@@ -1,4 +1,4 @@
-# 📒 PROJECT PRAIME 
+# 📒 PROJECT BrainWaveDx 
 
 [BrainWaveDx](https://----주소----) 페이지 URL이동
 
