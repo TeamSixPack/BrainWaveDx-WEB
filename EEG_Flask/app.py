@@ -24,7 +24,11 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 import openai
+from dotenv import load_dotenv
 from eeg_model import EEGInferenceEngine, CHANNEL_GROUPS
+
+# .env 파일 로드
+load_dotenv()
 
 PORT = int(os.getenv("FLASK_PORT", "8000"))
 app = Flask(__name__)
@@ -34,7 +38,10 @@ CORS(app)  # CORS 활성화
 _ENGINES = {}
 VER = 'V1'
 
-# OpenAI API 키 설정 (환경변수에서 가져오거나 직접 설정)
+# OpenAI API 키 설정 (환경변수에서 가져오기)
+openai.api_key = os.getenv("OPENAI_API_KEY")
+if not openai.api_key:
+    raise ValueError("OPENAI_API_KEY 환경변수가 설정되지 않았습니다. .env 파일을 확인해주세요.")
 
 
 def check_place(word):
@@ -42,32 +49,47 @@ def check_place(word):
     try:
         prompt = f"""
         아래 단어가 실제 주소나 위치를 나타내는 장소인지 판별해 주세요.
-        - 장소(place): 도로, 건물, 시설, 도시, 공원 등 실제 위치를 의미
-        - 비장소: 장난감, 상상 속 장소, 물건 이름 등 실제 위치가 아닌 경우
+        
+        장소(place)의 예시:
+        - 집, 아파트, 빌라, 원룸, 병원, 학교, 회사, 카페, 식당, 백화점, 마트, 은행, 공원, 영화관, 체육관, 교회, 사찰, 역, 공항, 주차장 등
+        
+        비장소의 예시:
+        - 장난감, 상상 속 공간, 물건 이름, 추상적 개념 등
+        
         단어: "{word}"
+        
+        이 단어는 실제 위치나 장소입니까? 
         출력 형식: 장소이면 1, 장소가 아니면 0
         """
+        
+        print(f"[DEBUG] 장소 판별 프롬프트 전송: {prompt}")
         
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "당신은 실제 위치(주소, 건물, 시설 등)만 장소로 판별하는 전문가입니다. 장난감, 상상 속 공간, 물건 이름은 장소가 아닙니다."},
+                {"role": "system", "content": "당신은 실제 위치(주소, 건물, 시설 등)만 장소로 판별하는 전문가입니다. '집', '병원', '학교', '회사' 등은 모두 장소입니다. 장난감, 상상 속 공간, 물건 이름은 장소가 아닙니다."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0
         )
         
         result_text = response.choices[0].message.content.strip()
+        print(f"[DEBUG] OpenAI 응답 원본: '{result_text}'")
         
         try:
             score = int(result_text)
             if score not in [0, 1]:
+                print(f"[DEBUG] 점수가 0 또는 1이 아님: {score}")
                 score = 0
-        except:
+        except ValueError as ve:
+            print(f"[DEBUG] 점수 변환 실패: {ve}")
             score = 0
+        
+        print(f"[DEBUG] 최종 장소 판별 점수: {score}")
         return score
     except Exception as e:
         print(f"장소 판별 오류: {e}")
+        traceback.print_exc()
         return 0
 
 def _truthy(v, default=True):
@@ -218,6 +240,126 @@ def check_place_api():
         
     except Exception as e:
         print(f"[ERROR] 장소 판별 오류: {e}")
+        traceback.print_exc()
+        error_response = jsonify({'error': str(e)})
+        error_response.headers.add('Access-Control-Allow-Origin', '*')
+        error_response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        error_response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return error_response, 500
+
+def check_moca_q3(answer):
+    """Q3: 왜 옷은 빨아 입는가? - 적절한 답변 검증"""
+    prompt = f"""
+    아래 답변이 MoCA Q3 질문에 적절한지 판별해 주세요.
+    질문: "왜 옷은 빨아 입는가?"
+    답변: "{answer}"
+    출력 형식: 적절하면 1, 부적절하면 0
+    """
+    
+    print(f"[DEBUG] MoCA Q3 프롬프트: {prompt}")
+    
+    response = openai.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "당신은 MoCA 검사 전문가입니다."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0
+    )
+    
+    result_text = response.choices[0].message.content.strip()
+    print(f"[DEBUG] OpenAI 원본 응답: '{result_text}'")
+    
+    try:
+        score = int(result_text)
+        print(f"[DEBUG] 파싱된 점수: {score}")
+        if score not in [0, 1]:
+            print(f"[DEBUG] 점수가 0 또는 1이 아님: {score}")
+            score = 0
+    except Exception as e:
+        print(f"[DEBUG] 점수 파싱 실패: {e}")
+        score = 0
+    
+    print(f"[DEBUG] 최종 반환 점수: {score}")
+    return score
+
+def check_moca_q4(answer):
+    """Q4: 주민등록증을 주웠을 때 주인에게 찾아주는 방법은? - 적절한 답변 검증"""
+    prompt = f"""
+    아래 답변이 MoCA Q4 질문에 적절한지 판별해 주세요.
+    질문: "주민등록증을 주웠을 때 주인에게 찾아주는 방법은 어떤 게 있을까?"
+    답변: "{answer}"
+    출력 형식: 적절하면 1, 부적절하면 0
+    """
+    
+    print(f"[DEBUG] MoCA Q4 프롬프트: {prompt}")
+    
+    response = openai.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "당신은 MoCA 검사 전문가입니다."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0
+    )
+    
+    result_text = response.choices[0].message.content.strip()
+    print(f"[DEBUG] OpenAI 원본 응답: '{result_text}'")
+    
+    try:
+        score = int(result_text)
+        print(f"[DEBUG] 파싱된 점수: {score}")
+        if score not in [0, 1]:
+            print(f"[DEBUG] 점수가 0 또는 1이 아님: {score}")
+            score = 0
+    except Exception as e:
+        print(f"[DEBUG] 점수 파싱 실패: {e}")
+        score = 0
+    
+    print(f"[DEBUG] 최종 반환 점수: {score}")
+    return score
+
+@app.route('/check_moca_q3', methods=['POST'])
+def check_moca_q3_api():
+    """MoCA Q3 답변 검증 API"""
+    try:
+        data = request.get_json()
+        answer = data.get('answer', '')
+        if not answer:
+            return jsonify({'error': '답변이 필요합니다'}), 400
+        print(f"[DEBUG] MoCA Q3 검증 요청: {answer}")
+        score = check_moca_q3(answer)
+        result = {
+            'answer': answer,
+            'is_appropriate': score == 1,
+            'score': score
+        }
+        print(f"[DEBUG] MoCA Q3 검증 결과: {result}")
+        return jsonify(result)
+    except Exception as e:
+        print(f"[ERROR] MoCA Q3 검증 오류: {e}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/check_moca_q4', methods=['POST'])
+def check_moca_q4_api():
+    """MoCA Q4 답변 검증 API"""
+    try:
+        data = request.get_json()
+        answer = data.get('answer', '')
+        if not answer:
+            return jsonify({'error': '답변이 필요합니다'}), 400
+        print(f"[DEBUG] MoCA Q4 검증 요청: {answer}")
+        score = check_moca_q4(answer)
+        result = {
+            'answer': answer,
+            'is_appropriate': score == 1,
+            'score': score
+        }
+        print(f"[DEBUG] MoCA Q4 검증 결과: {result}")
+        return jsonify(result)
+    except Exception as e:
+        print(f"[ERROR] MoCA Q4 검증 오류: {e}")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 

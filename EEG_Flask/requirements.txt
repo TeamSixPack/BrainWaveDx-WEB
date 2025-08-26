@@ -6,3 +6,4 @@ numpy
 requests
 brainflow
 pandas
+python-dotenv

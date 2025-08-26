@@ -36,6 +36,56 @@ const checkPlaceWithAI = async (word: string): Promise<boolean> => {
   }
 };
 
+// OpenAI API를 사용한 MoCA Q3 답변 검증 함수
+const checkMocaQ3WithAI = async (answer: string): Promise<boolean> => {
+  try {
+    const response = await fetch('http://localhost:8000/check_moca_q3', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ answer }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('MoCA Q3 검증 결과:', result);
+    
+    return result.is_appropriate;
+  } catch (error) {
+    console.error('MoCA Q3 검증 API 호출 오류:', error);
+    throw error;
+  }
+};
+
+// OpenAI API를 사용한 MoCA Q4 답변 검증 함수
+const checkMocaQ4WithAI = async (answer: string): Promise<boolean> => {
+  try {
+    const response = await fetch('http://localhost:8000/check_moca_q4', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ answer }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('MoCA Q4 검증 결과:', result);
+    
+    return result.is_appropriate;
+  } catch (error) {
+    console.error('MoCA Q4 검증 API 호출 오류:', error);
+    throw error;
+  }
+};
+
 // 장소 판별 테스트 함수 (사용자가 원할 때 호출)
 const testPlaceWithAI = async (word: string) => {
   try {
@@ -429,28 +479,31 @@ export default function MMSE() {
               if (allCorrectWordsFound && answerWords.length === correctWords.length) {
                 totalScore += question.points;
               }
-            } else if (question.id === 12 || question.id === 13) {
-              // 이해, 판단 문제: 간단한 키워드 포함 여부 체크
-              const normalizedAnswer = answer.toLowerCase().trim();
-              const correctKeywords = question.correctAnswer.toLowerCase().trim().split(',').map(k => k.trim());
-              
-              // 간단한 키워드 매칭 - "더러" 포함 여부도 체크
-              const hasCorrectKeyword = correctKeywords.some(keyword => {
-                // 정확한 키워드가 포함되어 있는지 확인
-                if (normalizedAnswer.includes(keyword)) {
-                  return true;
+            } else if (question.id === 12) {
+              // 12번 문제: 왜 옷은 빨아서 입습니까? - AI API를 사용한 답변 검증
+              if (answer && answer.length > 0) {
+                try {
+                  const isAppropriate = await checkMocaQ3WithAI(answer);
+                  if (isAppropriate) {
+                    totalScore += question.points; // AI가 적절하다고 판단하면 점수
+                  }
+                } catch (error) {
+                  console.error('MoCA Q3 검증 API 오류:', error);
+                  // API 오류 시 0점 처리
                 }
-                
-                // "더러"라는 말이 있으면 정답 처리 (12번 문제용)
-                if (question.id === 12 && normalizedAnswer.includes('더러')) {
-                  return true;
+              }
+            } else if (question.id === 13) {
+              // 13번 문제: 판단 문제 - AI API를 사용한 답변 검증
+              if (answer && answer.length > 0) {
+                try {
+                  const isAppropriate = await checkMocaQ4WithAI(answer);
+                  if (isAppropriate) {
+                    totalScore += question.points; // AI가 적절하다고 판단하면 점수
+                  }
+                } catch (error) {
+                  console.error('MoCA Q4 검증 API 오류:', error);
+                  // API 오류 시 0점 처리
                 }
-                
-                return false;
-              });
-              
-              if (hasCorrectKeyword) {
-                totalScore += question.points;
               }
             } else {
               // 텍스트 입력의 경우 유사도 체크 (대소문자, 공백 무시)
@@ -623,29 +676,32 @@ export default function MMSE() {
              if (allCorrectWordsFound && answerWords.length === correctWords.length) {
                totalScore += question.points;
              }
-           } else if (question.id === 12 || question.id === 13) {
-             // 이해, 판단 문제: 간단한 키워드 포함 여부 체크
-             const normalizedAnswer = answer.toLowerCase().trim();
-             const correctKeywords = question.correctAnswer.toLowerCase().trim().split(',').map(k => k.trim());
-             
-             // 간단한 키워드 매칭 - "더러" 포함 여부도 체크
-             const hasCorrectKeyword = correctKeywords.some(keyword => {
-               // 정확한 키워드가 포함되어 있는지 확인
-               if (normalizedAnswer.includes(keyword)) {
-                 return true;
-               }
-               
-               // "더러"라는 말이 있으면 정답 처리 (12번 문제용)
-               if (question.id === 12 && normalizedAnswer.includes('더러')) {
-                 return true;
-               }
-               
-               return false;
-             });
-             
-             if (hasCorrectKeyword) {
-               totalScore += question.points;
-             }
+                       } else if (question.id === 12) {
+              // 12번 문제: 왜 옷은 빨아서 입습니까? - AI API를 사용한 답변 검증
+              if (answer && answer.length > 0) {
+                try {
+                  const isAppropriate = await checkMocaQ3WithAI(answer);
+                  if (isAppropriate) {
+                    totalScore += question.points; // AI가 적절하다고 판단하면 점수
+                  }
+                } catch (error) {
+                  console.error('MoCA Q3 검증 API 오류:', error);
+                  // API 오류 시 0점 처리
+                }
+              }
+            } else if (question.id === 13) {
+              // 13번 문제: 판단 문제 - AI API를 사용한 답변 검증
+              if (answer && answer.length > 0) {
+                try {
+                  const isAppropriate = await checkMocaQ4WithAI(answer);
+                  if (isAppropriate) {
+                    totalScore += question.points; // AI가 적절하다고 판단하면 점수
+                  }
+                } catch (error) {
+                  console.error('MoCA Q4 검증 API 오류:', error);
+                  // API 오류 시 0점 처리
+                }
+              }
            } else {
              // 텍스트 입력의 경우 유사도 체크 (대소문자, 공백 무시)
              const normalizedAnswer = answer.toLowerCase().trim().replace(/\s+/g, '');
@@ -766,7 +822,7 @@ export default function MMSE() {
                       basic: 7           // 기본점수 (7점)
                     };
 
-                    // 각 문제별 점수 계산
+                                        // 각 문제별 점수 계산
                     mmseQuestions.forEach(question => {
                       if (question.id === 7) return; // 안내 문제 제외
                       
@@ -785,15 +841,9 @@ export default function MMSE() {
                           );
                           earnedPoints = (allCorrectWordsFound && answerWords.length === correctWords.length) ? question.points : 0;
                         } else if (question.id === 12 || question.id === 13) {
-                          // 이해, 판단 문제
-                          const normalizedAnswer = answer.toLowerCase().trim();
-                          const correctKeywords = question.correctAnswer.toLowerCase().trim().split(',').map(k => k.trim());
-                          const hasCorrectKeyword = correctKeywords.some(keyword => {
-                            if (normalizedAnswer.includes(keyword)) return true;
-                            if (question.id === 12 && normalizedAnswer.includes('더러')) return true;
-                            return false;
-                          });
-                          earnedPoints = hasCorrectKeyword ? question.points : 0;
+                          // 이해, 판단 문제 - AI 채점은 이미 완료됨
+                          // 결과창에서는 점수 계산 건너뛰기
+                          earnedPoints = 0;
                         } else if (question.id === 11) {
                           // 이름말하기 문제
                           const names = answer.split(',').map(n => n.trim());
@@ -832,7 +882,7 @@ export default function MMSE() {
                         }
                       }
 
-                      // 영역별 점수 누적
+                      // 영역별 점수 누적 (AI 채점 문제 제외)
                       if (question.id >= 1 && question.id <= 6) {
                         scores.orientation += earnedPoints; // 지남력 (1-6번)
                       } else if (question.id === 8) {
@@ -843,12 +893,33 @@ export default function MMSE() {
                         scores.recall += earnedPoints; // 기억회상 (10번)
                       } else if (question.id === 11) {
                         scores.naming += earnedPoints; // 이름말하기 (11번)
-                      } else if (question.id === 12) {
-                        scores.comprehension += earnedPoints; // 이해 (12번)
-                      } else if (question.id === 13) {
-                        scores.judgment += earnedPoints; // 판단 (13번)
                       }
+                      // AI 채점 문제(12번, 13번)는 이미 finalScore에 반영됨
                     });
+
+                    // AI 채점 문제 점수 계산 - finalScore에서 다른 영역 점수를 빼서 계산
+                    // 이해와 판단 문제는 이미 finalScore에 반영되어 있음
+                    const otherScores = scores.orientation + scores.memory + scores.calculation + scores.recall + scores.naming + scores.basic;
+                    const aiTotalScore = mmseScore - otherScores;
+                    
+                    // 이해 문제(12번)와 판단 문제(13번)의 점수를 적절히 분배
+                    if (aiTotalScore >= 4) {
+                      // 이해 3점 + 판단 1점
+                      scores.comprehension = 3;
+                      scores.judgment = 1;
+                    } else if (aiTotalScore >= 3) {
+                      // 이해 3점 + 판단 0점
+                      scores.comprehension = 3;
+                      scores.judgment = 0;
+                    } else if (aiTotalScore >= 1) {
+                      // 이해 0점 + 판단 1점
+                      scores.comprehension = 0;
+                      scores.judgment = 1;
+                    } else {
+                      // 둘 다 0점
+                      scores.comprehension = 0;
+                      scores.judgment = 0;
+                    }
 
                     return [
                       // 지남력
