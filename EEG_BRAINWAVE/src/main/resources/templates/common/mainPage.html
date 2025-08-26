@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메인페이지</title>
+	<!-- CSS  -->
+	<link th:href="@{/css/common/main.css}" rel="stylesheet">
+	<link th:href="@{/css/common/font.css}" rel="stylesheet">
+	<!-- Font Awesome CDN 추가 -->
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+	<!-- jQuery CDN  -->
+	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+	<!-- Axios CDN  -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<!-- JS  -->
+	<script th:src="@{/js/common/main.js}"></script>
+	<script th:src="@{/js/common/routing.js}"></script>    
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 영역 -->
+        <header class="header">
+            <nav class="nav-bar">
+                <a href="#" class="logo">LOGO</a>
+            </nav>
+        </header>
+
+        <!-- 컨텐츠 영역 -->
+        <main class="content">
+        	<section>
+        		<button class="login-btn" onclick="goToLogin()">로그인페이지</button>
+        	</section>
+        	<section>
+        		<button class="login-btn" onclick="goToJoin()">회원가입페이지</button>
+        	</section>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>EEG 진단 요청</title>
+</head>
+<body>
+<h2>EEG 진단 요청</h2>
+
+<form action="/inferResult.do" method="post">
+  <input type="text" name="filePath" placeholder=".../sub-044_task-eyesclosed_eeg.set" required>
+  <select name="device">
+    <option value="muse" selected>Muse</option>
+    <option value="hybrid_black">Hybrid Black</option>
+    <option value="union10">Union10</option>
+    <option value="total19">Total19</option>
+  </select>
+  <input type="text" name="subjectId" placeholder="sub-044 (옵션)">
+  <input type="text" name="trueLabel" placeholder="CN/FTD/AD (옵션)">
+  <label><input type="checkbox" name="enforce_two_minutes" checked> 2분 확보</label>
+  <button type="submit">진단</button>
+</form>
+
+
+<script>
+  // 파일 경로에서 sub-xxx 자동 추출
+  function autoFillSubjectId() {
+    const fp = document.getElementById('filePath').value || '';
+    const m = fp.replaceAll('\\', '/').match(/(sub-\d+)/i);
+    if (m) document.getElementById('subjectId').value = m[1];
+  }
+  // 최초 로드 + 입력 변경 시 자동 추출
+  autoFillSubjectId();
+  document.getElementById('filePath').addEventListener('input', autoFillSubjectId);
+</script>
+</body>
+</html>

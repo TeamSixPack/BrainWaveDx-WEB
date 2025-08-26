@@ -1,0 +1,993 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Korean font support and UTF-8 encoding */
+* {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  font-feature-settings: "kern" 1;
+  text-rendering: optimizeLegibility;
+  /* Mobile optimizations */
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* 균형잡힌 기본 스타일 */
+body {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #1e293b;
+  background-color: #f8fafc;
+}
+
+/* 적절한 제목 스타일 */
+h1 {
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  margin-bottom: 16px !important;
+  color: #1e293b !important;
+}
+
+h2 {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-bottom: 12px !important;
+  color: #1e293b !important;
+}
+
+h3 {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-bottom: 10px !important;
+  color: #1e293b !important;
+}
+
+h4 {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-bottom: 8px !important;
+  color: #1e293b !important;
+}
+
+/* 적절한 텍스트 크기 */
+p, span, div {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  color: #1e293b !important;
+}
+
+/* 링크 스타일 */
+a {
+  font-size: 16px !important;
+  color: #2563eb !important;
+  text-decoration: underline !important;
+  font-weight: 500 !important;
+}
+
+a:hover {
+  color: #1d4ed8 !important;
+}
+
+/* 강제 흰색 텍스트가 필요한 링크에 사용하는 보정 클래스 */
+a.override-white,
+a.inline-flex.override-white,
+a.inline-flex.rounded-lg.override-white {
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+a.override-white *,
+a.inline-flex.override-white *,
+a.inline-flex.rounded-lg.override-white * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* 입력 필드 */
+input, textarea, select {
+  font-size: 16px !important;
+  padding: 10px 14px !important;
+  border: 2px solid #d1d5db !important;
+  border-radius: 8px !important;
+  min-height: 44px !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  line-height: 1.5 !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #0066cc !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2) !important;
+}
+
+/* 입력 필드 플레이스홀더 */
+input::placeholder, textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+/* 버튼 스타일 */
+button, .btn, [role="button"] {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+  min-height: 44px !important;
+  min-width: 80px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  text-align: center !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.5 !important;
+}
+
+/* 기본 버튼 (Primary) */
+.btn-primary, button[type="submit"], button[type="button"]:not([variant="outline"]):not([variant="ghost"]) {
+  background-color: #0066cc !important;
+  color: #ffffff !important;
+  border: 2px solid #0066cc !important;
+}
+
+.btn-primary:hover, button[type="submit"]:hover, button[type="button"]:not([variant="outline"]):not([variant="ghost"]):hover {
+  background-color: #004499 !important;
+  border-color: #004499 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 보조 버튼 (Outline) */
+.btn-secondary, button[variant="outline"] {
+  background-color: #ffffff !important;
+  color: #0066cc !important;
+  border: 2px solid #0066cc !important;
+}
+
+.btn-secondary:hover, button[variant="outline"]:hover {
+  background-color: #0066cc !important;
+  color: #ffffff !important;
+  border-color: #0066cc !important;
+}
+
+/* Ghost 버튼 */
+button[variant="ghost"] {
+  background-color: transparent !important;
+  color: #0066cc !important;
+  border: 2px solid transparent !important;
+}
+
+button[variant="ghost"]:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+}
+
+/* 위험 버튼 */
+.btn-danger {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border: 2px solid #dc2626 !important;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c !important;
+  border-color: #b91c1c !important;
+}
+
+/* 카드 스타일 */
+.card {
+  padding: 20px !important;
+  margin-bottom: 16px !important;
+  border-radius: 12px !important;
+  border: 1px solid #e0e0e0 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 라벨 스타일 */
+label {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #000000 !important;
+  margin-bottom: 6px !important;
+  display: block !important;
+  line-height: 1.4 !important;
+}
+
+/* 체크박스와 라디오 */
+input[type="checkbox"], input[type="radio"] {
+  width: 18px !important;
+  height: 18px !important;
+  margin-right: 8px !important;
+}
+
+/* 새로운 체크박스 스타일 */
+.checkbox-new {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 20px !important;
+  height: 20px !important;
+  border: 2px solid #0066cc !important;
+  border-radius: 6px !important;
+  background-color: #ffffff !important;
+  cursor: pointer !important;
+  position: relative !important;
+  transition: all 0.2s ease !important;
+}
+
+.checkbox-new:checked {
+  border-color: #0066cc !important;
+  background-color: #ffffff !important;
+}
+
+.checkbox-new:checked::after {
+  content: '✓' !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  color: #0066cc !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+}
+
+.checkbox-new:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2) !important;
+}
+
+/* Radix UI 체크박스 스타일 강력 오버라이드 */
+[data-state="unchecked"] {
+  background-color: #ffffff !important;
+  border-color: #0066cc !important;
+  border-width: 2px !important;
+}
+
+[data-state="checked"] {
+  background-color: #ffffff !important;
+  border-color: #0066cc !important;
+  border-width: 2px !important;
+}
+
+/* 더 강력한 선택자로 오버라이드 */
+.peer[data-state="checked"] {
+  background-color: #ffffff !important;
+  border-color: #0066cc !important;
+  border-width: 2px !important;
+}
+
+.peer[data-state="unchecked"] {
+  background-color: #ffffff !important;
+  border-color: #0066cc !important;
+  border-width: 2px !important;
+}
+
+/* 모든 체크박스 상태 강제 오버라이드 */
+*[data-state="checked"] {
+  background-color: #ffffff !important;
+  border-color: #0066cc !important;
+  border-width: 2px !important;
+}
+
+*[data-state="unchecked"] {
+  background-color: #ffffff !important;
+  border-color: #0066cc !important;
+  border-width: 2px !important;
+}
+
+/* 체크박스 강력 스타일 오버라이드 */
+.peer[data-state="unchecked"],
+.peer[data-state="checked"] {
+  border: 2px solid #2563eb !important;
+  background-color: #ffffff !important;
+  border-color: #2563eb !important;
+  border-width: 2px !important;
+}
+
+/* 모든 체크박스 상태 강제 오버라이드 */
+*[data-state="checked"],
+*[data-state="unchecked"] {
+  border: 2px solid #2563eb !important;
+  background-color: #ffffff !important;
+  border-color: #2563eb !important;
+  border-width: 2px !important;
+}
+
+/* 체크박스 요소 직접 타겟팅 */
+input[type="checkbox"],
+.checkbox,
+[role="checkbox"] {
+  border: 2px solid #2563eb !important;
+  background-color: #ffffff !important;
+  border-color: #2563eb !important;
+  border-width: 2px !important;
+}
+
+/* Radix UI 체크박스 강제 스타일 */
+[data-radix-collection-item] {
+  border: 2px solid #2563eb !important;
+  background-color: #ffffff !important;
+}
+
+/* 테이블 스타일 */
+table {
+  font-size: 16px !important;
+  border-collapse: collapse !important;
+  width: 100% !important;
+}
+
+th, td {
+  padding: 12px !important;
+  border: 1px solid #e0e0e0 !important;
+  text-align: left !important;
+}
+
+th {
+  background-color: #f5f5f5 !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+}
+
+/* 알림 스타일 */
+.alert, .notification {
+  padding: 16px !important;
+  margin-bottom: 16px !important;
+  border-radius: 8px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+}
+
+.alert-success {
+  background-color: #d4edda !important;
+  color: #155724 !important;
+  border: 1px solid #c3e6cb !important;
+}
+
+.alert-error, .alert-danger {
+  background-color: #f8d7da !important;
+  color: #721c24 !important;
+  border: 1px solid #f5c6cb !important;
+}
+
+.alert-warning {
+  background-color: #fff3cd !important;
+  color: #856404 !important;
+  border: 1px solid #ffeaa7 !important;
+}
+
+.alert-info {
+  background-color: #d1ecf1 !important;
+  color: #0c5460 !important;
+  border: 1px solid #bee5eb !important;
+}
+
+/* 모달 스타일 */
+.modal, .dialog {
+  padding: 24px !important;
+  border-radius: 12px !important;
+}
+
+.modal-header {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  margin-bottom: 20px !important;
+}
+
+.modal-body {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+}
+
+/* 사이드바 스타일 */
+.sidebar {
+  font-size: 16px !important;
+}
+
+.sidebar-item {
+  padding: 12px 16px !important;
+  margin-bottom: 6px !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+
+/* 네비게이션 스타일 */
+.nav-item {
+  padding: 12px 16px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+}
+
+/* 탭 스타일 */
+.tab {
+  padding: 12px 20px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+
+/* 드롭다운 스타일 */
+.dropdown-item {
+  padding: 12px 16px !important;
+  font-size: 16px !important;
+}
+
+/* 툴팁 스타일 */
+.tooltip {
+  font-size: 14px !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+}
+
+/* 프로그레스 바 */
+.progress {
+  height: 20px !important;
+  border-radius: 10px !important;
+}
+
+.progress-bar {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 20px !important;
+}
+
+/* 스피너 */
+.spinner {
+  width: 40px !important;
+  height: 40px !important;
+  border-width: 3px !important;
+}
+
+/* 아이콘 크기 */
+.icon {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.icon-large {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.icon-xl {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+/* 간격 */
+.section {
+  margin-bottom: 40px !important;
+}
+
+.section-small {
+  margin-bottom: 24px !important;
+}
+
+.section-large {
+  margin-bottom: 56px !important;
+}
+
+/* 여백 */
+.margin-large {
+  margin: 24px !important;
+}
+
+.padding-large {
+  padding: 24px !important;
+}
+
+/* 높은 대비 색상 */
+:root {
+  --text-primary: #000000 !important;
+  --text-secondary: #333333 !important;
+  --text-muted: #666666 !important;
+  --background-primary: #ffffff !important;
+  --background-secondary: #f5f5f5 !important;
+  --border-primary: #cccccc !important;
+  --border-secondary: #e0e0e0 !important;
+  --accent-primary: #0066cc !important;
+  --accent-secondary: #004499 !important;
+  --success: #006600 !important;
+  --warning: #cc6600 !important;
+  --error: #cc0000 !important;
+}
+
+/* Senior-friendly refinements */
+:root {
+  --focus-color: #2563eb;
+}
+
+body {
+  line-height: 1.65;
+}
+
+section, .card, .Card, .rounded-xl {
+  scroll-margin-top: 80px;
+}
+
+/* Increase spacing between stacked groups */
+.space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: .55rem; }
+.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: .8rem; }
+.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+
+/* List readability */
+ul, ol { padding-left: 1.1rem; }
+li { margin-bottom: .35rem; }
+
+/* Focus visibility for keyboard users */
+a:focus-visible, button:focus-visible, [role="tab"]:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--focus-color) !important;
+  outline-offset: 2px !important;
+}
+
+/* Touch target minimums */
+button, [role="button"], [role="tab"], .btn, .Button {
+  min-height: 44px !important;
+}
+
+/* Subtle section dividers for scannability */
+.hr, .divider, .section-divider {
+  height: 1px; background: rgba(0,0,0,.06); margin: 16px 0;
+}
+
+/* Mobile touch optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase touch targets for mobile */
+  button, 
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  .clickable {
+    min-height: 48px !important;
+    min-width: 48px !important;
+  }
+  
+  /* Keep component hover styles intact on touch devices (no global override) */
+}
+
+/* Prevent zoom on input focus in iOS */
+@supports (-webkit-touch-callout: none) {
+  input[type="email"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="text"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Mobile viewport fixes */
+@media screen and (max-width: 768px) {
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Improve readability on small screens */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* 모바일에서 적절한 폰트 */
+  body {
+    font-size: 16px !important;
+  }
+  
+  h1 {
+    font-size: 24px !important;
+  }
+  
+  h2 {
+    font-size: 20px !important;
+  }
+  
+  h3 {
+    font-size: 18px !important;
+  }
+  
+  /* 모바일에서 적절한 입력 필드 */
+  input, textarea, select {
+    font-size: 16px !important;
+    padding: 16px !important;
+    min-height: 52px !important;
+  }
+  
+  /* 모바일에서 적절한 버튼 */
+  button, .btn, [role="button"] {
+    font-size: 16px !important;
+    padding: 16px 20px !important;
+    min-height: 52px !important;
+    width: 100% !important;
+  }
+}
+
+/* 태블릿 최적화 */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  body {
+    font-size: 16px !important;
+  }
+  
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* 데스크톱 최적화 */
+@media screen and (min-width: 1025px) {
+  body {
+    font-size: 18px !important;
+  }
+  
+  .container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+  
+  h1 {
+    font-size: 32px !important;
+  }
+  
+  h2 {
+    font-size: 28px !important;
+  }
+  
+  h3 {
+    font-size: 24px !important;
+  }
+}
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 15% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 15%;
+
+    --primary: 214 84% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 214 20% 95%;
+    --secondary-foreground: 214 50% 25%;
+
+    --muted: 214 20% 96%;
+    --muted-foreground: 214 15% 45%;
+
+    --accent: 189 84% 92%;
+    --accent-foreground: 214 50% 25%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 20% 90%;
+    --input: 214 20% 95%;
+    --ring: 214 84% 56%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 20% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 220 20% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 220 20% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 214 84% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 15%;
+    --secondary-foreground: 210 40% 95%;
+
+    --muted: 220 20% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 220 20% 15%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 15%;
+    --ring: 214 84% 56%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Dialog 닫기 버튼 */
+[data-radix-collection-item] button[aria-label="Close"],
+.dialog-close,
+[role="dialog"] button[aria-label="Close"],
+.DialogPrimitive.Close {
+  color: #0066cc !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+[data-radix-collection-item] button[aria-label="Close"]:hover,
+.dialog-close:hover,
+[role="dialog"] button[aria-label="Close"]:hover,
+.DialogPrimitive.Close:hover {
+  background-color: transparent !important;
+  color: #004499 !important;
+}
+
+/* Dialog 닫기 버튼 내부 아이콘 */
+.DialogPrimitive.Close svg,
+[data-radix-collection-item] button[aria-label="Close"] svg,
+.dialog-close svg,
+[role="dialog"] button[aria-label="Close"] svg {
+  color: #0066cc !important;
+}
+
+.DialogPrimitive.Close:hover svg,
+[data-radix-collection-item] button[aria-label="Close"]:hover svg,
+.dialog-close:hover svg,
+[role="dialog"] button[aria-label="Close"]:hover svg {
+  color: #004499 !important;
+}
+
+/* 비밀번호 토글 버튼 */
+.password-toggle {
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  height: 24px !important;
+  width: 24px !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  color: #6b7280 !important;
+  transition: all 0.2s ease !important;
+}
+
+.password-toggle:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+  color: #374151 !important;
+}
+
+.password-toggle svg {
+  height: 16px !important;
+  width: 16px !important;
+}
+
+/* 모든 체크박스 스타일 강제 오버라이드 */
+input[type="checkbox"], 
+input[type="radio"], 
+.checkbox, 
+[role="checkbox"],
+[data-radix-collection-item],
+.checkbox-new,
+.checkbox-custom {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 20px !important;
+  height: 20px !important;
+  border: 2px solid #1f2937 !important; /* 검은색 테두리 */
+  background-color: #ffffff !important; /* 흰색 배경 */
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  position: relative !important;
+  transition: all 0.2s ease !important;
+  margin-right: 8px !important;
+}
+
+/* 체크된 상태 */
+input[type="checkbox"]:checked, 
+input[type="radio"]:checked, 
+.checkbox:checked, 
+[role="checkbox"][aria-checked="true"],
+[data-radix-collection-item][data-state="checked"],
+.checkbox-new:checked,
+.checkbox-custom:checked {
+  border-color: #1f2937 !important; /* 검은색 테두리 유지 */
+  background-color: #ffffff !important; /* 흰색 배경 유지 */
+}
+
+/* 체크마크 */
+input[type="checkbox"]:checked::after, 
+input[type="radio"]:checked::after, 
+.checkbox:checked::after, 
+[role="checkbox"][aria-checked="true"]::after,
+[data-radix-collection-item][data-state="checked"]::after,
+.checkbox-new:checked::after,
+.checkbox-custom:checked::after {
+  content: '✓' !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  color: #1f2937 !important; /* 검은색 체크마크 */
+  font-size: 12px !important;
+  font-weight: bold !important;
+}
+
+/* custom checkbox 명확히 고정 (시니어 친화 크기) */
+.custom-checkbox {
+  width: 28px !important;
+  height: 28px !important;
+  border: 2px solid #1f2937 !important; /* 검은색 테두리 */
+  background-color: #ffffff !important;  /* 흰색 배경 */
+  border-radius: 6px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.custom-checkbox svg { 
+  color: #1f2937 !important; 
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* button 기본 스타일이 영향을 주지 않도록 역할 기반 요소 제외 */
+[role="checkbox"].custom-checkbox {
+  border: 2px solid #1f2937 !important;
+  background: #ffffff !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* 링크가 버튼(asChild)로 사용될 때 텍스트/밑줄 정리 */
+a.inline-flex.rounded-lg {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* 라벨 클릭 영역 개선 */
+label { cursor: default; }
+
+/* Tabs (Radix) triggers should not inherit global button background */
+[role="tab"] {
+  background-color: transparent !important;
+  color: inherit !important;
+  border: none !important;
+  height: 40px !important;
+  border-radius: 8px !important;
+}
+[role="tab"][data-state="active"] {
+  background-color: #0066cc !important;
+  color: #ffffff !important;
+}
+[role="tab"]:not([data-state="active"]) {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+/* Senior-friendly modal close button */
+.modal-close {
+  width: 36px !important;
+  height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #ffffff !important;
+  color: #111827 !important; /* 강한 대비 */
+  border: 1px solid rgba(0,0,0,.1) !important;
+  border-radius: 9999px !important; /* 원형 */
+  box-shadow: 0 1px 2px rgba(0,0,0,.06) !important;
+}
+.modal-close svg { width: 22px !important; height: 22px !important; color: inherit !important; }
+.modal-close:hover { background: #f3f4f6 !important; }
+.modal-close:active { background: #e5e7eb !important; }
+.modal-close:focus-visible { outline: 3px solid #2563eb !important; outline-offset: 2px !important; }
+
+/* Mobile upsize */
+@media (max-width: 640px) {
+  .modal-close { width: 48px !important; height: 48px !important; }
+  .modal-close svg { width: 28px !important; height: 28px !important; }
+}
+
+/***** Force reset for modal close button to avoid primary styles on mobile *****/
+button.modal-close,
+[role="button"].modal-close {
+  background: transparent !important;
+  border: none !important;
+  color: #374151 !important;
+  box-shadow: none !important;
+}
+button.modal-close:hover,
+[role="button"].modal-close:hover { color: #111827 !important; }
+
+/* Header large close button for iOS (text version) */
+.modal-close-large {
+  min-width: auto !important; height: auto !important;
+  padding: 2px 6px !important; font-size: 14px !important; font-weight: 600 !important;
+  background: transparent !important; color: #111827 !important; border: none !important;
+  box-shadow: none !important; border-radius: 6px !important;
+}
+.modal-close-large:active { background: rgba(0,0,0,.08) !important; }
+.modal-close-large:focus-visible { outline: 3px solid #2563eb !important; outline-offset: 2px !important; }
+
+/* Ensure close button never uses primary styles */
+.modal-close-large,
+.modal-close-large:hover,
+.modal-close-large:active {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border-color: rgba(0,0,0,.1) !important;
+}
+
+/* 버튼 자식 요소는 부모 색상을 상속 (문구 사라짐 방지) */
+button span,
+button p,
+button div,
+.btn span,
+.btn p,
+.btn div {
+  color: inherit !important;
+}
+
+/* 아이콘도 버튼 색상 상속 */
+button svg,
+.btn svg {
+  color: inherit !important;
+  stroke: currentColor !important;
+}
