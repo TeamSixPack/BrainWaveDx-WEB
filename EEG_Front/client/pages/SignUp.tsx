@@ -138,9 +138,6 @@ export default function SignUp() {
 
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-foreground">회원가입</h1>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              NeuroScan에 가입하여 뇌 건강 여정을 추적하세요
-            </p>
           </div>
         </div>
 

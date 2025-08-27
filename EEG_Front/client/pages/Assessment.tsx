@@ -889,7 +889,7 @@ export default function Assessment() {
                     </div>
                     <div className="flex items-start space-x-2 sm:space-x-3">
                       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 circle-number" style={{ color: '#ffffff !important' }}>3</div>
-                      <span className="text-muted-foreground">장비를 이마에 닫게 잘 착용하세요</span>
+                      <span className="text-muted-foreground">장비를 이마에 닿게 잘 착용하세요</span>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-xs font-bold circle-number" style={{ color: '#ffffff !important' }}>4</div>

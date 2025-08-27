@@ -105,8 +105,4 @@ public class UserController {
 			return mav;
 		}
 	}
-	
-	
-	
-	
 }

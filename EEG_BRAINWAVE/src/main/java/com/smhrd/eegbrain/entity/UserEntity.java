@@ -1,53 +1,47 @@
 package com.smhrd.eegbrain.entity;
 
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.PrePersist;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-import lombok.Data;
+import java.util.List;
 
 @Entity
-@Table(name = "user")
-@Data
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserEntity {
-
+    
     @Id
+    @Column(name = "uid")
     private String uid;
-
-    @Column(nullable = false)
+    
+    @Column(name = "pw", nullable = false)
     private String pw;
-
-    @Column(nullable = false)
+    
+    @Column(name = "name", nullable = false)
     private String name;
-	
-    @Column(nullable = false)
-    private String phone; // 전화번호 (010-1234-5678 형식)
-
-    @Column(name = "joined_at", nullable = false)
+    
+    @Column(name = "phone", nullable = false)
+    private String phone;
+    
+    @Column(name = "joined_at")
     private LocalDateTime joinedAt;
-
-    // --------- 편의 메서드 ---------
-    public String getFormattedPhone() {
-        return phone;
-    }
-
-    public void setFormattedPhone(String phone) {
-        // 전화번호 형식 검증 및 저장
-        if (phone != null && phone.matches("\\d{3}-\\d{4}-\\d{4}")) {
-            this.phone = phone;
-        } else {
-            this.phone = phone;
-        }
-    }
-
+    
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<AssessmentRecordEntity> assessmentRecords;
+    
     @PrePersist
     protected void onCreate() {
-        if (this.joinedAt == null) {
-            this.joinedAt = LocalDateTime.now();
+        if (joinedAt == null) {
+            joinedAt = LocalDateTime.now();
         }
     }
 }

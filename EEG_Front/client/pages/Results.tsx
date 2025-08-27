@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { PDFService, type AssessmentData } from "@/lib/pdf-service";
 import { AssessmentStorageService } from "@/lib/assessment-storage";
+import { autoSaveAssessment } from "@/lib/assessment-save";
 import Chatbot from "@/components/Chatbot";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -55,25 +56,10 @@ export default function Results() {
   
   // 자동 분석 결과 (세션 스토리지에서 가져오기)
   const [autoEegResult, setAutoEegResult] = useState<any>(null);
+  const [personalizedGuide, setPersonalizedGuide] = useState<any>(null);
   
-  useEffect(() => {
-    // 세션 스토리지에서 자동 분석 결과 확인
-    const storedResult = sessionStorage.getItem('eeg_analysis_result');
-    if (storedResult) {
-      try {
-        const parsedResult = JSON.parse(storedResult);
-        setAutoEegResult(parsedResult);
-        console.log('자동 분석 결과 로드됨:', parsedResult);
-        
-        // 자동 분석 결과가 로드되면 맞춤형 가이드 생성
-        const guide = getPersonalizedGuide(parsedResult);
-        setPersonalizedGuide(guide);
-        console.log('맞춤형 가이드 생성됨:', guide);
-      } catch (error) {
-        console.error('자동 분석 결과 파싱 오류:', error);
-      }
-    }
-  }, []);
+  // 무한 루프 방지를 위한 ref
+  const hasInitialized = useRef(false);
   
   // 자동 분석 결과가 있으면 그것을 우선 사용, 없으면 기존 결과 사용
   const finalEegResult = autoEegResult || eegResult;
@@ -108,6 +94,188 @@ export default function Results() {
     }
   };
 
+  useEffect(() => {
+    console.log('🔍 useEffect 실행됨');
+    console.log('🔍 finalEegResult:', finalEegResult);
+    console.log('🔍 assessmentSaved:', assessmentSaved);
+    console.log('🔍 mocaScore:', mocaScore);
+    console.log('🔍 mmseScore:', mmseScore);
+    
+    // 세션 스토리지에서 자동 분석 결과 확인
+    const storedResult = sessionStorage.getItem('eeg_analysis_result');
+    console.log('🔍 세션 스토리지 결과:', storedResult);
+    
+    if (storedResult) {
+      try {
+        const parsedResult = JSON.parse(storedResult);
+        setAutoEegResult(parsedResult);
+        console.log('자동 분석 결과 로드됨:', parsedResult);
+        
+        // 자동 분석 결과가 로드되면 맞춤형 가이드 생성
+        const guide = getPersonalizedGuide(parsedResult);
+        setPersonalizedGuide(guide);
+        console.log('맞춤형 가이드 생성됨:', guide);
+      } catch (error) {
+        console.error('자동 분석 결과 파싱 오류:', error);
+      }
+    }
+    
+    // 검사 결과가 있으면 자동으로 DB에 저장 (한 번만)
+    if (finalEegResult && !assessmentSaved) {
+      console.log('🔵 검사 완료! 자동으로 DB에 저장합니다...');
+      autoSaveAssessment(finalEegResult, mocaScore, mmseScore);
+      // 무한 루프 방지를 위해 여기서 setState 호출하지 않음
+    } else if (!finalEegResult) {
+      console.log('❌ finalEegResult가 없습니다!');
+    } else if (assessmentSaved) {
+      console.log('❌ 이미 저장되었습니다!');
+    }
+    
+    // 강제로 저장 시도 (테스트용) - 한 번만
+    if (storedResult && !assessmentSaved) {
+      console.log('🔵 강제 저장 시도...');
+      try {
+        const parsedResult = JSON.parse(storedResult);
+        autoSaveAssessment(parsedResult, mocaScore, mmseScore);
+        // 무한 루프 방지를 위해 여기서 setState 호출하지 않음
+      } catch (error) {
+        console.error('강제 저장 실패:', error);
+      }
+    }
+  }, []); // 의존성 배열을 비워서 한 번만 실행되도록 함
+
+  // 뇌파 검사 결과에 따른 맞춤형 가이드 데이터
+  const getPersonalizedGuide = (eegResult: any) => {
+    console.log('[DEBUG] getPersonalizedGuide 호출됨, eegResult:', eegResult);
+    if (!eegResult) {
+      console.log('[DEBUG] eegResult가 null/undefined');
+      return null;
+    }
+    
+    const getHighestProbLabel = (probMean: Record<string, number>) => {
+      return Object.entries(probMean).reduce((a, b) => 
+        Number(probMean[a[0]]) > Number(probMean[b[0]]) ? a : b
+      )[0];
+    };
+    
+    // 자동 분석 결과와 기존 결과 모두 처리
+    const probabilities = eegResult.probabilities || eegResult.prob_mean;
+    if (!probabilities) return null;
+    
+    const highestProbLabel = getHighestProbLabel(probabilities);
+    
+    // 맞춤형 가이드 데이터 반환
+    switch (highestProbLabel) {
+      case 'CN':
+        return {
+          title: "정상 뇌파 패턴",
+          color: "text-green-600",
+          guides: {
+            food: {
+              title: "뇌 건강을 위한 식단",
+              items: [
+                "오메가-3가 풍부한 생선 (연어, 고등어, 청어)",
+                "항산화 물질이 풍부한 베리류 (블루베리, 딸기, 라즈베리)",
+                "전곡류 (현미, 귀리, 퀴노아)",
+                "견과류 (호두, 아몬드, 브라질넛)",
+                "잎채소 (시금치, 케일, 브로콜리)"
+              ]
+            },
+            exercise: {
+              title: "뇌 활성화 운동",
+              items: [
+                "유산소 운동 (걷기, 조깅, 수영) - 주 3-4회, 30분",
+                "근력 운동 (스쿼트, 플랭크, 푸시업) - 주 2-3회",
+                "균형 운동 (요가, 타이치) - 주 2-3회",
+                "댄스나 테니스 같은 복합 운동"
+              ]
+            },
+            behavior: {
+              title: "뇌 건강 습관",
+              items: [
+                "규칙적인 수면 (7-8시간)",
+                "스트레스 관리 (명상, 호흡 운동)",
+                "사회적 활동 (친구와의 만남, 취미 활동)",
+                "새로운 기술 학습 (언어, 악기, 요리)"
+              ]
+            }
+          }
+        };
+      case 'AD':
+        return {
+          title: "알츠하이머 치매 패턴",
+          color: "text-red-600",
+          guides: {
+            food: {
+              title: "치매 예방 식단",
+              items: [
+                "MIND 다이어트 (지중해식 + DASH 다이어트)",
+                "항산화 물질 (비타민 E, C, 베타카로틴)",
+                "오메가-3 지방산 (생선, 호두, 아마씨)",
+                "비타민 B군 (전곡류, 계란, 녹색채소)",
+                "항염증 식품 (강황, 생강, 마늘)"
+              ]
+            },
+            exercise: {
+              title: "인지 기능 향상 운동",
+              items: [
+                "가벼운 유산소 운동 (걷기) - 매일 30분",
+                "스트레칭과 요가 - 주 3-4회",
+                "손가락 운동 (뜨개질, 퍼즐)",
+                "균형 운동 (한 발로 서기, 뒤로 걷기)"
+              ]
+            },
+            behavior: {
+              title: "인지 기능 보호",
+              items: [
+                "규칙적인 생활 리듬",
+                "충분한 수면 (8-9시간)",
+                "정신적 자극 (독서, 퍼즐, 게임)",
+                "가족과의 대화 및 사회적 활동"
+              ]
+            }
+          }
+        };
+      case 'FTD':
+        return {
+          title: "전두측두엽 치매 패턴",
+          color: "text-orange-600",
+          guides: {
+            food: {
+              title: "전두엽 기능 향상 식단",
+              items: [
+                "고품질 단백질 (닭고기, 생선, 콩)",
+                "복합 탄수화물 (현미, 귀리, 퀴노아)",
+                "뇌 에너지 공급 (코코넛 오일, MCT 오일)",
+                "항산화 물질 (베리류, 다크 초콜릿)",
+                "오메가-3 지방산 (생선, 아마씨)"
+              ]
+            },
+            exercise: {
+              title: "집행 기능 향상 운동",
+              items: [
+                "복합 운동 (테니스, 배드민턴)",
+                "춤추기 (댄스, 줌바)",
+                "요가와 필라테스",
+                "자연 속 걷기 (숲길, 공원)"
+              ]
+            },
+            behavior: {
+              title: "집행 기능 훈련",
+              items: [
+                "계획 세우기 (일정표 작성)",
+                "문제 해결 게임 (체스, 퍼즐)",
+                "새로운 언어나 악기 학습",
+                "정리 정돈 습관 형성"
+              ]
+            }
+          }
+        };
+      default:
+        return null;
+    }
+  };
+
   // Mock comprehensive results data
   const results = {
     patientName: "Test User", // In real app, get from auth
@@ -132,6 +300,120 @@ export default function Results() {
         { test: "종합 인지 평가", score: mocaScore, maxScore: 30, result: mocaScore >= 21 ? "정상" : "경도인지장애", description: mocaScore >= 21 ? "21점 이상으로 정상 범위" : "20점 이하로 경도인지장애" },
         { test: "간이 인지 검사", score: mmseScore, maxScore: 30, result: mmseScore >= 24 ? "정상" : mmseScore >= 18 ? "경도인지장애" : "인지기능장애", description: mmseScore >= 24 ? "24점 이상으로 인지적 손상 없음" : mmseScore >= 18 ? "23~18점으로 경도인지장애" : "17점 이하로 인지기능장애" }
       ]
+    }
+  };
+
+  // 컴포넌트 마운트 시 검사 결과 자동 저장
+  useEffect(() => {
+    // 이미 초기화되었으면 실행하지 않음
+    if (hasInitialized.current) {
+      return;
+    }
+    
+    hasInitialized.current = true;
+    
+    console.log('🔍 useEffect 실행됨 (한 번만)');
+    console.log('🔍 finalEegResult:', finalEegResult);
+    console.log('🔍 assessmentSaved:', assessmentSaved);
+    console.log('🔍 mocaScore:', mocaScore);
+    console.log('🔍 mmseScore:', mmseScore);
+    
+    // 세션 스토리지에서 자동 분석 결과 확인
+    const storedResult = sessionStorage.getItem('eeg_analysis_result');
+    console.log('🔍 세션 스토리지 결과:', storedResult);
+    
+    if (storedResult) {
+      try {
+        const parsedResult = JSON.parse(storedResult);
+        setAutoEegResult(parsedResult);
+        console.log('자동 분석 결과 로드됨:', parsedResult);
+        
+        // 자동 분석 결과가 로드되면 맞춤형 가이드 생성
+        const guide = getPersonalizedGuide(parsedResult);
+        setPersonalizedGuide(guide);
+        console.log('맞춤형 가이드 생성됨:', guide);
+      } catch (error) {
+        console.error('자동 분석 결과 파싱 오류:', error);
+      }
+    }
+    
+    // 검사 결과가 있으면 자동으로 DB에 저장 (한 번만)
+    if (finalEegResult && !assessmentSaved) {
+      console.log('🔵 검사 완료! 자동으로 DB에 저장합니다...');
+      autoSaveAssessment(finalEegResult, mocaScore, mmseScore);
+    } else if (!finalEegResult) {
+      console.log('❌ finalEegResult가 없습니다!');
+    } else if (assessmentSaved) {
+      console.log('❌ 이미 저장되었습니다!');
+    }
+    
+    // 강제로 저장 시도 (테스트용) - 한 번만
+    if (storedResult && !assessmentSaved) {
+      console.log('🔵 강제 저장 시도...');
+      try {
+        const parsedResult = JSON.parse(storedResult);
+        autoSaveAssessment(parsedResult, mocaScore, mmseScore);
+      } catch (error) {
+        console.error('강제 저장 실패:', error);
+      }
+    }
+  }, []); // 의존성 배열을 비워서 한 번만 실행되도록 함
+
+  const handleDownloadPDF = async () => {
+    setDownloadingPDF(true);
+    
+    try {
+      const assessmentData: AssessmentData = {
+        patientName: results.patientName,
+        assessmentDate: results.assessmentDate,
+        overallRisk: diagnosisInfo.title,
+        mocaScore: results.cognitiveTest.mocaScore,
+        mmseScore: results.cognitiveTest.mmseScore,
+        confidenceLevel: results.confidenceLevel,
+        recommendations: [diagnosisInfo.recommendation],
+        cognitiveTestScore: undefined,
+        personalizedGuide: personalizedGuide ? {
+          title: personalizedGuide.title,
+          color: personalizedGuide.color,
+          guides: {
+            food: {
+              title: personalizedGuide.guides.food.title,
+              items: personalizedGuide.guides.food.items
+            },
+            exercise: {
+              title: personalizedGuide.guides.exercise.title,
+              items: personalizedGuide.guides.exercise.items
+            },
+            behavior: {
+              title: personalizedGuide.guides.behavior.title,
+              items: personalizedGuide.guides.behavior.items
+            }
+          }
+        } : undefined
+      };
+      
+      await PDFService.generateAssessmentReport(assessmentData);
+    } catch (error) {
+      console.error("PDF 생성 오류:", error);
+      alert("PDF 보고서 생성 중 오류가 발생했습니다. 다시 시도해 주세요.");
+    } finally {
+      setDownloadingPDF(false);
+    }
+  };
+
+  const { isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+
+  // 툴팁 위치 조정 함수
+  const getTooltipPosition = (element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    
+    // 요소가 화면 중앙 아래에 있으면 위쪽에 툴팁 표시
+    if (rect.top > viewportHeight / 2) {
+      return 'top';
+    } else {
+      return 'bottom';
     }
   };
 
@@ -253,262 +535,6 @@ export default function Results() {
   };
 
   const diagnosisInfo = getDiagnosisInfo(results.diagnosis, eegResult);
-
-  // 뇌파 검사 결과에 따른 맞춤형 가이드 데이터
-  const getPersonalizedGuide = (eegResult: any) => {
-    console.log('[DEBUG] getPersonalizedGuide 호출됨, eegResult:', eegResult);
-    if (!eegResult) {
-      console.log('[DEBUG] eegResult가 null/undefined');
-      return null;
-    }
-    
-    const getHighestProbLabel = (probMean: Record<string, number>) => {
-      return Object.entries(probMean).reduce((a, b) => 
-        Number(probMean[a[0]]) > Number(probMean[b[0]]) ? a : b
-      )[0];
-    };
-    
-    // 자동 분석 결과와 기존 결과 모두 처리
-    const probabilities = eegResult.probabilities || eegResult.prob_mean;
-    if (!probabilities) return null;
-    
-    const highestProbLabel = getHighestProbLabel(probabilities);
-    
-    switch (highestProbLabel) {
-      case 'CN': // 정상
-        return {
-          title: "정상",
-          color: "green",
-          bgColor: "from-green-50 to-emerald-100",
-          borderColor: "border-green-200",
-          textColor: "text-green-800",
-          accentColor: "text-green-700",
-          dotColor: "bg-green-500",
-          guides: {
-            food: {
-              title: "예방 음식",
-              items: [
-                "지중해식 식단",
-                "다채로운 채소",
-                "건강한 지방",
-                "적정량의 단백질"
-              ]
-            },
-            exercise: {
-              title: "운동 가이드",
-              items: [
-                "다양한 운동 조합",
-                "정기적인 운동",
-                "새로운 운동 도전",
-                "그룹 운동 참여"
-              ]
-            },
-            behavior: {
-              title: "행동강령",
-              items: [
-                "지속적인 학습",
-                "사회적 참여",
-                "스트레스 관리",
-                "건강한 취미 생활"
-              ]
-            }
-          }
-        };
-      case 'AD': // 알츠하이머 치매
-        return {
-          title: "알츠하이머 치매",
-          color: "red",
-          bgColor: "from-red-50 to-rose-100",
-          borderColor: "border-red-200",
-          textColor: "text-red-800",
-          accentColor: "text-red-700",
-          dotColor: "bg-red-500",
-          guides: {
-            food: {
-              title: "권장 음식",
-              items: [
-                "오메가3 (생선, 견과류)",
-                "항산화제 (베리류, 녹차)",
-                "비타민B (전곡류, 시금치)",
-                "중쇄지방산 (코코넛오일)"
-              ]
-            },
-            exercise: {
-              title: "운동 가이드",
-              items: [
-                "유산소 운동 (30분/일)",
-                "근력 운동 (주2-3회)",
-                "균형 운동 (요가, 태극권)",
-                "인지 운동 (퍼즐, 게임)"
-              ]
-            },
-            behavior: {
-              title: "행동강령",
-              items: [
-                "규칙적인 생활습관",
-                "충분한 수면 (7-8시간)",
-                "스트레스 관리",
-                "사회적 활동 유지"
-              ]
-            }
-          }
-        };
-      case 'FTD': // 전측두엽치매
-        return {
-          title: "전두측두엽 치매",
-          color: "red",
-          bgColor: "from-red-50 to-rose-100",
-          borderColor: "border-red-200",
-          textColor: "text-red-800",
-          accentColor: "text-red-700",
-          dotColor: "bg-red-500",
-                      guides: {
-              food: {
-                title: "권장 음식",
-                items: [
-                  "오메가3 (생선, 견과류)",
-                  "항산화제 (베리류, 녹차)",
-                  "비타민B (전곡류, 시금치)",
-                  "중쇄지방산 (코코넛오일)"
-                ]
-              },
-              exercise: {
-                title: "운동 가이드",
-                items: [
-                  "유산소 운동 (30분/일)",
-                  "근력 운동 (주2-3회)",
-                  "균형 운동 (요가, 태극권)",
-                  "인지 운동 (퍼즐, 게임)"
-                ]
-              },
-              behavior: {
-                title: "행동강령",
-                items: [
-                  "규칙적인 생활습관",
-                  "충분한 수면 (7-8시간)",
-                  "스트레스 관리",
-                  "사회적 활동 유지"
-                ]
-              }
-            }
-        };
-      default:
-        return null;
-    }
-  };
-
-  const [personalizedGuide, setPersonalizedGuide] = useState<any>(null);
-
-  // 컴포넌트 마운트 시 검사 결과 자동 저장
-  useEffect(() => {
-    // 게스트 모드 사용자는 검사 결과를 저장하지 않음
-    if (!isLoggedIn) {
-      return;
-    }
-    
-    const saveAssessment = () => {
-      try {
-        const assessmentData = {
-          patientName: results.patientName,
-          assessmentDate: results.assessmentDate,
-          diagnosis: results.diagnosis,
-          confidenceLevel: results.confidenceLevel,
-          eegAnalysis: results.eegAnalysis,
-          cognitiveTest: {
-            overallScore: results.eegAnalysis.overallScore,
-            memoryScore: 0,
-            attentionScore: 0,
-            processingScore: 0,
-            spatialScore: 0,
-            executiveScore: 0,
-            details: []
-          },
-          riskFactors: {
-            mciRisk: 0,
-            dementiaRisk: 0,
-            overallRisk: "low"
-          }
-        };
-        
-        AssessmentStorageService.saveAssessment(assessmentData);
-        setAssessmentSaved(true);
-      } catch (error) {
-        console.error('검사 결과 저장 오류:', error);
-      }
-    };
-
-    // 이미 저장된 검사인지 확인 (중복 저장 방지)
-    const existingAssessments = AssessmentStorageService.getAllAssessments();
-    const currentDateStr = new Date(results.assessmentDate).toISOString().split('T')[0];
-    const alreadySaved = existingAssessments.some(assessment => 
-      new Date(assessment.assessmentDate).toISOString().split('T')[0] === currentDateStr &&
-      assessment.eegAnalysis.overallScore === results.eegAnalysis.overallScore
-    );
-
-    if (!alreadySaved) {
-      saveAssessment();
-    } else {
-      setAssessmentSaved(true);
-    }
-  }, [results]);
-
-  const handleDownloadPDF = async () => {
-    setDownloadingPDF(true);
-    
-    try {
-      const assessmentData: AssessmentData = {
-        patientName: results.patientName,
-        assessmentDate: results.assessmentDate,
-        overallRisk: diagnosisInfo.title,
-        mocaScore: results.cognitiveTest.mocaScore,
-        mmseScore: results.cognitiveTest.mmseScore,
-        confidenceLevel: results.confidenceLevel,
-        recommendations: [diagnosisInfo.recommendation],
-        cognitiveTestScore: undefined,
-        personalizedGuide: personalizedGuide ? {
-          title: personalizedGuide.title,
-          color: personalizedGuide.color,
-          guides: {
-            food: {
-              title: personalizedGuide.guides.food.title,
-              items: personalizedGuide.guides.food.items
-            },
-            exercise: {
-              title: personalizedGuide.guides.exercise.title,
-              items: personalizedGuide.guides.exercise.items
-            },
-            behavior: {
-              title: personalizedGuide.guides.behavior.title,
-              items: personalizedGuide.guides.behavior.items
-            }
-          }
-        } : undefined
-      };
-      
-      await PDFService.generateAssessmentReport(assessmentData);
-    } catch (error) {
-      console.error("PDF 생성 오류:", error);
-      alert("PDF 보고서 생성 중 오류가 발생했습니다. 다시 시도해 주세요.");
-    } finally {
-      setDownloadingPDF(false);
-    }
-  };
-
-  const { isLoggedIn } = useAuth();
-  const navigate = useNavigate();
-
-  // 툴팁 위치 조정 함수
-  const getTooltipPosition = (element: HTMLElement) => {
-    const rect = element.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    
-    // 요소가 화면 중앙 아래에 있으면 위쪽에 툴팁 표시
-    if (rect.top > viewportHeight / 2) {
-      return 'top';
-    } else {
-      return 'bottom';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#dbeafe] to-[#f1f5f9]">

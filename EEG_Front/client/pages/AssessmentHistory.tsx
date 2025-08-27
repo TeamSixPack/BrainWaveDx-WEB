@@ -2,71 +2,102 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  AssessmentStorageService, 
-  type StoredAssessment, 
-  type AssessmentStats
-} from "@/lib/assessment-storage";
 import { 
   Brain,
   Calendar,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   ArrowLeft,
   Target,
   Activity,
   CheckCircle,
   AlertTriangle,
   AlertCircle,
-  Trash2
+  Trash2,
+  TrendingUp
 } from "lucide-react";
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+// 백엔드 API에서 가져올 검사 기록 타입
+interface AssessmentRecord {
+  id: number;
+  assessmentDate: string;
+  eegResult: string;
+  mocaScore: number | null;
+  mmseScore: number | null;
+  createdAt: string;
+  user: {
+    uid: string;
+    name: string;
+  };
+}
 
 export default function AssessmentHistory() {
-  const [assessments, setAssessments] = useState<StoredAssessment[]>([]);
-  const [stats, setStats] = useState<AssessmentStats | null>(null);
-  const [selectedAssessments, setSelectedAssessments] = useState<string[]>([]);
+  const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  
+  // 테스트용 userId (실제로는 로그인된 사용자 ID를 사용해야 함)
+  const userId = "test";
   const navigate = useNavigate();
 
   useEffect(() => {
     loadAssessments();
   }, []);
 
-  const loadAssessments = () => {
-    const allAssessments = AssessmentStorageService.getAllAssessments();
-    const assessmentStats = AssessmentStorageService.getAssessmentStats();
-    setAssessments(allAssessments);
-    setStats(assessmentStats);
-  };
-
-  const handleDeleteAssessment = (id: string) => {
-    if (confirm('이 검사 기록을 삭제하시겠습니까?')) {
-      AssessmentStorageService.deleteAssessment(id);
-      loadAssessments();
-      setSelectedAssessments([]);
+  // 검사 기록 로드
+  const loadAssessments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('🔍 검사 기록 로드 시작...');
+      
+      const response = await fetch(`http://localhost:8090/api/assessments/user/${userId}`);
+      console.log('🔍 API 응답 상태:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API 응답 오류:', errorText);
+        throw new Error(`검사 기록을 불러오는데 실패했습니다. (${response.status})`);
+      }
+      
+      const data = await response.json();
+      console.log('🔍 API 응답 데이터:', data);
+      
+      if (data.success) {
+        setAssessments(data.records || []);
+        console.log('✅ 검사 기록 로드 완료:', data.records);
+      } else {
+        throw new Error(data.message || '검사 기록을 불러오는데 실패했습니다.');
+      }
+      
+    } catch (error) {
+      console.error('❌ 검사 기록 로드 에러:', error);
+      setError(error.message);
+      setAssessments([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 비교 기능 제거
-
-  const toggleAssessmentSelection = (id: string) => {
-    setSelectedAssessments(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(assessmentId => assessmentId !== id);
-      } else if (prev.length < 2) {
-        return [...prev, id];
-      } else {
-        return [prev[1], id]; // 최대 2개만 선택 가능
+  const handleDeleteAssessment = async (id: number) => {
+    if (confirm('이 검사 기록을 삭제하시겠습니까?')) {
+      try {
+        // TODO: 백엔드에 삭제 API가 있다면 여기서 호출
+        // 현재는 프론트엔드에서만 제거
+        setAssessments(prev => prev.filter(assessment => assessment.id !== id));
+      } catch (err) {
+        console.error('검사 기록 삭제 에러:', err);
+        alert('검사 기록 삭제에 실패했습니다.');
       }
-    });
+    }
   };
 
-  const getDiagnosisInfo = (diagnosis: string) => {
-    switch (diagnosis) {
-      case "normal":
+
+
+  const getDiagnosisInfo = (eegResult: string) => {
+    switch (eegResult.toLowerCase()) {
+      case "정상":
         return {
           title: "정상",
           color: "text-green-600",
@@ -74,17 +105,17 @@ export default function AssessmentHistory() {
           borderColor: "border-green-200",
           icon: CheckCircle
         };
-      case "mci":
+      case "전측두엽장애":
         return {
-          title: "경도인지장애",
+          title: "전측두엽장애",
           color: "text-orange-600",
           bgColor: "bg-orange-50",
           borderColor: "border-orange-200",
           icon: AlertTriangle
         };
-      case "dementia":
+      case "치매":
         return {
-          title: "치매 가능성",
+          title: "치매",
           color: "text-red-600",
           bgColor: "bg-red-50",
           borderColor: "border-red-200",
@@ -92,35 +123,114 @@ export default function AssessmentHistory() {
         };
       default:
         return {
-          title: "알 수 없음",
+          title: eegResult || "알 수 없음",
           color: "text-blue-600",
-                     bgColor: "bg-white",
+          bgColor: "bg-white",
           borderColor: "border-gray-200",
           icon: Brain
         };
     }
   };
 
-  const formatScoreChange = (value: number) => {
-    if (value > 0) {
-      return { icon: TrendingUp, color: "text-green-600", text: `+${value}` };
-    } else if (value < 0) {
-      return { icon: TrendingDown, color: "text-red-600", text: `${value}` };
-    } else {
-      return { icon: Minus, color: "text-blue-600", text: "0" };
-    }
+  // 그래프용 데이터 준비
+  const prepareChartData = () => {
+    return assessments
+      .sort((a, b) => new Date(a.assessmentDate).getTime() - new Date(b.assessmentDate).getTime())
+      .map((assessment, index) => {
+        const date = new Date(assessment.assessmentDate);
+        let resultValue = 0;
+        
+        switch (assessment.eegResult?.toLowerCase()) {
+          case "정상":
+            resultValue = 3;
+            break;
+          case "전측두엽장애":
+            resultValue = 2;
+            break;
+          case "치매":
+            resultValue = 1;
+            break;
+          default:
+            resultValue = 0;
+        }
+        
+        return {
+          date: `${date.getMonth() + 1}/${date.getDate()}`,
+          result: resultValue,
+          fullDate: date.toLocaleDateString(),
+          diagnosis: assessment.eegResult
+        };
+      });
   };
 
-  // 샘플 데이터 (예시 표시용)
-  const sampleTrendData = [
-    { date: "1월10일", eeg: 80, moca: 22, mmse: 27 },
-    { date: "2월15일", eeg: 65, moca: 20, mmse: 24 },
-    { date: "3월20일", eeg: 85, moca: 23, mmse: 28 },
-    { date: "4월2일",  eeg: 70, moca: 21, mmse: 25 },
-    { date: "5월8일",  eeg: 90, moca: 24, mmse: 29 },
-    { date: "6월12일", eeg: 75, moca: 22, mmse: 26 },
-    { date: "7월3일",  eeg: 95, moca: 25, mmse: 30 },
-  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#dbeafe] to-[#f1f5f9]">
+        <header className="border-b bg-background/80 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate(-1)}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                뒤로 가기
+              </Button>
+              <div className="flex items-center space-x-2">
+                <Brain className="h-6 w-6 text-primary" />
+                <span className="text-xl font-bold text-foreground">검사 기록</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-12 sm:py-16 text-center">
+          <div className="max-w-md mx-auto">
+            <Brain className="h-16 w-16 text-muted-foreground mx-auto mb-6 animate-pulse" />
+            <h2 className="text-2xl font-bold text-foreground mb-4">검사 기록을 불러오는 중...</h2>
+            <p className="text-muted-foreground">잠시만 기다려주세요.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#dbeafe] to-[#f1f5f9]">
+        <header className="border-b bg-background/80 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate(-1)}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                뒤로 가기
+              </Button>
+              <div className="flex items-center space-x-2">
+                <Brain className="h-6 w-6 text-primary" />
+                <span className="text-xl font-bold text-foreground">검사 기록</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 py-12 sm:py-16 text-center">
+          <div className="max-w-md mx-auto">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-6" />
+            <h2 className="text-2xl font-bold text-foreground mb-4">오류가 발생했습니다</h2>
+            <p className="text-muted-foreground mb-8">{error}</p>
+            <Button onClick={loadAssessments}>
+              다시 시도
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (assessments.length === 0) {
     return (
@@ -128,14 +238,14 @@ export default function AssessmentHistory() {
         <header className="border-b bg-background/80 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center space-x-4">
-                          <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              뒤로 가기
-            </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate(-1)}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                뒤로 가기
+              </Button>
               <div className="flex items-center space-x-2">
                 <Brain className="h-6 w-6 text-primary" />
                 <span className="text-xl font-bold text-foreground">검사 기록</span>
@@ -149,7 +259,7 @@ export default function AssessmentHistory() {
             <Brain className="h-16 w-16 text-muted-foreground mx-auto mb-6" />
             <h2 className="text-2xl font-bold text-foreground mb-4">검사 기록이 없습니다</h2>
             <p className="text-muted-foreground mb-8">
-                             첫 번째 뇌 건강 검사를 받아보세요. 검사 결과가 여기에 저장됩니다.
+              첫 번째 뇌 건강 검사를 받아보세요. 검사 결과가 여기에 저장됩니다.
             </p>
             <Button asChild>
               <Link to="/assessment">
@@ -179,68 +289,73 @@ export default function AssessmentHistory() {
             </Button>
             <div className="flex items-center space-x-2">
               <Brain className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold text-foreground">NeuroScan</span>
+              <span className="text-xl font-bold text-foreground">검사 기록</span>
             </div>
           </div>
-
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
-        
-
-
-
-        {/* Progress Chart */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <span>검사 점수 추이</span>
-            </CardTitle>
-            <CardDescription>
-              날짜별 검사 점수 변화를 한눈에 확인할 수 있습니다
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-80 w-full px-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={sampleTrendData} margin={{ top: 10, right: 20, left: 10, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="eeg" name="뇌파 점수" stroke="#3b82f6" dot />
-                  <Line type="monotone" dataKey="moca" name="MOCA 점수(0~30)" stroke="#10b981" dot />
-                  <Line type="monotone" dataKey="mmse" name="MMSE 점수(0~30)" stroke="#f59e0b" dot />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
         <div className="space-y-6">
-          {/* Tabs removed: comparison not used */}
-
           <div className="space-y-6">
-            {/* Selection Controls (comparison removed) */}
-            {selectedAssessments.length > 0 && (
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <span className="font-medium">{selectedAssessments.length}개 검사가 선택됨</span>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setSelectedAssessments([])}
-                      >
-                        선택 해제
-                      </Button>
-                    </div>
+            
+            {/* 결과 변화 그래프 */}
+            {assessments.length > 1 && (
+              <Card className="bg-white">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    <span>검사 결과 변화 추이</span>
+                  </CardTitle>
+                  <CardDescription>
+                    시간에 따른 뇌 건강 상태 변화를 확인할 수 있습니다
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={prepareChartData()}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value, index) => {
+                            const data = prepareChartData();
+                            return data[index]?.fullDate || value;
+                          }}
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 12 }}
+                          tickFormatter={(value) => {
+                            switch (value) {
+                              case 3: return "정상";
+                              case 2: return "전측두엽장애";
+                              case 1: return "치매";
+                              default: return "";
+                            }
+                          }}
+                          domain={[0, 3]}
+                          ticks={[1, 2, 3]}
+                        />
+                        <Tooltip 
+                          formatter={(value, name) => {
+                            const data = prepareChartData();
+                            const index = data.findIndex(item => item.result === value);
+                            return [data[index]?.diagnosis || "알 수 없음", "진단 결과"];
+                          }}
+                          labelFormatter={(label) => `검사일: ${label}`}
+                        />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="result" 
+                          stroke="#2563eb" 
+                          strokeWidth={3}
+                          dot={{ fill: "#2563eb", strokeWidth: 2, r: 6 }}
+                          activeDot={{ r: 8, stroke: "#2563eb", strokeWidth: 2, fill: "#ffffff" }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
@@ -249,16 +364,12 @@ export default function AssessmentHistory() {
             {/* Assessment List */}
             <div className="space-y-3 sm:space-y-4">
               {assessments.map((assessment, index) => {
-                const diagnosisInfo = getDiagnosisInfo(assessment.diagnosis);
-                const isSelected = selectedAssessments.includes(assessment.id);
+                const diagnosisInfo = getDiagnosisInfo(assessment.eegResult);
                 
                 return (
                   <Card 
                     key={assessment.id} 
-                                                              className={`cursor-pointer transition-colors hover:shadow-sm ${
-                       isSelected ? 'ring-2 ring-primary bg-primary/5' : index % 2 === 0 ? 'bg-white' : 'bg-blue-50'
-                     }`}
-                    onClick={() => toggleAssessmentSelection(assessment.id)}
+                    className="bg-white transition-colors hover:shadow-sm"
                   >
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -269,9 +380,6 @@ export default function AssessmentHistory() {
                           <div>
                             <CardTitle className="flex items-center space-x-2">
                               <span>검사 #{assessments.length - index}</span>
-                              <Badge variant="outline" className={diagnosisInfo.color}>
-                                {diagnosisInfo.title}
-                              </Badge>
                               {index === 0 && (
                                 <Badge variant="default">최신</Badge>
                               )}
@@ -280,7 +388,7 @@ export default function AssessmentHistory() {
                               <Calendar className="h-4 w-4" />
                               <span>{new Date(assessment.assessmentDate).toLocaleDateString()}</span>
                               <span>•</span>
-                              <span>신뢰도 {assessment.confidenceLevel}%</span>
+                              <span>{assessment.user?.name || '사용자'}</span>
                             </CardDescription>
                           </div>
                         </div>
@@ -300,42 +408,26 @@ export default function AssessmentHistory() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-muted-foreground">MOCA 점수</p>
-                          <div className="flex items-center space-x-2">
-                             {(assessment as any).cognitiveTest?.mocaScore && (assessment as any).cognitiveTest.mocaScore > 0 ? (
-                              <>
-                                <span className="text-xl font-bold text-primary">
-                                   {(assessment as any).cognitiveTest.mocaScore}
-                                </span>
-                                <span className="text-sm text-muted-foreground">/24</span>
-                              </>
-                            ) : (
-                              <span className="text-sm text-muted-foreground italic">검사 미완료</span>
-                            )}
-                          </div>
-                          <p className="text-sm font-medium text-muted-foreground">결과</p>
-                          <div className="text-sm text-muted-foreground">
-                            {assessment.riskFactors.mciRisk < 20 ? '정상' : 
-                             assessment.riskFactors.mciRisk < 50 ? '전측두엽장애' : '치매'}
-                          </div>
+                      <div className="grid grid-cols-3 gap-8">
+                        <div className="space-y-2">
+                          <p className="text-base font-semibold text-muted-foreground">결과</p>
+                          <p className="text-lg font-bold">{assessment.eegResult}</p>
                         </div>
-                        
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-muted-foreground">MMSE 점수</p>
-                          <div className="flex items-center space-x-2">
-                             {(assessment as any).cognitiveTest?.mmseScore && (assessment as any).cognitiveTest.mmseScore > 0 ? (
-                              <>
-                                <span className="text-xl font-bold text-primary">
-                                   {(assessment as any).cognitiveTest.mmseScore}
-                                </span>
-                                <span className="text-sm text-muted-foreground">/23</span>
-                              </>
-                            ) : (
-                              <span className="text-sm text-muted-foreground italic">검사 미완료</span>
-                            )}
-                          </div>
+                        <div className="space-y-2 text-center">
+                          <p className="text-base font-semibold text-muted-foreground">종합 인지 검사 점수</p>
+                          {assessment.mocaScore !== null && assessment.mocaScore > 0 ? (
+                            <p className="text-lg font-bold">{assessment.mocaScore}/30</p>
+                          ) : (
+                            <p className="text-base text-muted-foreground italic">검사 미완료</p>
+                          )}
+                        </div>
+                        <div className="space-y-2 text-center">
+                          <p className="text-base font-semibold text-muted-foreground">간이 인지 검사 점수</p>
+                          {assessment.mmseScore !== null && assessment.mmseScore > 0 ? (
+                            <p className="text-lg font-bold">{assessment.mmseScore}/30</p>
+                          ) : (
+                            <p className="text-base text-muted-foreground italic">검사 미완료</p>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -344,8 +436,6 @@ export default function AssessmentHistory() {
               })}
             </div>
           </div>
-
-          {/* Comparison removed */}
         </div>
 
         {/* Action Buttons */}

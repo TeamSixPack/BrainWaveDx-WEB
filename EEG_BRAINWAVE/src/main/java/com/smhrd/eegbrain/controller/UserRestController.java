@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.smhrd.eegbrain.entity.UserEntity;
@@ -22,7 +21,6 @@ public class UserRestController {
 	
     // 아이디 중복 확인 (AJAX 요청 처리)
     @PostMapping("/checkId")
-    @ResponseBody
     public ResponseEntity<Map<String, Object>> checkIdDuplicate(@RequestParam("id") String uid) {
         Map<String, Object> response = new HashMap<>();
         
