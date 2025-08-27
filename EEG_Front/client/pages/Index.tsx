@@ -90,8 +90,8 @@ export default function Index() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-2 sm:space-x-6">
             <div className="flex items-center space-x-2">
-              <Brain className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
-              <span className="text-lg sm:text-xl font-bold text-foreground">NeuroScan</span>
+              <Brain className="h-8 w-8 sm:h-9 sm:w-9 text-primary" />
+              <span className="text-xl sm:text-2xl font-bold text-foreground">NeuroScan</span>
             </div>
             {/* 기억력 상담 챗봇 버튼 */}
             <Button 
@@ -153,17 +153,21 @@ export default function Index() {
                 <Brain className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-primary" />
               </div>
               <div className="space-y-2 sm:space-y-3">
-                <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-foreground leading-tight px-2">
+                <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-foreground leading-tight px-2">
                   AI 기술로 뇌 건강을 예측하세요.
                 </h1>
-                <p className="text-sm sm:text-base lg:text-lg text-blue-700 max-w-2xl mx-auto leading-relaxed px-4">
+                <p className="text-base sm:text-lg lg:text-xl text-blue-700 max-w-2xl mx-auto leading-relaxed px-4">
                   인지 기능 테스트를 통해 빠르고 쉽게 뇌 건강 상태를 확인하세요.
                 </p>
                 {!isLoggedIn && (
-                  <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto px-4">
-                    로그인 없이도 테스트를 진행할 수 있습니다. 결과는 PDF로 다운로드 <br></br>가능하며, 
-                    로그인 시 검사 기록을 저장하고 추이를 확인할 수 있습니다.
-                  </p>
+                  <div className="login-info-text text-sm sm:text-base text-muted-foreground max-w-lg mx-auto px-4">
+                    <p className="leading-relaxed">
+                      로그인 없이도 테스트를 진행할 수 있습니다.
+                    </p>
+                    <p className="leading-relaxed mt-1">
+                      결과는 PDF로 다운로드 가능하며, 로그인 시 검사 기록을 저장하고 추이를 확인할 수 있습니다.
+                    </p>
+                  </div>
                 )}
               </div>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center pt-4 sm:pt-7">
@@ -171,20 +175,20 @@ export default function Index() {
                 {isLoggedIn ? (
                   <div className="space-y-3 sm:space-y-4">
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                      <Button asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold text-white !text-white">
+                      <Button asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold text-white !text-white">
                         <Link to="/test-mode-selection" className="override-white">
                           <Brain className="mr-2 h-5 w-5 sm:h-6 sm:w-6 text-white" />
                           테스트 시작하기
                         </Link>
                       </Button>
-                      <Button asChild size="lg" variant="secondary" className="px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold">
+                      <Button asChild size="lg" variant="secondary" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold">
                         <Link to="/eeg-test">
                           <Upload className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
                           뇌파 분석 테스트
                         </Link>
                       </Button>
                     </div>
-                    <Button variant="outline" size="lg" asChild className="px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold">
+                    <Button variant="outline" size="lg" asChild className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold">
                       <Link to="/assessment-history">
                         <FileText className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
                         검사기록 보기
@@ -194,7 +198,7 @@ export default function Index() {
                 ) : (
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                      <Button variant="default" asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold w-full sm:w-64 text-white !text-white">
+                      <Button variant="default" asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-64 text-white !text-white">
                         <Link to="/test-mode-selection" className="override-white">
                           <Brain className="mr-2 h-5 w-5 sm:h-6 sm:w-6 text-white" />
                           비회원으로 검사하기
@@ -221,24 +225,24 @@ export default function Index() {
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Brain className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                 </div>
-                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2">뇌파 기반 인지 기능 평가</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">뇌파 데이터로 정확한 인지 기능 상태를 분석합니다.</p>
+                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">뇌파 기반 인지 기능 평가</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">뇌파 데이터로 정확한 인지 기능 상태를 분석합니다.</p>
               </div>
 
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-5 shadow-md border border-white/20 hover:shadow-lg transition-shadow">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Zap className="h-6 w-6 sm:h-7 sm:w-7 text-green-600" />
                 </div>
-                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2">MMSE-K<br></br> 인지 검사</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">표준화된 한국형 간이정신상태검사 도구를 제공합니다.</p>
+                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">MMSE-K<br></br> 인지 검사</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">표준화된 한국형 간이정신상태검사 도구를 제공합니다.</p>
               </div>
 
               <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-5 shadow-md border border-white/20 hover:shadow-lg transition-shadow">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Upload className="h-6 w-6 sm:h-7 sm:w-7 text-blue-600" />
                 </div>
-                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2">AI 기반 맞춤<br></br> 분석</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">개인별 맞춤 분석으로 정확한 결과를 제공합니다.</p>
+                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">AI 기반 맞춤<br></br> 분석</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">개인별 맞춤 분석으로 정확한 결과를 제공합니다.</p>
               </div>
 
               <div 
@@ -248,15 +252,15 @@ export default function Index() {
                 <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-blue-500/10 transition-colors duration-200">
                   <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7 text-green-600 group-hover:text-blue-600 transition-colors duration-200" />
                 </div>
-                <h3 className="text-sm sm:text-base font-semibold text-foreground mb-2 group-hover:text-blue-700 transition-colors duration-200">AI 건강 상담<br></br> 챗봇</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground group-hover:text-blue-600 transition-colors duration-200">음성으로 상담하고 전문가 수준의 해석을 받아보세요.</p>
+                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 group-hover:text-blue-700 transition-colors duration-200">AI 건강 상담<br></br> 챗봇</h3>
+                <p className="text-sm sm:text-base text-muted-foreground group-hover:text-blue-600 transition-colors duration-200">음성으로 상담하고 전문가 수준의 해석을 받아보세요.</p>
               </div>
             </div>
 
             {/* Footer Info */}
             <div className="text-center space-y-2 sm:space-y-3 pt-8 sm:pt-12">
-              <p className="text-sm sm:text-base text-muted-foreground">직관적인 인지 기능 테스트</p>
-              <p className="text-xs sm:text-sm text-muted-foreground italic">
+              <p className="text-base sm:text-lg text-muted-foreground">직관적인 인지 기능 테스트</p>
+              <p className="text-sm sm:text-base text-muted-foreground italic">
                 정확한 진단은 전문 의료기관에서 받으시기 바랍니다.
               </p>
             </div>
@@ -276,10 +280,10 @@ export default function Index() {
           <div className="relative w-full max-w-md mx-4 bg-white rounded-xl shadow-2xl border border-gray-200">
             {/* 헤더 */}
             <div className="flex items-center justify-center p-3 sm:p-4 pb-2">
-              <h2 className="text-lg sm:text-xl font-bold text-blue-900">로그인</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-blue-900">로그인</h2>
             </div>
             <div className="px-4 sm:px-6 pb-3 text-center">
-              <p className="text-xs sm:text-sm text-blue-600 mt-1">로그인 정보를 입력해주세요</p>
+              <p className="text-sm sm:text-base text-blue-600 mt-1">로그인 정보를 입력해주세요</p>
             </div>
             
             {/* 모달 바디 */}
@@ -287,7 +291,7 @@ export default function Index() {
               <form onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
                 {/* Username Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm sm:text-base font-semibold text-blue-700">아이디</Label>
+                  <Label htmlFor="username" className="text-base sm:text-lg font-semibold text-blue-700">아이디</Label>
                   <div className="relative">
                     <Input
                       id="username"
@@ -295,7 +299,7 @@ export default function Index() {
                       placeholder="아이디를 입력하세요"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="h-10 sm:h-11 text-sm sm:text-base"
+                      className="h-12 sm:h-14 text-base sm:text-lg"
                       required
                     />
                   </div>
@@ -303,22 +307,22 @@ export default function Index() {
 
                 {/* Password Field */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-base font-semibold text-blue-700">비밀번호</Label>
+                  <Label htmlFor="password" className="text-base sm:text-lg font-semibold text-blue-700">비밀번호</Label>
                   <div className="relative">
                     <Input
                       id="password"
                       type="password"
-                                              placeholder="비밀번호를 입력하세요"
+                      placeholder="비밀번호를 입력하세요"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-11 text-base"
+                      className="h-12 sm:h-14 text-base sm:text-lg"
                       required
                     />
                   </div>
                 </div>
 
                 {/* Login Button */}
-                <Button type="submit" size="default" className="w-full h-11 text-base font-semibold" disabled={isLoading}>
+                <Button type="submit" size="default" className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold" disabled={isLoading}>
                   {isLoading ? "로그인 중..." : "로그인"}
                 </Button>
               </form>
@@ -328,7 +332,7 @@ export default function Index() {
                 <Link
                   to="/forgot-password"
                   onClick={() => setLoginModalOpen(false)}
-                  className="text-sm text-primary hover:underline font-medium"
+                  className="text-base sm:text-lg text-primary hover:underline font-medium"
                 >
                   비밀번호 찾기
                 </Link>
@@ -336,8 +340,8 @@ export default function Index() {
 
               {/* Sign Up Link */}
               <div className="text-center space-y-3 pt-2">
-                <p className="text-sm text-blue-600">아직 계정이 없으신가요?</p>
-                <Button variant="outline" size="default" asChild className="w-full h-11 text-base font-semibold">
+                <p className="text-base sm:text-lg text-blue-600">아직 계정이 없으신가요?</p>
+                <Button variant="outline" size="default" asChild className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold">
                   <Link to="/signup" onClick={() => setLoginModalOpen(false)}>회원가입</Link>
                 </Button>
               </div>
@@ -369,16 +373,16 @@ export default function Index() {
                 }
               }}>
                 <div className="space-y-2">
-                  <Label htmlFor="currentPw" className="text-base font-semibold text-blue-700">현재 비밀번호</Label>
-                  <Input id="currentPw" type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} className="h-11 text-base" required />
+                  <Label htmlFor="currentPw" className="text-base sm:text-lg font-semibold text-blue-700">현재 비밀번호</Label>
+                  <Input id="currentPw" type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} className="h-12 sm:h-14 text-base sm:text-lg" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="newPw" className="text-base font-semibold text-blue-700">새 비밀번호(4자 이상)</Label>
-                  <Input id="newPw" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="h-11 text-base" required minLength={4} />
+                  <Label htmlFor="newPw" className="text-base sm:text-lg font-semibold text-blue-700">새 비밀번호(4자 이상)</Label>
+                  <Input id="newPw" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className="h-12 sm:h-14 text-base sm:text-lg" required minLength={4} />
                 </div>
                 <div className="flex gap-3 pt-2">
-                  <Button type="submit" className="flex-1 h-11">변경</Button>
-                  <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setChangePwOpen(false)}>취소</Button>
+                  <Button type="submit" className="flex-1 h-12 sm:h-14 text-base sm:text-lg">변경</Button>
+                  <Button type="button" variant="outline" className="flex-1 h-12 sm:h-14 text-base sm:text-lg" onClick={() => setChangePwOpen(false)}>취소</Button>
                 </div>
               </form>
             </div>

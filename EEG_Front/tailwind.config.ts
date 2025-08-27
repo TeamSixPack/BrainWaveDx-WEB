@@ -7,12 +7,30 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1rem",
       screens: {
+        "sm": "640px",
+        "md": "768px",
+        "lg": "1024px",
+        "xl": "1280px",
         "2xl": "1400px",
       },
     },
     extend: {
+      fontSize: {
+        'xs': ['14px', { lineHeight: '1.5' }],
+        'sm': ['16px', { lineHeight: '1.6' }],
+        'base': ['18px', { lineHeight: '1.7' }],
+        'lg': ['20px', { lineHeight: '1.6' }],
+        'xl': ['24px', { lineHeight: '1.4' }],
+        '2xl': ['28px', { lineHeight: '1.3' }],
+        '3xl': ['32px', { lineHeight: '1.2' }],
+        '4xl': ['36px', { lineHeight: '1.2' }],
+      },
+      spacing: {
+        '18': '4.5rem',
+        '88': '22rem',
+      },
       colors: {
         border: "#e2e8f0",
         input: "#e2e8f0",

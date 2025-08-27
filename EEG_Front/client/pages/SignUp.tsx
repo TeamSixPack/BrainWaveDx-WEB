@@ -132,13 +132,13 @@ export default function SignUp() {
 
 
           <div className="flex items-center justify-center space-x-2">
-            <Brain className="h-10 w-10 text-primary" />
-            <span className="text-2xl font-bold text-foreground">NeuroScan</span>
+            <Brain className="h-12 w-12 text-primary" />
+            <span className="text-3xl font-bold text-foreground">NeuroScan</span>
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-foreground">회원가입</h1>
-            <p className="text-base text-muted-foreground leading-relaxed">
+            <h1 className="text-3xl font-bold text-foreground">회원가입</h1>
+            <p className="text-lg text-muted-foreground leading-relaxed">
               NeuroScan에 가입하여 뇌 건강 여정을 추적하세요
             </p>
           </div>
@@ -153,7 +153,7 @@ export default function SignUp() {
             <form onSubmit={handleSignUp} className="space-y-5">
               {/* 아이디 */}
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-base font-semibold">아이디</Label>
+                <Label htmlFor="username" className="text-lg font-semibold">아이디</Label>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
                     <Input
@@ -163,7 +163,7 @@ export default function SignUp() {
                       placeholder="4~20자 영문, 숫자"
                       value={formData.username}
                       onChange={handleInputChange}
-                      className="h-10 text-base"
+                      className="h-12 text-lg"
                       required
                     />
                   </div>
@@ -172,23 +172,23 @@ export default function SignUp() {
                     variant="outline" 
                     size="default"
                     onClick={handleIdCheck}
-                    className="whitespace-nowrap h-10 px-4 w-full sm:w-auto"
+                    className="whitespace-nowrap h-12 px-4 w-full sm:w-auto text-lg"
                     disabled={idCheckLoading}
                   >
                     {idCheckLoading ? "확인 중..." : "중복확인"}
                   </Button>
                 </div>
                 {isIdChecked && (
-                  <p className="text-sm text-green-600 font-medium">✓ 사용 가능한 아이디입니다</p>
+                  <p className="text-base text-green-600 font-medium">✓ 사용 가능한 아이디입니다</p>
                 )}
                 {!isIdChecked && formData.username.length > 0 && (
-                  <p className="text-xs text-red-600">아이디 중복 확인을 진행해 주세요</p>
+                  <p className="text-sm text-red-600">아이디 중복 확인을 진행해 주세요</p>
                 )}
               </div>
 
               {/* 이름 */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-base font-semibold">이름</Label>
+                <Label htmlFor="name" className="text-lg font-semibold">이름</Label>
                 <div className="relative">
                   <Input
                     id="name"
@@ -197,7 +197,7 @@ export default function SignUp() {
                     placeholder="실명을 입력하세요"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="h-10 text-base"
+                    className="h-12 text-lg"
                     required
                   />
                 </div>
@@ -205,7 +205,7 @@ export default function SignUp() {
 
               {/* 전화번호 */}
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-base font-semibold">전화번호</Label>
+                <Label htmlFor="phone" className="text-lg font-semibold">전화번호</Label>
                 <div className="relative">
                   <Input
                     id="phone"
@@ -216,19 +216,19 @@ export default function SignUp() {
                     placeholder="01012345678"
                     value={formData.phone}
                     onChange={handlePhoneChange}
-                    className="h-10 text-base"
+                    className="h-12 text-lg"
                     maxLength={11}
                     required
                   />
                 </div>
                 {formData.phone.length > 0 && formData.phone.length < 10 && (
-                  <p className="text-xs text-red-600">숫자만 입력해 주세요 (10~11자리)</p>
+                  <p className="text-sm text-red-600">숫자만 입력해 주세요 (10~11자리)</p>
                 )}
               </div>
 
               {/* 비밀번호 */}
               <div className="space-y-3">
-                <Label htmlFor="password" className="text-base font-semibold">비밀번호</Label>
+                <Label htmlFor="password" className="text-lg font-semibold">비밀번호</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -237,32 +237,32 @@ export default function SignUp() {
                     placeholder="4자리 이상 입력"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="h-11 text-base"
+                    className="h-12 text-lg"
                     required
                   />
                 </div>
                 {formData.password.length > 0 && formData.password.length < 4 && (
-                  <p className="text-xs text-red-600">비밀번호는 4자리 이상이어야 합니다</p>
+                  <p className="text-sm text-red-600">비밀번호는 4자리 이상이어야 합니다</p>
                 )}
               </div>
 
               {/* 비밀번호 확인 */}
               <div className="space-y-3">
-                <Label htmlFor="confirmPassword" className="text-base font-semibold">비밀번호 확인</Label>
+                <Label htmlFor="confirmPassword" className="text-lg font-semibold">비밀번호 확인</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
                     type="password"
-                                            placeholder="비밀번호를 다시 입력하세요"
+                    placeholder="비밀번호를 다시 입력하세요"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="h-11 text-base"
+                    className="h-12 text-lg"
                     required
                   />
                 </div>
                 {formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword && (
-                  <p className="text-xs text-red-600">비밀번호가 일치하지 않습니다</p>
+                  <p className="text-sm text-red-600">비밀번호가 일치하지 않습니다</p>
                 )}
               </div>
 
@@ -285,7 +285,7 @@ export default function SignUp() {
                   >
                     {acceptTerms && (
                       <svg
-                        className="w-3 h-3"
+                        className="w-4 h-4"
                         viewBox="0 0 20 20"
                         fill="currentColor"
                         style={{ color: '#1f2937' } as React.CSSProperties}
@@ -300,7 +300,7 @@ export default function SignUp() {
                   </span>
                   <div className="flex-1 min-w-0 text-left sm:text-center">
                     <Label
-                      className="text-sm text-foreground cursor-pointer leading-relaxed block"
+                      className="text-base text-foreground cursor-pointer leading-relaxed block"
                       onClick={() => setAcceptTerms(!acceptTerms)}
                     >
                       저는{" "}
@@ -318,13 +318,13 @@ export default function SignUp() {
               </div>
 
               {/* 회원가입 버튼 */}
-              <Button type="submit" size="default" className="w-full h-10 text-base" disabled={isLoading}>
+              <Button type="submit" size="default" className="w-full h-12 text-lg" disabled={isLoading}>
                 {isLoading ? "계정 생성 중..." : "계정 만들기"}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 이미 계정이 있으신가요?{" "}
                 <Link to="/" className="text-primary hover:underline font-medium">
                   로그인하기

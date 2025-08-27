@@ -21,7 +21,7 @@ export default function Assessment() {
   const [isRecording, setIsRecording] = useState(false);
   const [serialNumber, setSerialNumber] = useState("");
   const [showSerialGuide, setShowSerialGuide] = useState(false);
-  const [bluetoothStatus, setBluetoothStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'failed'>('disconnected');
+  const [deviceConnectionStatus, setDeviceConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'failed'>('disconnected');
   
   // TTS 관련 상태
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -204,27 +204,27 @@ export default function Assessment() {
     }
   };
 
-  // 블루투스 연결 확인 함수
-  const checkBluetoothConnection = async () => {
-    setBluetoothStatus('connecting');
+  // 장비 연결 확인 함수
+  const checkDeviceConnection = async () => {
+    setDeviceConnectionStatus('connecting');
     
     try {
-      // 실제 블루투스 연결 확인 로직 (시뮬레이션)
+      // 실제 장비 연결 확인 로직 (시뮬레이션)
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // 랜덤으로 연결 성공/실패 결정 (실제로는 실제 블루투스 상태 확인)
-      const isConnected = Math.random() > 0.3; // 70% 확률로 연결 성공
+      // 항상 연결 성공하도록 수정
+      const isConnected = true; // 100% 확률로 연결 성공
       
       if (isConnected) {
-        setBluetoothStatus('connected');
+        setDeviceConnectionStatus('connected');
         
         // 연결 성공 시 음성 안내
         if (isVoiceMode && isTTSEnabled) {
-          speakText("블루투스 연결이 성공했습니다! 이제 뇌파 측정을 진행할 수 있습니다.");
+          speakText("장비 연결이 성공했습니다! 이제 뇌파 측정을 진행할 수 있습니다.");
         }
         
-        // 블루투스 연결 성공 시 시리얼 넘버가 있으면 뇌파 데이터 수집 시작
-        console.log('[DEBUG] 블루투스 연결 성공');
+        // 장비 연결 성공 시 시리얼 넘버가 있으면 뇌파 데이터 수집 시작
+        console.log('[DEBUG] 장비 연결 성공');
         console.log('[DEBUG] 시리얼 넘버:', serialNumber);
         if (serialNumber) {
           console.log('[DEBUG] startEegCollection 함수 호출 시작');
@@ -233,19 +233,19 @@ export default function Assessment() {
           console.log('[DEBUG] 시리얼 넘버가 없어서 startEegCollection 호출 안됨');
         }
       } else {
-        setBluetoothStatus('failed');
+        setDeviceConnectionStatus('failed');
         
         // 연결 실패 시 음성 안내
         if (isVoiceMode && isTTSEnabled) {
-          speakText("블루투스 연결에 실패했습니다. 헤드밴드 전원과 블루투스 설정을 확인해주세요.");
+          speakText("장비 연결에 실패했습니다. 장비 전원과 시리얼 넘버를 확인해주세요.");
         }
       }
     } catch (error) {
-      setBluetoothStatus('failed');
+      setDeviceConnectionStatus('failed');
       
       // 오류 발생 시 음성 안내
       if (isVoiceMode && isTTSEnabled) {
-        speakText("블루투스 연결 확인 중 오류가 발생했습니다. 다시 시도해주세요.");
+        speakText("장비 연결 확인 중 오류가 발생했습니다. 다시 시도해주세요.");
       }
     }
   };
@@ -802,11 +802,15 @@ export default function Assessment() {
                   <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
                     <div className="flex items-start space-x-2 sm:space-x-3">
                       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
-                      <span className="text-muted-foreground">헤드셋을 머리에 편안하게 착용하세요</span>
+                      <span className="text-muted-foreground">장비 전원을 키고 불이 잘 들어오는지 확인하세요</span>
                     </div>
                     <div className="flex items-start space-x-2 sm:space-x-3">
                       <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
-                      <span className="text-muted-foreground">블루투스 연결 상태를 확인하세요</span>
+                      <span className="text-muted-foreground">헤드셋을 머리에 편안하게 착용하세요</span>
+                    </div>
+                    <div className="flex items-start space-x-2 sm:space-x-3">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                      <span className="text-muted-foreground">장비를 이마에 닫게 잘 착용하세요</span>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">4</div>
@@ -819,23 +823,23 @@ export default function Assessment() {
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium text-foreground">신호 품질 확인</h4>
                     <Button
-                      onClick={checkBluetoothConnection}
-                      disabled={bluetoothStatus === 'connecting'}
+                      onClick={checkDeviceConnection}
+                      disabled={deviceConnectionStatus === 'connecting'}
                       size="sm"
-                      variant={bluetoothStatus === 'connected' ? 'default' : bluetoothStatus === 'failed' ? 'destructive' : 'outline'}
+                      variant={deviceConnectionStatus === 'connected' ? 'default' : deviceConnectionStatus === 'failed' ? 'destructive' : 'outline'}
                       className="text-xs"
                     >
-                      {bluetoothStatus === 'connecting' ? (
+                      {deviceConnectionStatus === 'connecting' ? (
                         <>
                           <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                           연결 중...
                         </>
-                      ) : bluetoothStatus === 'connected' ? (
+                      ) : deviceConnectionStatus === 'connected' ? (
                         <>
                           <CheckCircle className="w-3 h-3 mr-2" />
                           연결됨
                         </>
-                      ) : bluetoothStatus === 'failed' ? (
+                      ) : deviceConnectionStatus === 'failed' ? (
                         <>
                           <AlertCircle className="w-3 h-3 mr-2" />
                           연결 실패
@@ -843,45 +847,45 @@ export default function Assessment() {
                       ) : (
                         <>
                           <Activity className="w-3 h-3 mr-2" />
-                          블루투스 연결 확인
+                          장비 연결 확인
                         </>
                       )}
                     </Button>
                   </div>
                   
-                  {/* 블루투스 연결 상태 메시지 */}
-                  {bluetoothStatus === 'connected' && (
+                  {/* 장비 연결 상태 메시지 */}
+                  {deviceConnectionStatus === 'connected' && (
                     <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center space-x-2 text-green-700">
                         <CheckCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">블루투스 연결 성공!</span>
+                        <span className="text-sm font-medium">장비 연결 성공!</span>
                       </div>
                       <p className="text-xs text-green-600 mt-1">
-                        Muse2 헤드밴드가 성공적으로 연결되었습니다. 이제 뇌파 측정을 진행할 수 있습니다.
+                        장비가 성공적으로 연결되었습니다. 이제 뇌파 측정을 진행할 수 있습니다.
                       </p>
                     </div>
                   )}
                   
-                  {bluetoothStatus === 'failed' && (
+                  {deviceConnectionStatus === 'failed' && (
                     <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
                       <div className="flex items-center space-x-2 text-red-700">
                         <AlertCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">블루투스 연결 실패</span>
+                        <span className="text-sm font-medium">장비 연결 실패</span>
                       </div>
                       <p className="text-xs text-red-600 mt-1">
-                        헤드밴드 전원이 켜져 있는지, 블루투스가 활성화되어 있는지 확인해주세요.
+                        장비 전원이 켜져 있는지, 시리얼 넘버가 올바른지 확인해주세요.
                       </p>
                     </div>
                   )}
                   
-                  {/* 블루투스 연결 상태만 표시 */}
+                  {/* 장비 연결 상태만 표시 */}
                   <div className="text-center py-6">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Activity className="h-8 w-8 text-blue-600" />
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">
-                      블루투스 연결 확인 버튼을 눌러<br />
-                      Muse2 헤드밴드 연결 상태를 확인하세요
+                      장비 연결 확인 버튼을 눌러<br />
+                      장비 연결 상태를 확인하세요
                     </p>
                   </div>
                 </div>
@@ -892,17 +896,17 @@ export default function Assessment() {
                   onClick={startRecording} 
                   size="lg" 
                   className="px-8"
-                  disabled={bluetoothStatus !== 'connected'}
+                  disabled={deviceConnectionStatus !== 'connected'}
                 >
-                  {bluetoothStatus === 'connected' ? "녹화 시작" : 
-                   bluetoothStatus === 'connecting' ? "블루투스 연결 중..." : 
-                   bluetoothStatus === 'failed' ? "블루투스 연결 실패" : 
-                   "블루투스 연결 확인 필요"}
+                  {deviceConnectionStatus === 'connected' ? "녹화 시작" : 
+                   deviceConnectionStatus === 'connecting' ? "장비 연결 중..." : 
+                   deviceConnectionStatus === 'failed' ? "장비 연결 실패" : 
+                   "장비 연결 확인 필요"}
                 </Button>
                 
-                {bluetoothStatus !== 'connected' && (
+                {deviceConnectionStatus !== 'connected' && (
                   <p className="text-sm text-orange-600">
-                    ⚠️ 블루투스 연결 확인 버튼을 눌러 헤드밴드 연결 상태를 확인해주세요
+                    ⚠️ 장비 연결 확인 버튼을 눌러 장비 연결 상태를 확인해주세요
                   </p>
                 )}
 
