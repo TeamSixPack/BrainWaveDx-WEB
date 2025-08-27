@@ -168,7 +168,7 @@ export default function Demo() {
               <div className="flex items-center space-x-2 text-blue-700">
                 <Volume2 className="h-4 w-4" />
                 <span className="text-sm">
-                  {isSpeaking ? "음성 안내 중..." : "페이지 소개가 자동으로 읽혔습니다. 다시 듣려면 🔄 버튼을 클릭하세요."}
+                  {isSpeaking ? "음성 안내 중..." : "페이지 소개가 자동으로 읽혔습니다. 다시 들으시려면 🔄 버튼을 클릭하세요."}
                 </span>
               </div>
             </div>

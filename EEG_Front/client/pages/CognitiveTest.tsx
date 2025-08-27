@@ -271,15 +271,15 @@ export default function CognitiveTest() {
   const questions = useMemo(() => [
     {
       id: 1,
-      category: "시공간/집행기능",
-      title: "Trail Making Test",
+      category: "순서 연결 능력",
+      title: "순서 연결",
       maxPoints: 2,
       type: "trail-making"
     },
     {
       id: 2,
       category: "이름대기",
-      title: "동물 이름 말하기",
+      title: "동물 이름 맞추기",
       maxPoints: 3,
       type: "naming"
     },
@@ -293,14 +293,14 @@ export default function CognitiveTest() {
     {
       id: 4,
       category: "주의력",
-      title: "주의력 테스트",
+      title: "주의력 검사",
       maxPoints: 5,
       type: "attention"
     },
     {
       id: 5,
       category: "언어",
-      title: "유창성 테스트",
+      title: "유창성 검사",
       maxPoints: 1,
       type: "fluency"
     },
@@ -314,7 +314,7 @@ export default function CognitiveTest() {
     {
       id: 7,
       category: "지남력",
-      title: "지남력 테스트",
+      title: "지남력 검사",
       maxPoints: 6,
       type: "orientation"
     }
@@ -738,9 +738,7 @@ export default function CognitiveTest() {
           </Button>
         </div>
       </div>
-      <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
-                        <p className="text-sm text-blue-700">빈칸을 모두 채우고 다음을 누르면 자동 채점됩니다</p>
-      </div>
+
     </div>
   );
 
@@ -875,9 +873,7 @@ export default function CognitiveTest() {
           
 
         </div>
-        <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
-          <p className="text-sm text-blue-700">모든 동물의 이름을 선택하고 다음을 누르면 자동 채점됩니다</p>
-        </div>
+
       </div>
     );
   };
@@ -1014,10 +1010,7 @@ export default function CognitiveTest() {
                 </Button>
               </div>
             </div>
-            
-            <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
-              <p className="text-sm text-blue-700">기억한 단어를 선택하고 다음을 누르면 자동 채점됩니다</p>
-            </div>
+          
           </div>
         )}
       </div>
@@ -1518,7 +1511,7 @@ export default function CognitiveTest() {
   const renderOrientationTest = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <p className="text-lg font-medium mb-4">현재 상황에 대한 질문에 답하세요</p>
+        <p className="text-lg font-medium mb-4">현재 상황에 대한 질문에 답하세요<br></br>예시에 맞는 형식으로 정답을 입력하세요</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -1532,7 +1525,6 @@ export default function CognitiveTest() {
                  <div className="space-y-2">
            <Label>현재 장소</Label>
            <Input
-             placeholder="예: 집, 병원, 회사"
              value={answers[currentQuestion]?.place || ''}
              onChange={(e) => handleAnswer({ ...answers[currentQuestion], place: e.target.value })}
              className="flex-1"
@@ -1541,7 +1533,7 @@ export default function CognitiveTest() {
         <div className="space-y-2">
           <Label>현재 시간</Label>
           <Input 
-            placeholder="예: 오후 3시 30분" 
+            placeholder="예: 오후 3시 30분 또는 15시 30분" 
             value={answers[currentQuestion]?.time || ''} 
             onChange={(e) => handleAnswer({ ...answers[currentQuestion], time: e.target.value })}
           />
@@ -1630,14 +1622,22 @@ export default function CognitiveTest() {
         
         // 오후/오전 시간을 24시간 형식으로 변환
         // 오후 3시 = 15시, 오후 12시 = 12시, 오전 12시 = 0시
-        if (inputHour >= 1 && inputHour <= 11) {
-          // 오후 시간으로 가정 (1시~11시는 오후로 처리)
-          inputHour += 12;
-        } else if (inputHour === 12) {
-          // 12시는 오후 12시로 가정 (12시 = 12시)
-          inputHour = 12;
+        if (timeStr.includes('오후') || timeStr.includes('PM') || timeStr.includes('pm')) {
+          // 오후가 명시된 경우
+          if (inputHour >= 1 && inputHour <= 11) {
+            inputHour += 12; // 1시~11시는 13시~23시로 변환
+          }
+          // 12시는 그대로 12시
+        } else if (timeStr.includes('오전') || timeStr.includes('AM') || timeStr.includes('am')) {
+          // 오전이 명시된 경우
+          if (inputHour === 12) {
+            inputHour = 0; // 오전 12시는 0시로 변환
+          }
+          // 1시~11시는 그대로 유지
+        } else {
+          // 오전/오후가 명시되지 않은 경우, 24시간 형식으로 가정
+          // 이미 24시간 형식이므로 변환 불필요
         }
-        // 0시는 그대로 0시
         
         console.log('입력된 시간:', inputHour + '시 ' + inputMinute + '분');
         
@@ -1884,7 +1884,7 @@ export default function CognitiveTest() {
                 <div className="flex items-center space-x-2 text-blue-700">
                   <Volume2 className="h-4 w-4" />
                                      <span className="text-sm">
-                     {isSpeaking ? "음성 안내 중..." : "문제가 읽혔습니다. 다시 듣려면 🔄 버튼을 클릭하세요."}
+                     {isSpeaking ? "음성 안내 중..." : "문제가 읽혔습니다. 다시 들으시려면 🔄 버튼을 클릭하세요."}
                    </span>
                 </div>
               </div>
@@ -1901,7 +1901,6 @@ export default function CognitiveTest() {
         {currentQuestionData && (
           <div className="fixed left-0 right-0 bottom-0 z-40 md:static md:mt-4 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t md:border-0 p-3 md:p-0">
             <div className="flex justify-center items-center gap-2">
-              <div className="text-sm text-blue-600 mr-0 md:mr-3 hidden md:block">{currentQuestionData.category} • {currentQuestionData.maxPoints}점</div>
             <Button 
               onClick={handleNext} 
               disabled={questions[currentQuestion]?.type === 'fluency' && !showFluencyResults} 

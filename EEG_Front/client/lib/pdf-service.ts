@@ -70,10 +70,10 @@ export class PDFService {
           html, body { height: auto; }
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.3;
+            line-height: 1.2;
             color: #111827;
             margin: 0;
-            font-size: 10px;
+            font-size: 12px;
           }
           .container { max-width: 800px; margin: 0 auto; }
 
@@ -83,42 +83,42 @@ export class PDFService {
             padding-bottom: 10px;
             margin-bottom: 12px;
           }
-          .logo { font-size: 18px; font-weight: 700; color: #2563eb; margin-bottom: 3px; }
-          .title { font-size: 16px; font-weight: 700; margin: 0; }
-          .meta { font-size: 9px; color: #374151; margin-top: 2px; }
+          .logo { font-size: 20px; font-weight: 700; color: #2563eb; margin-bottom: 4px; }
+          .title { font-size: 18px; font-weight: 700; margin: 0; }
+          .meta { font-size: 12px; color: #374151; margin-top: 4px; }
 
-          .section { margin-bottom: 10px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 5px; }
-          .section-title { font-size: 12px; font-weight: 700; color: #111827; margin-bottom: 8px; }
+          .section { margin-bottom: 12px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; }
+          .section-title { font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 10px; }
 
-          .cards { display: flex; flex-wrap: wrap; gap: 8px; }
-          .card { flex: 1 1 120px; background: #f9fafb; padding: 8px; border-radius: 5px; text-align: center; }
-          .score-value { font-size: 18px; font-weight: 800; color: #2563eb; }
-          .score-label { font-size: 9px; color: #6b7280; }
+          .cards { display: flex; flex-wrap: wrap; gap: 10px; }
+          .card { flex: 1 1 130px; background: #f9fafb; padding: 10px; border-radius: 6px; text-align: center; }
+          .score-value { font-size: 20px; font-weight: 800; color: #2563eb; }
+          .score-label { font-size: 12px; color: #6b7280; }
           .risk-low { color: #16a34a; } .risk-medium { color: #eab308; } .risk-high { color: #dc2626; }
 
-          .k-desc { font-size: 10px; color: #111827; }
-          .muted { color: #6b7280; font-size: 9px; }
+          .k-desc { font-size: 13px; color: #111827; }
+          .muted { color: #6b7280; font-size: 12px; }
 
-          .brainwave-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-          .brainwave-item { background: #f3f4f6; padding: 8px; border-radius: 4px; border-left: 3px solid #2563eb; }
+          .brainwave-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+          .brainwave-item { background: #f3f4f6; padding: 10px; border-radius: 5px; border-left: 3px solid #2563eb; }
 
           .recommendations { list-style: none; padding: 0; margin: 0; }
-          .recommendations li { background: #eff6ff; margin: 4px 0; padding: 6px 8px; border-left: 2px solid #2563eb; border-radius: 3px; }
-          .disclaimer { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 4px; padding: 8px; font-size: 9px; }
+          .recommendations li { background: #eff6ff; margin: 5px 0; padding: 8px 10px; border-left: 2px solid #2563eb; border-radius: 4px; font-size: 13px; }
+          .disclaimer { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 5px; padding: 10px; font-size: 12px; }
           
           .guide-card { 
             background: #f9fafb; 
-            padding: 8px; 
-            border-radius: 4px; 
+            padding: 10px; 
+            border-radius: 5px; 
             border: 1px solid #e5e7eb;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
           }
-          .guide-card h4 { font-size: 10px; font-weight: 600; }
-          .guide-card ul { margin: 0; padding-left: 14px; }
-          .guide-card li { margin: 2px 0; font-size: 9px; line-height: 1.3; }
+          .guide-card h4 { font-size: 13px; font-weight: 600; }
+          .guide-card ul { margin: 0; padding-left: 16px; }
+          .guide-card li { margin: 3px 0; font-size: 12px; line-height: 1.3; }
 
-          .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-          .compact { margin-bottom: 8px; }
+          .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+          .compact { margin-bottom: 10px; }
         </style>
       </head>
       <body>
@@ -126,7 +126,7 @@ export class PDFService {
           <div class="header">
             <div class="logo">🧠 NeuroScan</div>
             <h1 class="title">뇌 건강 검사 결과 보고서</h1>
-            <div class="meta">검사일: ${date}${data.patientName ? ` · 성명: ${data.patientName}` : ''}</div>
+            <div class="meta">${data.patientName ? `성명: ${data.patientName}` : ''}</div>
           </div>
 
           <div class="section">
@@ -136,46 +136,21 @@ export class PDFService {
                 <div class="score-value">${data.overallRisk}</div>
                 <div class="score-label">진단 요약</div>
               </div>
-              <div class="card">
-                <div class="score-value">${data.cognitiveScore}/100</div>
-                <div class="score-label">뇌파 종합 점수</div>
-              </div>
-              ${typeof data.mocaScore === 'number' ? `
-              <div class="card">
-                <div class="score-value">${data.mocaScore}/30</div>
-                <div class="score-label">MOCA-K</div>
-              </div>` : ''}
-              ${typeof data.mmseScore === 'number' ? `
-              <div class="card">
-                <div class="score-value">${data.mmseScore}/30</div>
-                <div class="score-label">MMSE-K</div>
-              </div>` : ''}
-
               ${typeof data.confidenceLevel === 'number' ? `
               <div class="card">
                 <div class="score-value">${data.confidenceLevel}%</div>
                 <div class="score-label">신뢰도</div>
               </div>` : ''}
-            </div>
-          </div>
-
-
-
-            <div class="section compact">
-              <div class="section-title">2) 인지 선별검사</div>
-              ${typeof data.mocaScore === 'number' || typeof data.mmseScore === 'number' ? `
-              <div class="cards">
-                ${typeof data.mocaScore === 'number' ? `
-                <div class="card">
-                                  <div class="score-value">${data.mocaScore}/30</div>
-                <div class="score-label">MOCA-K</div>
-                </div>` : ''}
-                ${typeof data.mmseScore === 'number' ? `
-                <div class="card">
-                                  <div class="score-value">${data.mmseScore}/30</div>
-                <div class="score-label">MMSE-K</div>
-                </div>` : ''}
-              </div>` : '<p class="muted">검사 미완료</p>'}
+              ${typeof data.mocaScore === 'number' ? `
+              <div class="card">
+                <div class="score-value">${data.mocaScore}/30</div>
+                <div class="score-label">MOCA-K(종합 인지 검사)</div>
+              </div>` : ''}
+              ${typeof data.mmseScore === 'number' ? `
+              <div class="card">
+                <div class="score-value">${data.mmseScore}/30</div>
+                <div class="score-label">MMSE-K(간이 인지 검사)</div>
+              </div>` : ''}
             </div>
           </div>
 
@@ -191,29 +166,29 @@ export class PDFService {
             <div class="section-title">4) 맞춤형 생활 가이드 - ${data.personalizedGuide.title}</div>
             <div class="two-column">
               <div class="guide-card">
-                <h4 style="color: ${data.personalizedGuide.color === 'red' ? '#dc2626' : data.personalizedGuide.color === 'orange' ? '#ea580c' : '#16a34a'}; margin: 0 0 6px 0; font-size: 10px;">
+                <h4 style="color: ${data.personalizedGuide.color === 'red' ? '#dc2626' : data.personalizedGuide.color === 'orange' ? '#ea580c' : '#16a34a'}; margin: 0 0 6px 0; font-size: 13px;">
                   🍽️ ${data.personalizedGuide.guides.food.title}
                 </h4>
-                <ul style="margin: 0; padding-left: 14px; font-size: 9px;">
+                <ul style="margin: 0; padding-left: 16px; font-size: 12px;">
                   ${data.personalizedGuide.guides.food.items.map(item => `<li>${item}</li>`).join('')}
                 </ul>
               </div>
               
               <div class="guide-card">
-                <h4 style="color: ${data.personalizedGuide.color === 'red' ? '#dc2626' : data.personalizedGuide.color === 'orange' ? '#ea580c' : '#16a34a'}; margin: 0 0 6px 0; font-size: 10px;">
+                <h4 style="color: ${data.personalizedGuide.color === 'red' ? '#dc2626' : data.personalizedGuide.color === 'orange' ? '#ea580c' : '#16a34a'}; margin: 0 0 6px 0; font-size: 13px;">
                   🏃‍♂️ ${data.personalizedGuide.guides.exercise.title}
                 </h4>
-                <ul style="margin: 0; padding-left: 14px; font-size: 9px;">
+                <ul style="margin: 0; padding-left: 16px; font-size: 12px;">
                   ${data.personalizedGuide.guides.exercise.items.map(item => `<li>${item}</li>`).join('')}
                 </ul>
               </div>
             </div>
             
             <div class="guide-card" style="margin-top: 8px;">
-              <h4 style="color: ${data.personalizedGuide.color === 'red' ? '#dc2626' : data.personalizedGuide.color === 'orange' ? '#ea580c' : '#16a34a'}; margin: 0 0 6px 0; font-size: 10px;">
+              <h4 style="color: ${data.personalizedGuide.color === 'red' ? '#dc2626' : data.personalizedGuide.color === 'orange' ? '#ea580c' : '#16a34a'}; margin: 0 0 6px 0; font-size: 13px;">
                 🎯 ${data.personalizedGuide.guides.behavior.title}
               </h4>
-              <ul style="margin: 0; padding-left: 14px; font-size: 9px;">
+              <ul style="margin: 0; padding-left: 16px; font-size: 12px;">
                 ${data.personalizedGuide.guides.behavior.items.map(item => `<li>${item}</li>`).join('')}
               </ul>
             </div>
@@ -223,7 +198,7 @@ export class PDFService {
           <div class="two-column">
             <div class="section compact">
               <div class="section-title">${data.personalizedGuide ? '5' : '4'}) 추가 정보</div>
-              <div style="font-size: 10px; line-height: 1.3;">
+              <div style="font-size: 13px; line-height: 1.3;">
                 <p><strong>검사 방법:</strong> 뇌파 신호 분석 + 인지 기능 테스트</p>
                 <p><strong>검사 시간:</strong> 약 10-15분</p>
                 <p><strong>결과 해석:</strong> AI 기반 자동 분석</p>
@@ -233,7 +208,7 @@ export class PDFService {
 
             <div class="section compact">
               <div class="section-title">${data.personalizedGuide ? '6' : '5'}) 연락처 및 후속 조치</div>
-              <div style="font-size: 10px; line-height: 1.3;">
+              <div style="font-size: 13px; line-height: 1.3;">
                 <p><strong>상담 문의:</strong> 전문 의료기관 방문 권장</p>
                 <p><strong>재검사:</strong> 6개월 후 권장</p>
                 <p><strong>응급 상황:</strong> 증상 악화 시 즉시 병원</p>

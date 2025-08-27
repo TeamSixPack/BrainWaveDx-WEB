@@ -108,6 +108,27 @@ p, span, div {
   color: #1e293b !important;
 }
 
+/* 검사 진행률 제목은 더 크게 */
+.progress-title {
+  font-size: 32px !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+}
+
+/* 원 안의 숫자는 하얀색으로 강제 적용 */
+.circle-number {
+  color: #ffffff !important;
+}
+
+/* 다음 단계 버튼 텍스트는 하얀색으로 강제 적용 */
+.next-step-button {
+  color: #ffffff !important;
+}
+
+.next-step-button * {
+  color: #ffffff !important;
+}
+
 /* 링크 스타일 */
 a {
   font-size: 18px !important;

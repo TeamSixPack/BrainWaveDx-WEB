@@ -22,6 +22,8 @@ export default function Assessment() {
   const [serialNumber, setSerialNumber] = useState("");
   const [showSerialGuide, setShowSerialGuide] = useState(false);
   const [deviceConnectionStatus, setDeviceConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'failed'>('disconnected');
+  const [countdown, setCountdown] = useState<number>(0);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   
   // TTS 관련 상태
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -184,10 +186,11 @@ export default function Assessment() {
         
         // 실패 시 setup 단계로 돌아가기
         setCurrentStep('setup');
+        setErrorMessage('장비를 제대로 착용해주세요. 전극이 피부와 잘 접촉하는지 확인하고, LED가 녹색인지 확인해주세요.');
         
         // 실패 음성 안내
         if (isVoiceMode && isTTSEnabled) {
-          speakText("뇌파 데이터 수집에 실패했습니다. 다시 시도해주세요.");
+          speakText("뇌파 데이터 수집에 실패했습니다. 장비를 제대로 착용해주세요.");
         }
       }
       
@@ -196,20 +199,21 @@ export default function Assessment() {
       
       // 오류 시 setup 단계로 돌아가기
       setCurrentStep('setup');
+      setErrorMessage('장비를 제대로 착용해주세요. 전극이 피부와 잘 접촉하는지 확인하고, LED가 녹색인지 확인해주세요.');
       
       // 오류 시 음성 안내
       if (isVoiceMode && isTTSEnabled) {
-        speakText("뇌파 데이터 수집 중 오류가 발생했습니다. 다시 시도해주세요.");
+        speakText("뇌파 데이터 수집 중 오류가 발생했습니다. 장비를 제대로 착용해주세요.");
       }
     }
   };
 
-  // 장비 연결 확인 함수
-  const checkDeviceConnection = async () => {
+  // 뇌파 측정 시작 함수
+  const startEegMeasurement = async () => {
     setDeviceConnectionStatus('connecting');
     
     try {
-      // 실제 장비 연결 확인 로직 (시뮬레이션)
+      // 실제 뇌파 측정 시작 로직 (시뮬레이션)
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // 항상 연결 성공하도록 수정
@@ -217,14 +221,15 @@ export default function Assessment() {
       
       if (isConnected) {
         setDeviceConnectionStatus('connected');
+        setErrorMessage(''); // 에러 메시지 초기화
         
         // 연결 성공 시 음성 안내
         if (isVoiceMode && isTTSEnabled) {
-          speakText("장비 연결이 성공했습니다! 이제 뇌파 측정을 진행할 수 있습니다.");
+          speakText("뇌파 측정이 시작되었습니다! 5초 후에 측정이 시작됩니다.");
         }
         
-        // 장비 연결 성공 시 시리얼 넘버가 있으면 뇌파 데이터 수집 시작
-        console.log('[DEBUG] 장비 연결 성공');
+        // 뇌파 측정 시작 시 시리얼 넘버가 있으면 뇌파 데이터 수집 시작
+        console.log('[DEBUG] 뇌파 측정 시작 성공');
         console.log('[DEBUG] 시리얼 넘버:', serialNumber);
         if (serialNumber) {
           console.log('[DEBUG] startEegCollection 함수 호출 시작');
@@ -232,12 +237,26 @@ export default function Assessment() {
         } else {
           console.log('[DEBUG] 시리얼 넘버가 없어서 startEegCollection 호출 안됨');
         }
+        
+        // 5초 후 자동으로 다음 단계로 이동
+        setCountdown(5);
+        const countdownInterval = setInterval(() => {
+          setCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(countdownInterval);
+              setCurrentStep('preparation');
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        
       } else {
         setDeviceConnectionStatus('failed');
         
         // 연결 실패 시 음성 안내
         if (isVoiceMode && isTTSEnabled) {
-          speakText("장비 연결에 실패했습니다. 장비 전원과 시리얼 넘버를 확인해주세요.");
+          speakText("뇌파 측정 시작에 실패했습니다. 장비 전원과 시리얼 넘버를 확인해주세요.");
         }
       }
     } catch (error) {
@@ -245,7 +264,7 @@ export default function Assessment() {
       
       // 오류 발생 시 음성 안내
       if (isVoiceMode && isTTSEnabled) {
-        speakText("장비 연결 확인 중 오류가 발생했습니다. 다시 시도해주세요.");
+        speakText("뇌파 측정 시작 중 오류가 발생했습니다. 다시 시도해주세요.");
       }
     }
   };
@@ -447,11 +466,50 @@ export default function Assessment() {
       <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8 max-w-4xl">
         {/* Progress Bar */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs sm:text-sm font-medium text-foreground">검사 진행률</span>
-            <span className="text-xs sm:text-sm text-muted-foreground">{Math.round(progress)}% 완료</span>
+          <div className="text-center mb-2">
+            <span className="progress-title text-foreground">
+              검사 진행률
+            </span>
           </div>
-          <Progress value={progress} className="h-2" />
+          
+          {/* 단계별 진행 상태 */}
+          <div className="flex justify-between items-center">
+            <div className={`flex flex-col items-center ${currentStep === 'setup' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 circle-number ${
+                currentStep === 'setup' ? 'bg-primary' : 'bg-muted'
+              }`} style={{ color: '#ffffff !important' }}>
+                1
+              </div>
+              <span className="text-xs text-center">안내</span>
+            </div>
+            
+            <div className={`flex flex-col items-center ${currentStep === 'preparation' || currentStep === 'recording' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 circle-number ${
+                currentStep === 'preparation' || currentStep === 'recording' ? 'bg-primary' : 'bg-muted'
+              }`} style={{ color: '#ffffff !important' }}>
+                2
+              </div>
+              <span className="text-xs text-center">검사</span>
+            </div>
+            
+            <div className={`flex flex-col items-center ${currentStep === 'processing' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 circle-number ${
+                currentStep === 'processing' ? 'bg-primary' : 'bg-muted'
+              }`} style={{ color: '#ffffff !important' }}>
+                3
+              </div>
+              <span className="text-xs text-center">분석 중</span>
+            </div>
+            
+            <div className={`flex flex-col items-center ${currentStep === 'complete' ? 'text-primary' : 'text-muted-foreground'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1 circle-number ${
+                currentStep === 'complete' ? 'bg-primary' : 'bg-muted'
+              }`} style={{ color: '#ffffff !important' }}>
+                4
+              </div>
+              <span className="text-xs text-center">결과</span>
+            </div>
+          </div>
         </div>
 
         {/* Setup Step */}
@@ -519,9 +577,30 @@ export default function Assessment() {
                   <div className="flex items-center space-x-2 text-blue-700">
                     <Volume2 className="h-4 w-4" />
                     <span className="text-sm">
-                      {isSpeaking ? "음성 안내 중..." : "안내가 자동으로 읽혔습니다. 다시 듣려면 🔄 버튼을 클릭하세요."}
+                      {isSpeaking ? "음성 안내 중..." : "안내가 자동으로 읽혔습니다. 다시 들으시려면 🔄 버튼을 클릭하세요."}
                     </span>
                   </div>
+                </div>
+              )}
+              
+              {/* 에러 메시지 표시 */}
+              {errorMessage && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center space-x-2 text-red-700">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">장비 착용 확인 필요</span>
+                  </div>
+                  <p className="text-xs text-red-600 mt-1">
+                    {errorMessage}
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setErrorMessage('')}
+                    className="mt-2 text-xs"
+                  >
+                    확인
+                  </Button>
                 </div>
               )}
             </CardHeader>
@@ -774,7 +853,7 @@ export default function Assessment() {
                   <div className="flex items-center space-x-2 text-blue-700">
                     <Volume2 className="h-4 w-4" />
                     <span className="text-sm">
-                      {isSpeaking ? "음성 안내 중..." : "안내가 자동으로 읽혔습니다. 다시 듣려면 🔄 버튼을 클릭하세요."}
+                      {isSpeaking ? "음성 안내 중..." : "안내가 자동으로 읽혔습니다. 다시 들으시려면 🔄 버튼을 클릭하세요."}
                     </span>
                   </div>
                 </div>
@@ -801,19 +880,19 @@ export default function Assessment() {
                   </div>
                   <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
                     <div className="flex items-start space-x-2 sm:space-x-3">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 circle-number" style={{ color: '#ffffff !important' }}>1</div>
                       <span className="text-muted-foreground">장비 전원을 키고 불이 잘 들어오는지 확인하세요</span>
                     </div>
                     <div className="flex items-start space-x-2 sm:space-x-3">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 circle-number" style={{ color: '#ffffff !important' }}>2</div>
                       <span className="text-muted-foreground">헤드셋을 머리에 편안하게 착용하세요</span>
                     </div>
                     <div className="flex items-start space-x-2 sm:space-x-3">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-primary rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 circle-number" style={{ color: '#ffffff !important' }}>3</div>
                       <span className="text-muted-foreground">장비를 이마에 닫게 잘 착용하세요</span>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">4</div>
+                      <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-xs font-bold circle-number" style={{ color: '#ffffff !important' }}>4</div>
                       <span className="text-muted-foreground">편안히 앉아서 움직이지 마세요</span>
                     </div>
                   </div>
@@ -821,9 +900,8 @@ export default function Assessment() {
 
                 <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-foreground">신호 품질 확인</h4>
                     <Button
-                      onClick={checkDeviceConnection}
+                      onClick={startEegMeasurement}
                       disabled={deviceConnectionStatus === 'connecting'}
                       size="sm"
                       variant={deviceConnectionStatus === 'connected' ? 'default' : deviceConnectionStatus === 'failed' ? 'destructive' : 'outline'}
@@ -832,37 +910,43 @@ export default function Assessment() {
                       {deviceConnectionStatus === 'connecting' ? (
                         <>
                           <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                          연결 중...
+                          측정 시작 중...
                         </>
                       ) : deviceConnectionStatus === 'connected' ? (
                         <>
                           <CheckCircle className="w-3 h-3 mr-2" />
-                          연결됨
+                          측정 시작됨
                         </>
                       ) : deviceConnectionStatus === 'failed' ? (
                         <>
                           <AlertCircle className="w-3 h-3 mr-2" />
-                          연결 실패
+                          측정 시작 실패
                         </>
                       ) : (
                         <>
                           <Activity className="w-3 h-3 mr-2" />
-                          장비 연결 확인
+                          뇌파 측정 시작
                         </>
                       )}
                     </Button>
                   </div>
                   
-                  {/* 장비 연결 상태 메시지 */}
+                  {/* 뇌파 측정 상태 메시지 */}
                   {deviceConnectionStatus === 'connected' && (
                     <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg">
                       <div className="flex items-center space-x-2 text-green-700">
                         <CheckCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">장비 연결 성공!</span>
+                        <span className="text-sm font-medium">뇌파 측정 시작 성공!</span>
                       </div>
                       <p className="text-xs text-green-600 mt-1">
-                        장비가 성공적으로 연결되었습니다. 이제 뇌파 측정을 진행할 수 있습니다.
+                        뇌파 측정이 성공적으로 시작되었습니다. {countdown > 0 ? `${countdown}초 후에` : '곧'} 측정 화면으로 이동합니다.
                       </p>
+                      {countdown > 0 && (
+                        <div className="mt-2 text-center">
+                          <div className="text-lg font-bold text-green-700">{countdown}</div>
+                          <div className="text-xs text-green-600">초 후 시작</div>
+                        </div>
+                      )}
                     </div>
                   )}
                   
@@ -870,7 +954,7 @@ export default function Assessment() {
                     <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
                       <div className="flex items-center space-x-2 text-red-700">
                         <AlertCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">장비 연결 실패</span>
+                        <span className="text-sm font-medium">뇌파 측정 시작 실패</span>
                       </div>
                       <p className="text-xs text-red-600 mt-1">
                         장비 전원이 켜져 있는지, 시리얼 넘버가 올바른지 확인해주세요.
@@ -878,14 +962,14 @@ export default function Assessment() {
                     </div>
                   )}
                   
-                  {/* 장비 연결 상태만 표시 */}
+                  {/* 뇌파 측정 시작 안내 */}
                   <div className="text-center py-6">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Activity className="h-8 w-8 text-blue-600" />
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">
-                      장비 연결 확인 버튼을 눌러<br />
-                      장비 연결 상태를 확인하세요
+                      뇌파 측정 시작 버튼을 눌러<br />
+                      뇌파 측정을 시작하세요
                     </p>
                   </div>
                 </div>
@@ -899,14 +983,14 @@ export default function Assessment() {
                   disabled={deviceConnectionStatus !== 'connected'}
                 >
                   {deviceConnectionStatus === 'connected' ? "녹화 시작" : 
-                   deviceConnectionStatus === 'connecting' ? "장비 연결 중..." : 
-                   deviceConnectionStatus === 'failed' ? "장비 연결 실패" : 
-                   "장비 연결 확인 필요"}
+                   deviceConnectionStatus === 'connecting' ? "뇌파 측정 시작 중..." : 
+                   deviceConnectionStatus === 'failed' ? "뇌파 측정 시작 실패" : 
+                   "뇌파 측정 시작 필요"}
                 </Button>
                 
                 {deviceConnectionStatus !== 'connected' && (
                   <p className="text-sm text-orange-600">
-                    ⚠️ 장비 연결 확인 버튼을 눌러 장비 연결 상태를 확인해주세요
+                    ⚠️ 뇌파 측정 시작 버튼을 눌러 뇌파 측정을 시작해주세요
                   </p>
                 )}
 
@@ -938,12 +1022,12 @@ export default function Assessment() {
               </CardDescription>
               
               {/* TTS 안내 메시지 */}
-              {isVoiceMode && isTTSEnabled && (
+              {isTTSEnabled && (
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-center justify-center space-x-2 text-blue-700">
                     <Volume2 className="h-4 w-4" />
                     <span className="text-sm">
-                      {isSpeaking ? "음성 안내 중..." : "뇌파 측정 안내가 자동으로 읽혔습니다. 다시 듣려면 🔄 버튼을 클릭하세요."}
+                      {isSpeaking ? "음성 안내 중..." : "뇌파 측정 안내가 자동으로 읽혔습니다. 다시 들으시려면 🔄 버튼을 클릭하세요."}
                     </span>
                   </div>
                 </div>
@@ -1029,7 +1113,7 @@ export default function Assessment() {
                   <div className="flex items-center justify-center space-x-2 text-blue-700">
                     <Volume2 className="h-4 w-4" />
                     <span className="text-sm">
-                      {isSpeaking ? "음성 안내 중..." : "데이터 분석 안내가 자동으로 읽혔습니다. 다시 듣려면 🔄 버튼을 클릭하세요."}
+                      {isSpeaking ? "음성 안내 중..." : "데이터 분석 안내가 자동으로 읽혔습니다. 다시 들으시려면 🔄 버튼을 클릭하세요."}
                     </span>
                   </div>
                 </div>
@@ -1082,7 +1166,7 @@ export default function Assessment() {
                   <div className="flex items-center justify-center space-x-2 text-blue-700">
                     <Volume2 className="h-4 w-4" />
                     <span className="text-sm">
-                      {isSpeaking ? "음성 안내 중..." : "검사 완료 안내가 자동으로 읽혔습니다. 다시 듣려면 🔄 버튼을 클릭하세요."}
+                      {isSpeaking ? "음성 안내 중..." : "검사 완료 안내가 자동으로 읽혔습니다. 다시 들으시려면 🔄 버튼을 클릭하세요."}
                     </span>
                   </div>
                 </div>
@@ -1097,8 +1181,8 @@ export default function Assessment() {
               </div>
 
               <div className="flex justify-center">
-                <Button size="lg" asChild>
-                  <Link to="/demo">다음 단계 계속하기</Link>
+                <Button size="lg" asChild className="text-white next-step-button" style={{ color: '#ffffff !important' }}>
+                  <Link to="/demo" className="text-white next-step-button" style={{ color: '#ffffff !important' }}>다음 단계 계속하기</Link>
                 </Button>
               </div>
             </CardContent>

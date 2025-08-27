@@ -189,92 +189,7 @@ export default function AssessmentHistory() {
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
         
 
-        {/* Statistics Overview */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">총 검사 횟수</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">{stats.totalAssessments}회</div>
-                <p className="text-xs text-muted-foreground">누적 검사 기록</p>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">평균 뇌파 점수</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">{stats.averageEegScore}점</div>
-                <Progress value={stats.averageEegScore} className="mt-2" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">평균 MOCA 점수</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {(stats as any)?.averageMocaScore && (stats as any).averageMocaScore > 0 ? (
-                  <>
-                    <div className="text-2xl font-bold text-primary">{(stats as any).averageMocaScore}점</div>
-                    <p className="text-xs text-muted-foreground">/30점 만점</p>
-                    <Progress value={(((stats as any).averageMocaScore as number) / 30) * 100} className="mt-2" />
-                  </>
-                ) : (
-                  <div className="text-sm text-muted-foreground italic">검사 미완료</div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">평균 MMSE 점수</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {(stats as any)?.averageMmseScore && (stats as any).averageMmseScore > 0 ? (
-                  <>
-                    <div className="text-2xl font-bold text-primary">{(stats as any).averageMmseScore}점</div>
-                    <p className="text-xs text-muted-foreground">/30점 만점</p>
-                    <Progress value={(((stats as any).averageMmseScore as number) / 30) * 100} className="mt-2" />
-                  </>
-                ) : (
-                  <div className="text-sm text-muted-foreground italic">검사 미완료</div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">전체적 추세</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-2">
-                  {stats.improvementTrend === 'improving' && (
-                    <>
-                      <TrendingUp className="h-5 w-5 text-green-600" />
-                      <span className="text-green-600 font-semibold">개선</span>
-                    </>
-                  )}
-                  {stats.improvementTrend === 'declining' && (
-                    <>
-                      <TrendingDown className="h-5 w-5 text-red-600" />
-                      <span className="text-red-600 font-semibold">악화</span>
-                    </>
-                  )}
-                  {stats.improvementTrend === 'stable' && (
-                    <>
-                                             <Minus className="h-5 w-5 text-blue-600" />
-                       <span className="text-blue-600 font-semibold">안정</span>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Progress Chart */}
         <Card className="mb-8">
@@ -385,70 +300,41 @@ export default function AssessmentHistory() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <p className="text-sm font-medium text-muted-foreground">뇌파 점수</p>
+                          <p className="text-sm font-medium text-muted-foreground">MOCA 점수</p>
                           <div className="flex items-center space-x-2">
-                            <span className="text-xl font-bold text-primary">
-                              {assessment.eegAnalysis.overallScore}
-                            </span>
-                            <span className="text-sm text-muted-foreground">/100</span>
+                             {(assessment as any).cognitiveTest?.mocaScore && (assessment as any).cognitiveTest.mocaScore > 0 ? (
+                              <>
+                                <span className="text-xl font-bold text-primary">
+                                   {(assessment as any).cognitiveTest.mocaScore}
+                                </span>
+                                <span className="text-sm text-muted-foreground">/24</span>
+                              </>
+                            ) : (
+                              <span className="text-sm text-muted-foreground italic">검사 미완료</span>
+                            )}
                           </div>
-                        </div>
-                        
-                                                 <div className="space-y-1">
-                           <p className="text-sm font-medium text-muted-foreground">MOCA 점수</p>
-                           <div className="flex items-center space-x-2">
-                              {(assessment as any).cognitiveTest?.mocaScore && (assessment as any).cognitiveTest.mocaScore > 0 ? (
-                               <>
-                                 <span className="text-xl font-bold text-primary">
-                                    {(assessment as any).cognitiveTest.mocaScore}
-                                 </span>
-                                 <span className="text-sm text-muted-foreground">/24</span>
-                               </>
-                             ) : (
-                               <span className="text-sm text-muted-foreground italic">검사 미완료</span>
-                             )}
-                           </div>
-                         </div>
-                         
-                         <div className="space-y-1">
-                           <p className="text-sm font-medium text-muted-foreground">MMSE 점수</p>
-                           <div className="flex items-center space-x-2">
-                              {(assessment as any).cognitiveTest?.mmseScore && (assessment as any).cognitiveTest.mmseScore > 0 ? (
-                               <>
-                                 <span className="text-xl font-bold text-primary">
-                                    {(assessment as any).cognitiveTest.mmseScore}
-                                 </span>
-                                 <span className="text-sm text-muted-foreground">/23</span>
-                               </>
-                             ) : (
-                               <span className="text-sm text-muted-foreground italic">검사 미완료</span>
-                             )}
-                           </div>
-                         </div>
-                        
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-muted-foreground">MCI 위험도</p>
-                          <div className="flex items-center space-x-2">
-                            <span className={`text-xl font-bold ${
-                              assessment.riskFactors.mciRisk < 20 ? 'text-green-600' :
-                              assessment.riskFactors.mciRisk < 50 ? 'text-orange-600' : 'text-red-600'
-                            }`}>
-                              {assessment.riskFactors.mciRisk}%
-                            </span>
+                          <p className="text-sm font-medium text-muted-foreground">결과</p>
+                          <div className="text-sm text-muted-foreground">
+                            {assessment.riskFactors.mciRisk < 20 ? '정상' : 
+                             assessment.riskFactors.mciRisk < 50 ? '전측두엽장애' : '치매'}
                           </div>
                         </div>
                         
                         <div className="space-y-1">
-                          <p className="text-sm font-medium text-muted-foreground">치매 위험도</p>
+                          <p className="text-sm font-medium text-muted-foreground">MMSE 점수</p>
                           <div className="flex items-center space-x-2">
-                            <span className={`text-xl font-bold ${
-                              assessment.riskFactors.dementiaRisk < 20 ? 'text-green-600' :
-                              assessment.riskFactors.dementiaRisk < 50 ? 'text-orange-600' : 'text-red-600'
-                            }`}>
-                              {assessment.riskFactors.dementiaRisk}%
-                            </span>
+                             {(assessment as any).cognitiveTest?.mmseScore && (assessment as any).cognitiveTest.mmseScore > 0 ? (
+                              <>
+                                <span className="text-xl font-bold text-primary">
+                                   {(assessment as any).cognitiveTest.mmseScore}
+                                </span>
+                                <span className="text-sm text-muted-foreground">/23</span>
+                              </>
+                            ) : (
+                              <span className="text-sm text-muted-foreground italic">검사 미완료</span>
+                            )}
                           </div>
                         </div>
                       </div>

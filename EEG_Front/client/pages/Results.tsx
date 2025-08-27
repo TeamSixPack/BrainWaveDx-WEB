@@ -460,7 +460,6 @@ export default function Results() {
         patientName: results.patientName,
         assessmentDate: results.assessmentDate,
         overallRisk: diagnosisInfo.title,
-        cognitiveScore: results.eegAnalysis.overallScore,
         mocaScore: results.cognitiveTest.mocaScore,
         mmseScore: results.cognitiveTest.mmseScore,
         confidenceLevel: results.confidenceLevel,
@@ -837,7 +836,7 @@ export default function Results() {
                         <>
                           <div className="text-3xl font-bold text-green-600 mb-2">{results.cognitiveTest.mmseScore}/30</div>
                           <p className="text-sm text-green-700">
-                            {results.cognitiveTest.mmseScore >= 24 ? '24점 이상으로 인지적 손상이 없습니다' : 
+                            {results.cognitiveTest.mmseScore >= 24 ? '24점 이상으로 정상입니다' : 
                              results.cognitiveTest.mmseScore >= 18 ? '23~18점으로 경도인지장애입니다' : 
                              '17점 이하로 인지기능장애입니다'}
                           </p>
@@ -878,7 +877,7 @@ export default function Results() {
                               <div className="flex items-start space-x-2">
                                 <div className="w-2 h-2 bg-green-400 rounded-full mt-1 flex-shrink-0"></div>
                                 <div className="min-w-0 flex-1">
-                                  <div className="font-semibold text-green-800 mb-1 text-sm">인지적 손상 없음</div>
+                                  <div className="font-semibold text-green-800 mb-1 text-sm">정상</div>
                                   <div className="text-gray-700 text-xs leading-relaxed">
                                     정상 뇌 건강.<br />
                                     인지 저하나 신경학적 이상 없음.
@@ -888,7 +887,7 @@ export default function Results() {
                               <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-100"></div>
                             </div>
                           </span>
-                          <span className="font-semibold">인지적 손상 없음</span>
+                          <span className="font-semibold">정상</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="font-semibold group relative cursor-help">
@@ -1027,6 +1026,7 @@ export default function Results() {
               </div>
             </div>
 
+            {/* 맞춤형 가이드 받기 버튼 - 비활성화됨
             <div className="text-center">
               <Button
                 onClick={() => setIsChatbotOpen(true)}
@@ -1036,6 +1036,7 @@ export default function Results() {
                 맞춤형 가이드 받기
               </Button>
             </div>
+            */}
           </CardContent>
         </Card>
 
@@ -1070,7 +1071,7 @@ export default function Results() {
               <Button variant="outline" className="w-full h-12" asChild>
                 <Link to="/assessment">
                   <Activity className="h-4 w-4 mr-2" />
-                  새로운 테스트
+                  다시 검사하기
                 </Link>
               </Button>
 
@@ -1094,7 +1095,7 @@ export default function Results() {
         </Card>
       </div>
 
-      {/* Floating Chatbot Icon */}
+      {/* Floating Chatbot Icon - 비활성화됨
       <div className="fixed bottom-6 right-6 z-40 group">
         <Button
           onClick={() => setIsChatbotOpen(true)}
@@ -1105,13 +1106,15 @@ export default function Results() {
           <MessageCircle className="h-6 w-6 group-hover:scale-110 transition-transform" />
         </Button>
       </div>
+      */}
 
-      {/* Chatbot Component */}
+      {/* Chatbot Component - 비활성화됨
       <Chatbot
         isOpen={isChatbotOpen}
         onClose={() => setIsChatbotOpen(false)}
         userDiagnosis={diagnosisInfo.title}
       />
+      */}
     </div>
   );
 }

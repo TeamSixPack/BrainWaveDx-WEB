@@ -93,16 +93,6 @@ export default function Index() {
               <Brain className="h-8 w-8 sm:h-9 sm:w-9 text-primary" />
               <span className="text-xl sm:text-2xl font-bold text-foreground">NeuroScan</span>
             </div>
-            {/* 기억력 상담 챗봇 버튼 */}
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="hidden sm:flex bg-white hover:bg-blue-50 border-gray-200 hover:border-blue-200 text-blue-700 hover:text-blue-800 transition-colors duration-200"
-              onClick={() => setMemoryChatbotOpen(true)}
-            >
-              <MessageCircle className="h-4 w-4 mr-2 group-hover:text-blue-600" />
-              AI 건강 상담
-            </Button>
           </div>
           <div className="flex items-center space-x-3">
             {isLoggedIn ? (
@@ -219,43 +209,7 @@ export default function Index() {
               </div>
             </div>
 
-            {/* Features Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 pt-8 sm:pt-12">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-5 shadow-md border border-white/20 hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Brain className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
-                </div>
-                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">뇌파 기반 인지 기능 평가</h3>
-                <p className="text-sm sm:text-base text-muted-foreground">뇌파 데이터로 정확한 인지 기능 상태를 분석합니다.</p>
-              </div>
 
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-5 shadow-md border border-white/20 hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Zap className="h-6 w-6 sm:h-7 sm:w-7 text-green-600" />
-                </div>
-                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">MMSE-K<br></br> 인지 검사</h3>
-                <p className="text-sm sm:text-base text-muted-foreground">표준화된 한국형 간이정신상태검사 도구를 제공합니다.</p>
-              </div>
-
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-5 shadow-md border border-white/20 hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Upload className="h-6 w-6 sm:h-7 sm:w-7 text-blue-600" />
-                </div>
-                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">AI 기반 맞춤<br></br> 분석</h3>
-                <p className="text-sm sm:text-base text-muted-foreground">개인별 맞춤 분석으로 정확한 결과를 제공합니다.</p>
-              </div>
-
-              <div 
-                className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-5 shadow-sm border border-white/20 hover:shadow-md transition-colors duration-200 cursor-pointer group hover:bg-blue-50 hover:border-blue-200"
-                onClick={() => setMemoryChatbotOpen(true)}
-              >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-blue-500/10 transition-colors duration-200">
-                  <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7 text-green-600 group-hover:text-blue-600 transition-colors duration-200" />
-                </div>
-                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 group-hover:text-blue-700 transition-colors duration-200">AI 건강 상담<br></br> 챗봇</h3>
-                <p className="text-sm sm:text-base text-muted-foreground group-hover:text-blue-600 transition-colors duration-200">음성으로 상담하고 전문가 수준의 해석을 받아보세요.</p>
-              </div>
-            </div>
 
             {/* Footer Info */}
             <div className="text-center space-y-2 sm:space-y-3 pt-8 sm:pt-12">
