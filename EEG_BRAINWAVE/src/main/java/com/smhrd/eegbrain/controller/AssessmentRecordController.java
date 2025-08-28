@@ -109,6 +109,12 @@ public class AssessmentRecordController {
                     
                     return recordMap;
                 })
+                .sorted((a, b) -> {
+                    // Controller에서도 ID 기준 내림차순 정렬 보장
+                    Long idA = (Long) a.get("id");
+                    Long idB = (Long) b.get("id");
+                    return idB.compareTo(idA);
+                })
                 .toList();
             
             System.out.println("✅ 응답 데이터 생성 완료");

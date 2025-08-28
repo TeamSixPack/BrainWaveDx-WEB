@@ -574,8 +574,10 @@ export default function Results() {
               </Link>
             </Button>
             <div className="flex items-center space-x-2">
-              <Brain className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold text-foreground">NeuroScan</span>
+              <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer">
+                <Brain className="h-6 w-6 text-primary" />
+                <span className="text-xl font-bold text-foreground">NeuroScan</span>
+              </Link>
             </div>
           </div>
           <Badge variant="outline" className="text-sm">

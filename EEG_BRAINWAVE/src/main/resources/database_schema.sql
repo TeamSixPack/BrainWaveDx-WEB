@@ -24,9 +24,12 @@ CREATE TABLE IF NOT EXISTS assessment_records (
     mmse_score INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (uid) REFERENCES users(uid) ON DELETE CASCADE,
-    INDEX idx_user_id (uid, id DESC),
-    INDEX idx_user_assessment_date (uid, assessment_date DESC),
-    INDEX idx_assessment_date (assessment_date DESC)
+    INDEX idx_user_id_desc (uid, id DESC),
+    INDEX idx_user_created_at_desc (uid, created_at DESC),
+    INDEX idx_user_assessment_date_desc (uid, assessment_date DESC),
+    INDEX idx_id_desc (id DESC),
+    INDEX idx_created_at_desc (created_at DESC),
+    INDEX idx_assessment_date_desc (assessment_date DESC)
 );
 
 -- 테스트 데이터 삽입
@@ -72,4 +75,25 @@ INSERT INTO assessment_records (uid, assessment_date, eeg_result, moca_score, mm
 -- FROM assessment_records ar
 -- JOIN users u ON ar.uid = u.uid
 -- WHERE ar.uid = 'test'
--- ORDER BY ar.assessment_date DESC;
+-- ORDER BY ar.id DESC;
+
+-- 강제로 ID 기준 내림차순 정렬 확인
+-- SELECT 
+--     ar.id,
+--     ar.uid,
+--     u.name,
+--     ar.assessment_date,
+--     ar.eeg_result,
+--     ar.moca_score,
+--     ar.mmse_score,
+--     ar.created_at
+-- FROM assessment_records ar
+-- JOIN users u ON ar.uid = u.uid
+-- WHERE ar.uid = 'test'
+-- ORDER BY CAST(ar.id AS UNSIGNED) DESC;
+
+-- 인덱스 확인 및 재생성
+-- SHOW INDEX FROM assessment_records;
+-- DROP INDEX idx_id_desc ON assessment_records;
+-- CREATE INDEX idx_id_desc ON assessment_records (id DESC);
+-- CREATE INDEX idx_created_at_desc ON assessment_records (created_at DESC);

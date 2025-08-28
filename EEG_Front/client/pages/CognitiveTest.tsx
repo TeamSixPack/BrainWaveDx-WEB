@@ -74,6 +74,8 @@ export default function CognitiveTest() {
   const [sequenceNumbers, setSequenceNumbers] = useState<string[]>([]);
   const [currentSequenceIndex, setCurrentSequenceIndex] = useState(0);
   const [isShowingSequence, setIsShowingSequence] = useState(false);
+  const [countdownTimer, setCountdownTimer] = useState(1);
+  const [isCountdownRunning, setIsCountdownRunning] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
   const navigate = useNavigate();
   const { isLoggedIn } = useAuth();
@@ -457,9 +459,22 @@ export default function CognitiveTest() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isShowingSequence && currentSequenceIndex < sequenceNumbers.length) {
+      // 카운트다운 시작
+      setIsCountdownRunning(true);
+      setCountdownTimer(1);
+      
       interval = setInterval(() => {
-        setCurrentSequenceIndex(prev => prev + 1);
-      }, 1000);
+        setCountdownTimer(prev => {
+          if (prev <= 0.1) {
+            // 1초 카운트다운 완료, 다음 숫자로
+            setCurrentSequenceIndex(prevIndex => prevIndex + 1);
+            return 1; // 다음 숫자용 카운트다운 재시작
+          }
+          return prev - 0.1; // 0.1초씩 감소하여 부드러운 애니메이션
+        });
+      }, 100); // 0.1초마다 업데이트
+    } else {
+      setIsCountdownRunning(false);
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -472,6 +487,8 @@ export default function CognitiveTest() {
       setIsShowingSequence(false);
       setCurrentSequenceIndex(0);
       setAttentionPhase('sequence');
+      setCountdownTimer(1);
+      setIsCountdownRunning(false);
     }
     if (questions[currentQuestion]?.type !== 'memory') {
       setMemoryPhase('instruction');
@@ -927,6 +944,9 @@ export default function CognitiveTest() {
         {memoryPhase === 'showing' && (
           <div className="text-center p-3 bg-white rounded-lg border border-gray-200">
             <p className="text-sm text-blue-700 mb-2">다음 5개 단어를 기억하세요:</p>
+            
+            <div className="text-2xl font-bold text-blue-600 mt-3">{memoryTimeLeft}초 남음</div>
+            
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-2">
               {['사과', '책상', '자동차', '바다', '꽃'].map((word, index) => (
                 <div key={index} className="p-2 bg-white rounded border font-bold">
@@ -934,7 +954,8 @@ export default function CognitiveTest() {
                 </div>
               ))}
             </div>
-            <div className="text-2xl font-bold text-blue-600 mt-3">{memoryTimeLeft}초 남음</div>
+            
+
           </div>
         )}
         {memoryPhase === 'input' && (
@@ -1049,6 +1070,8 @@ export default function CognitiveTest() {
                 setIsShowingSequence(true); 
                 setSequenceNumbers(['2', '1', '8', '4', '5']); 
                 setCurrentSequenceIndex(0); 
+                setCountdownTimer(1);
+                setIsCountdownRunning(false);
               }} className="w-full">
                 시작하기
               </Button>
@@ -1059,7 +1082,76 @@ export default function CognitiveTest() {
                 {currentSequenceIndex < sequenceNumbers.length ? (
                   <>
                     <p className="text-sm text-blue-700 mb-2">숫자를 기억하세요:</p>
+                    
+                    {/* 진행 상황 표시 */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-center space-x-2 mb-2">
+                        <Clock className="h-5 w-5 text-blue-600" />
+                        <span className="text-lg font-semibold text-blue-600">
+                          {currentSequenceIndex + 1}번째 숫자 / 5개
+                        </span>
+                      </div>
+                      
+                      {/* 프로그레스 바 */}
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-blue-600 h-3 rounded-full transition-all duration-1000 ease-linear"
+                          style={{ width: `${((currentSequenceIndex + 1) / 5) * 100}%` }}
+                        />
+                      </div>
+                      
+                      {/* 단계 인디케이터 */}
+                      <div className="flex justify-center space-x-2 mt-2">
+                        {[0, 1, 2, 3, 4].map((index) => (
+                          <div
+                            key={index}
+                            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                              index <= currentSequenceIndex 
+                                ? 'bg-blue-600 scale-125' 
+                                : 'bg-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* 현재 숫자 표시 */}
                     <div className="text-6xl font-bold text-blue-600 my-6">{sequenceNumbers[currentSequenceIndex]}</div>
+                    
+                    {/* 1초 카운트다운 타이머 */}
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center space-x-2 mb-2">
+                          <Clock className="h-5 w-5 text-blue-600" />
+                          <span className="text-lg font-semibold text-blue-600">
+                            다음 숫자까지
+                          </span>
+                        </div>
+                        
+                        {/* 실시간 5초 카운트다운 */}
+                        <div className="text-3xl font-bold text-blue-600 mb-2">
+                          {currentSequenceIndex === 4 ? '🎉' : `${countdownTimer.toFixed(1)}초`}
+                        </div>
+                        
+                        {/* 시각적 카운트다운 바 */}
+                        {currentSequenceIndex < 4 && (
+                          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full transition-all duration-100 ease-linear"
+                              style={{ width: `${(countdownTimer / 1) * 100}%` }}
+                            />
+                          </div>
+                        )}
+                        
+                        {/* 진행 상태 메시지 */}
+                        <p className="text-sm text-blue-700">
+                          {currentSequenceIndex === 4 
+                            ? '🎉 모든 숫자 표시 완료!' 
+                            : '⏱️ 1초 후 다음 숫자가 나타납니다'
+                          }
+                        </p>
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <div className="text-base md:text-lg font-medium text-blue-800 my-6">이제 기억한 숫자를 순서대로 입력해주세요</div>

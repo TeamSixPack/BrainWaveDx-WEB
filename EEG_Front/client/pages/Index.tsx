@@ -90,8 +90,10 @@ export default function Index() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-2 sm:space-x-6">
             <div className="flex items-center space-x-2">
-              <Brain className="h-8 w-8 sm:h-9 sm:w-9 text-primary" />
-              <span className="text-xl sm:text-2xl font-bold text-foreground">NeuroScan</span>
+              <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer">
+                <Brain className="h-8 w-8 sm:h-9 sm:w-9 text-primary" />
+                <span className="text-xl sm:text-2xl font-bold text-foreground">NeuroScan</span>
+              </Link>
             </div>
           </div>
           <div className="flex items-center space-x-3">

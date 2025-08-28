@@ -361,6 +361,8 @@ export default function MMSE() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
   const [memoryPhase, setMemoryPhase] = useState<'show' | 'input'>('show');
+  const [memoryCountdown, setMemoryCountdown] = useState(2);
+  const [isMemoryCountdownRunning, setIsMemoryCountdownRunning] = useState(false);
   
   // TTS 관련 상태
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -576,17 +578,29 @@ export default function MMSE() {
   useEffect(() => {
     if (currentQuestion === 7) { // id: 8은 0-based index로 7
       setMemoryPhase('show');
+      setMemoryCountdown(2);
+      setIsMemoryCountdownRunning(true);
       
-      // 2초 후 입력 단계로 전환
-      const timer = setTimeout(() => {
-        setMemoryPhase('input');
-        // TTS로 입력 단계 안내
-        if (isTTSEnabled) {
-          speakText("이제 기억한 단어들을 입력하실 수 있습니다. 쉼표로 구분하여 입력해주세요.");
-        }
-      }, 2000);
+      // 2초 카운트다운 시작
+      const countdownInterval = setInterval(() => {
+        setMemoryCountdown(prev => {
+          if (prev <= 0.1) {
+            setIsMemoryCountdownRunning(false);
+            setMemoryPhase('input');
+            // TTS로 입력 단계 안내
+            if (isTTSEnabled) {
+              speakText("이제 기억한 단어들을 입력하실 수 있습니다. 쉼표로 구분하여 입력해주세요.");
+            }
+            return 2;
+          }
+          return prev - 0.1;
+        });
+      }, 100);
       
-      return () => clearTimeout(timer);
+      return () => {
+        clearInterval(countdownInterval);
+        setIsMemoryCountdownRunning(false);
+      };
     }
   }, [currentQuestion, isTTSEnabled]);
 
@@ -594,6 +608,8 @@ export default function MMSE() {
   useEffect(() => {
     if (currentQuestion !== 7) {
       setMemoryPhase('show');
+      setMemoryCountdown(2);
+      setIsMemoryCountdownRunning(false);
     }
   }, [currentQuestion]);
 
@@ -1142,6 +1158,25 @@ export default function MMSE() {
                 {memoryPhase === 'show' ? (
                   <>
                     <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">다음 단어들을 기억하세요. 2초 후 선택하실 수 있습니다.</p>
+                    
+                    {/* 2초 카운트다운 타이머 */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-center space-x-2 mb-2">
+                        <Clock className="h-5 w-5 text-blue-600" />
+                        <span className="text-lg font-semibold text-blue-600">
+                          {memoryCountdown.toFixed(1)}초 남음
+                        </span>
+                      </div>
+                      
+                      {/* 시각적 카운트다운 바 */}
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-100 ease-linear"
+                          style={{ width: `${(memoryCountdown / 2) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                    
                     <div className="space-y-2">
                       <p className="text-lg sm:text-xl font-bold text-primary">나무</p>
                       <p className="text-lg sm:text-xl font-bold text-primary">자동차</p>

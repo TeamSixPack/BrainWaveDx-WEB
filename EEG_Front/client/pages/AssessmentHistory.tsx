@@ -90,28 +90,66 @@ export default function AssessmentHistory() {
           console.log(`  ${index + 1}번째: ID=${record.id}, 날짜=${record.assessmentDate}, 결과=${record.eegResult}`);
         });
         
-        // 백엔드 정렬이 오래된 순서라면 배열을 뒤집어서 최신이 맨 위에 오도록 함
-        let finalRecords = [...records];
+        // 백엔드 정렬이 실패했으므로 프론트엔드에서 강제로 정렬
+        console.log('⚠️ 백엔드에서 오래된 순서로 데이터 전송됨. 프론트엔드에서 강제 정렬합니다.');
         
-        if (records.length > 1) {
-          const firstId = records[0]?.id;
-          const lastId = records[records.length - 1]?.id;
+        // 1단계: ID 기준 내림차순 정렬
+        let finalRecords = [...records].sort((a, b) => {
+          const idA = parseInt(a.id);
+          const idB = parseInt(b.id);
           
-          // 첫 번째 ID가 마지막 ID보다 작다면 (오래된 순서라면) 배열을 뒤집기
-          if (firstId < lastId) {
-            console.log('⚠️ 백엔드에서 오래된 순서로 데이터 전송됨. 배열을 뒤집어서 최신 순으로 변경합니다.');
-            finalRecords = [...records].reverse();
+          if (isNaN(idA) || isNaN(idB)) {
+            // ID가 숫자가 아니면 문자열로 비교
+            return String(b.id).localeCompare(String(a.id));
+          }
+          
+          return idB - idA;
+        });
+        
+        // 2단계: 정렬 결과 검증 및 강제 수정
+        if (finalRecords.length > 1) {
+          const firstId = parseInt(finalRecords[0]?.id);
+          const lastId = parseInt(finalRecords[finalRecords.length - 1]?.id);
+          
+          if (!isNaN(firstId) && !isNaN(lastId) && firstId < lastId) {
+            console.log('⚠️ 정렬이 실패했습니다. 배열을 강제로 뒤집습니다.');
+            finalRecords = finalRecords.reverse();
             
-            console.log('🔍 배열 뒤집기 후 결과:');
-            finalRecords.forEach((record: any, index: number) => {
-              console.log(`  ${index + 1}번째: ID=${record.id}, 날짜=${record.assessmentDate}, 결과=${record.eegResult}`);
-            });
+            // 다시 한 번 검증
+            const newFirstId = parseInt(finalRecords[0]?.id);
+            const newLastId = parseInt(finalRecords[finalRecords.length - 1]?.id);
+            if (!isNaN(newFirstId) && !isNaN(newLastId) && newFirstId < newLastId) {
+              console.error('❌ 정렬이 완전히 실패했습니다. 수동으로 정렬합니다.');
+              // 수동으로 ID 순서대로 재배열
+              const idMap = new Map();
+              finalRecords.forEach(record => idMap.set(parseInt(record.id), record));
+              const sortedIds = Array.from(idMap.keys()).sort((a, b) => b - a);
+              finalRecords = sortedIds.map(id => idMap.get(id));
+            }
           }
         }
+        
+        console.log('🔍 강제 정렬 후 결과:');
+        finalRecords.forEach((record: any, index: number) => {
+          console.log(`  ${index + 1}번째: ID=${record.id}, 날짜=${record.assessmentDate}, 결과=${record.eegResult}`);
+        });
         
         // 최종 데이터 사용
         setAssessments(finalRecords);
         console.log('✅ 검사 기록 로드 완료:', finalRecords);
+        
+        // 추가 검증: 실제로 최신이 맨 위에 있는지 확인
+        if (finalRecords.length > 1) {
+          const firstId = parseInt(finalRecords[0]?.id);
+          const secondId = parseInt(finalRecords[1]?.id);
+          
+          if (!isNaN(firstId) && !isNaN(secondId) && firstId < secondId) {
+            console.error('❌ 최종 정렬 실패! 첫 번째 ID가 두 번째 ID보다 작습니다.');
+            console.error(`  첫 번째: ID=${firstId}, 두 번째: ID=${secondId}`);
+          } else {
+            console.log('✅ 최종 정렬 성공! 최신 검사 기록이 맨 위에 있습니다.');
+          }
+        }
       } else {
         throw new Error(data.message || '검사 기록을 불러오는데 실패했습니다.');
       }
@@ -363,7 +401,10 @@ export default function AssessmentHistory() {
               뒤로 가기
             </Button>
             <div className="flex items-center space-x-2">
-              <Brain className="h-6 w-6 text-primary" />
+              <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer">
+                <Brain className="h-6 w-6 text-primary" />
+                <span className="text-xl font-bold text-foreground">NeuroScan</span>
+              </Link>
               <span className="text-xl font-bold text-foreground">검사 기록</span>
             </div>
           </div>
@@ -373,6 +414,8 @@ export default function AssessmentHistory() {
       <div className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
         <div className="space-y-6">
           <div className="space-y-6">
+            
+
             
             {/* 결과 변화 그래프 */}
             {assessments.length > 1 && (
@@ -463,9 +506,6 @@ export default function AssessmentHistory() {
                           <div>
                             <CardTitle className="flex items-center space-x-2">
                               <span>검사 #{assessment.id}</span>
-                              {index === 0 && (
-                                <Badge variant="default">최신</Badge>
-                              )}
                             </CardTitle>
                             <CardDescription className="flex items-center space-x-2 mt-1">
                               <Calendar className="h-4 w-4" />

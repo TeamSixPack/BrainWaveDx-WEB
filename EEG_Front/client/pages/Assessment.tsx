@@ -450,8 +450,10 @@ export default function Assessment() {
               </Link>
             </Button>
             <div className="flex items-center space-x-2">
-              <Brain className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
-              <span className="text-lg lg:text-xl font-bold text-foreground">NeuroScan</span>
+              <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer">
+                <Brain className="h-5 w-5 lg:h-6 lg:w-6 text-primary" />
+                <span className="text-lg lg:text-xl font-bold text-foreground">NeuroScan</span>
+              </Link>
             </div>
           </div>
           {/* <Badge variant="outline" className="text-xs lg:text-sm">

@@ -17,8 +17,10 @@ export default function About() {
           </Button>
 
           <div className="flex items-center justify-center space-x-3">
-            <Brain className="h-12 w-12 text-primary" />
-            <span className="text-3xl font-bold text-foreground">NeuroScan</span>
+            <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer">
+              <Brain className="h-12 w-12 text-primary" />
+              <span className="text-2xl font-bold text-foreground">NeuroScan</span>
+            </Link>
           </div>
 
           <div className="space-y-4">

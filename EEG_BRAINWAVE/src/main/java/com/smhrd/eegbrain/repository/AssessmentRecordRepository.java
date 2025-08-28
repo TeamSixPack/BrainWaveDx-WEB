@@ -23,6 +23,17 @@ public interface AssessmentRecordRepository extends JpaRepository<AssessmentReco
     @Query("SELECT ar FROM AssessmentRecordEntity ar JOIN FETCH ar.user WHERE ar.user.uid = :userId ORDER BY ar.id DESC")
     List<AssessmentRecordEntity> findByUserIdOrderByAssessmentDateDesc(@Param("userId") String userId);
     
+    // 강제로 ID 내림차순 정렬하는 새로운 메서드
+    @Query("SELECT ar FROM AssessmentRecordEntity ar JOIN FETCH ar.user WHERE ar.user.uid = :userId ORDER BY ar.id DESC")
+    List<AssessmentRecordEntity> findByUserIdOrderByIdDesc(@Param("userId") String userId);
+    
+    // 네이티브 쿼리로 강제 정렬
+    @Query(value = "SELECT ar.*, u.* FROM assessment_records ar " +
+                   "JOIN users u ON ar.uid = u.uid " +
+                   "WHERE ar.uid = :userId " +
+                   "ORDER BY ar.id DESC", nativeQuery = true)
+    List<Object[]> findByUserIdOrderByIdDescNative(@Param("userId") String userId);
+    
     @Query("SELECT COUNT(ar) FROM AssessmentRecordEntity ar WHERE ar.user.uid = :userId")
     Long countByUserId(@Param("userId") String userId);
     
