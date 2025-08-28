@@ -17,15 +17,16 @@ CREATE TABLE IF NOT EXISTS users (
 -- 검사 기록 테이블 생성
 CREATE TABLE IF NOT EXISTS assessment_records (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
+    uid VARCHAR(50) NOT NULL,
     assessment_date TIMESTAMP NOT NULL,
     eeg_result VARCHAR(50),
     moca_score INT,
     mmse_score INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(uid) ON DELETE CASCADE,
-    INDEX idx_user_assessment_date (user_id, assessment_date),
-    INDEX idx_assessment_date (assessment_date)
+    FOREIGN KEY (uid) REFERENCES users(uid) ON DELETE CASCADE,
+    INDEX idx_user_id (uid, id DESC),
+    INDEX idx_user_assessment_date (uid, assessment_date DESC),
+    INDEX idx_assessment_date (assessment_date DESC)
 );
 
 -- 테스트 데이터 삽입
@@ -36,7 +37,7 @@ INSERT INTO users (uid, pw, name, phone) VALUES
 ON DUPLICATE KEY UPDATE name = VALUES(name), phone = VALUES(phone);
 
 -- 2. test 사용자의 검사 기록 생성 (다양한 결과와 점수)
-INSERT INTO assessment_records (user_id, assessment_date, eeg_result, moca_score, mmse_score) VALUES
+INSERT INTO assessment_records (uid, assessment_date, eeg_result, moca_score, mmse_score) VALUES
 -- 오늘 검사
 ('test', NOW(), '정상', 28, 29),
 -- 어제 검사
@@ -61,7 +62,7 @@ INSERT INTO assessment_records (user_id, assessment_date, eeg_result, moca_score
 -- 검사 기록 조회 테스트
 -- SELECT 
 --     ar.id,
---     ar.user_id,
+--     ar.uid,
 --     u.name,
 --     ar.assessment_date,
 --     ar.eeg_result,
@@ -69,6 +70,6 @@ INSERT INTO assessment_records (user_id, assessment_date, eeg_result, moca_score
 --     ar.mmse_score,
 --     ar.created_at
 -- FROM assessment_records ar
--- JOIN users u ON ar.user_id = ar.uid
--- WHERE ar.user_id = 'test'
+-- JOIN users u ON ar.uid = u.uid
+-- WHERE ar.uid = 'test'
 -- ORDER BY ar.assessment_date DESC;

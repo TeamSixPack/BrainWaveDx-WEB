@@ -40,10 +40,24 @@ export default function AssessmentHistory() {
   // 테스트용 userId (실제로는 로그인된 사용자 ID를 사용해야 함)
   const userId = "test";
   const navigate = useNavigate();
+  
+  console.log('🔍 AssessmentHistory - userId 설정됨:', userId);
+  console.log('🔍 AssessmentHistory - userId 타입:', typeof userId);
+  console.log('🔍 AssessmentHistory - userId 길이:', userId.length);
 
   useEffect(() => {
     loadAssessments();
   }, []);
+
+  // assessments 배열이 변경될 때마다 순서 확인
+  useEffect(() => {
+    if (assessments.length > 0) {
+      console.log('🔍 assessments 배열 변경됨:');
+      assessments.forEach((assessment, index) => {
+        console.log(`  ${index + 1}번째: ID=${assessment.id}, 날짜=${assessment.assessmentDate}, 결과=${assessment.eegResult}`);
+      });
+    }
+  }, [assessments]);
 
   // 검사 기록 로드
   const loadAssessments = async () => {
@@ -65,8 +79,39 @@ export default function AssessmentHistory() {
       console.log('🔍 API 응답 데이터:', data);
       
       if (data.success) {
-        setAssessments(data.records || []);
-        console.log('✅ 검사 기록 로드 완료:', data.records);
+        console.log('🔍 백엔드에서 받은 검사 기록:', data.records);
+        
+        // 백엔드에서 이미 정렬된 데이터를 받음
+        const records = data.records;
+        
+        // 데이터 순서 확인을 위한 로그
+        console.log('🔍 백엔드에서 받은 데이터 순서:');
+        records.forEach((record: any, index: number) => {
+          console.log(`  ${index + 1}번째: ID=${record.id}, 날짜=${record.assessmentDate}, 결과=${record.eegResult}`);
+        });
+        
+        // 백엔드 정렬이 오래된 순서라면 배열을 뒤집어서 최신이 맨 위에 오도록 함
+        let finalRecords = [...records];
+        
+        if (records.length > 1) {
+          const firstId = records[0]?.id;
+          const lastId = records[records.length - 1]?.id;
+          
+          // 첫 번째 ID가 마지막 ID보다 작다면 (오래된 순서라면) 배열을 뒤집기
+          if (firstId < lastId) {
+            console.log('⚠️ 백엔드에서 오래된 순서로 데이터 전송됨. 배열을 뒤집어서 최신 순으로 변경합니다.');
+            finalRecords = [...records].reverse();
+            
+            console.log('🔍 배열 뒤집기 후 결과:');
+            finalRecords.forEach((record: any, index: number) => {
+              console.log(`  ${index + 1}번째: ID=${record.id}, 날짜=${record.assessmentDate}, 결과=${record.eegResult}`);
+            });
+          }
+        }
+        
+        // 최종 데이터 사용
+        setAssessments(finalRecords);
+        console.log('✅ 검사 기록 로드 완료:', finalRecords);
       } else {
         throw new Error(data.message || '검사 기록을 불러오는데 실패했습니다.');
       }
@@ -83,12 +128,38 @@ export default function AssessmentHistory() {
   const handleDeleteAssessment = async (id: number) => {
     if (confirm('이 검사 기록을 삭제하시겠습니까?')) {
       try {
-        // TODO: 백엔드에 삭제 API가 있다면 여기서 호출
-        // 현재는 프론트엔드에서만 제거
-        setAssessments(prev => prev.filter(assessment => assessment.id !== id));
-      } catch (err) {
-        console.error('검사 기록 삭제 에러:', err);
-        alert('검사 기록 삭제에 실패했습니다.');
+        console.log('🔍 검사 기록 삭제 시작: ID =', id);
+        
+        const response = await fetch(`http://localhost:8090/api/assessments/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        console.log('🔍 삭제 API 응답 상태:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ 삭제 API 응답 오류:', errorText);
+          throw new Error(`검사 기록 삭제에 실패했습니다. (${response.status})`);
+        }
+        
+        const data = await response.json();
+        console.log('🔍 삭제 API 응답 데이터:', data);
+        
+        if (data.success) {
+          // 프론트엔드에서도 제거
+          setAssessments(prev => prev.filter(assessment => assessment.id !== id));
+          console.log('✅ 검사 기록 삭제 완료: ID =', id);
+          alert('검사 기록이 삭제되었습니다.');
+        } else {
+          throw new Error(data.message || '검사 기록 삭제에 실패했습니다.');
+        }
+        
+      } catch (error) {
+        console.error('❌ 검사 기록 삭제 에러:', error);
+        alert('검사 기록 삭제에 실패했습니다: ' + error.message);
       }
     }
   };
@@ -135,9 +206,9 @@ export default function AssessmentHistory() {
   // 그래프용 데이터 준비
   const prepareChartData = () => {
     return assessments
-      .sort((a, b) => new Date(a.assessmentDate).getTime() - new Date(b.assessmentDate).getTime())
+      .sort((a, b) => new Date(a.createdAt || a.assessmentDate).getTime() - new Date(b.createdAt || b.assessmentDate).getTime())
       .map((assessment, index) => {
-        const date = new Date(assessment.assessmentDate);
+        const date = new Date(assessment.createdAt || assessment.assessmentDate);
         let resultValue = 0;
         
         switch (assessment.eegResult?.toLowerCase()) {
@@ -157,7 +228,11 @@ export default function AssessmentHistory() {
         return {
           date: `${date.getMonth() + 1}/${date.getDate()}`,
           result: resultValue,
-          fullDate: date.toLocaleDateString(),
+          fullDate: date.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }),
           diagnosis: assessment.eegResult
         };
       });
@@ -362,9 +437,17 @@ export default function AssessmentHistory() {
             )}
 
             {/* Assessment List */}
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3 sm:space-y4">
+              {(() => {
+                console.log('🔍 렌더링 시 assessments 배열:', assessments);
+                console.log('🔍 렌더링 시 첫 번째 데이터:', assessments[0]);
+                console.log('🔍 렌더링 시 마지막 데이터:', assessments[assessments.length - 1]);
+                return null;
+              })()}
               {assessments.map((assessment, index) => {
                 const diagnosisInfo = getDiagnosisInfo(assessment.eegResult);
+                
+                console.log(`🔍 렌더링 ${index}번째: ID=${assessment.id}, 날짜=${assessment.assessmentDate}`);
                 
                 return (
                   <Card 
@@ -379,14 +462,21 @@ export default function AssessmentHistory() {
                           </div>
                           <div>
                             <CardTitle className="flex items-center space-x-2">
-                              <span>검사 #{assessments.length - index}</span>
+                              <span>검사 #{assessment.id}</span>
                               {index === 0 && (
                                 <Badge variant="default">최신</Badge>
                               )}
                             </CardTitle>
                             <CardDescription className="flex items-center space-x-2 mt-1">
                               <Calendar className="h-4 w-4" />
-                              <span>{new Date(assessment.assessmentDate).toLocaleDateString()}</span>
+                              <span>{new Date(assessment.assessmentDate).toLocaleString('ko-KR', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                              })}</span>
                               <span>•</span>
                               <span>{assessment.user?.name || '사용자'}</span>
                             </CardDescription>

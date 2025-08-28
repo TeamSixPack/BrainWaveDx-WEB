@@ -22,12 +22,24 @@ public class AssessmentRecordController {
     @PostMapping
     public ResponseEntity<?> saveAssessmentRecord(@RequestBody Map<String, Object> request) {
         try {
-            String userId = request.get("userId").toString();
-            String eegResult = (String) request.get("eegResult");
+            System.out.println("🔍 받은 요청 데이터: " + request);
+            
+            String userId = request.get("userId") != null ? request.get("userId").toString() : null;
+            String eegResult = request.get("eegResult") != null ? (String) request.get("eegResult") : null;
             Integer mocaScore = request.get("mocaScore") != null ? 
                 Integer.parseInt(request.get("mocaScore").toString()) : null;
             Integer mmseScore = request.get("mmseScore") != null ? 
                 Integer.parseInt(request.get("mmseScore").toString()) : null;
+            
+            System.out.println("🔍 파싱된 데이터:");
+            System.out.println("  - userId: " + userId);
+            System.out.println("  - eegResult: " + eegResult);
+            System.out.println("  - mocaScore: " + mocaScore);
+            System.out.println("  - mmseScore: " + mmseScore);
+            
+            if (userId == null || eegResult == null) {
+                throw new IllegalArgumentException("userId와 eegResult는 필수입니다.");
+            }
 
             AssessmentRecordEntity savedRecord = assessmentRecordService.saveAssessmentRecord(
                 userId, eegResult, mocaScore, mmseScore);
@@ -37,8 +49,12 @@ public class AssessmentRecordController {
             response.put("message", "검사 기록이 저장되었습니다.");
             response.put("recordId", savedRecord.getId());
             
+            System.out.println("✅ 검사 기록 저장 성공: " + savedRecord.getId());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            System.err.println("❌ 검사 기록 저장 실패: " + e.getMessage());
+            e.printStackTrace();
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "검사 결과 저장에 실패했습니다: " + e.getMessage());
@@ -52,6 +68,15 @@ public class AssessmentRecordController {
     public ResponseEntity<?> getUserAssessmentRecords(@PathVariable String userId) {
         try {
             System.out.println("🔍 사용자 ID로 검사 기록 조회 시작: " + userId);
+            System.out.println("🔍 userId 길이: " + (userId != null ? userId.length() : "null"));
+            System.out.println("🔍 userId가 비어있는지: " + (userId != null && userId.trim().isEmpty()));
+            
+            if (userId == null || userId.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "사용자 ID가 비어있습니다."
+                ));
+            }
             
             List<AssessmentRecordEntity> records = assessmentRecordService.getUserAssessmentRecords(userId);
             System.out.println("🔍 조회된 검사 기록 수: " + records.size());
@@ -87,6 +112,15 @@ public class AssessmentRecordController {
                 .toList();
             
             System.out.println("✅ 응답 데이터 생성 완료");
+            
+            // 응답 데이터 순서 확인
+            System.out.println("🔍 컨트롤러에서 응답 데이터 순서 확인:");
+            for (int i = 0; i < responseRecords.size(); i++) {
+                Map<String, Object> record = responseRecords.get(i);
+                System.out.println("  " + (i + 1) + "번째: ID=" + record.get("id") + 
+                                 ", 날짜=" + record.get("assessmentDate") + 
+                                 ", 결과=" + record.get("eegResult"));
+            }
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -124,6 +158,42 @@ public class AssessmentRecordController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "검사 기록 조회에 실패했습니다: " + e.getMessage());
+            
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // 검사 기록 삭제
+    @DeleteMapping("/{recordId}")
+    public ResponseEntity<?> deleteAssessmentRecord(@PathVariable Long recordId) {
+        try {
+            System.out.println("🔍 검사 기록 삭제 시작: " + recordId);
+            
+            boolean deleted = assessmentRecordService.deleteAssessmentRecord(recordId);
+            
+            if (deleted) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "검사 기록이 삭제되었습니다.");
+                
+                System.out.println("✅ 검사 기록 삭제 성공: " + recordId);
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "검사 기록을 찾을 수 없습니다.");
+                
+                System.out.println("❌ 검사 기록을 찾을 수 없음: " + recordId);
+                return ResponseEntity.notFound().build();
+            }
+            
+        } catch (Exception e) {
+            System.err.println("❌ 검사 기록 삭제 실패: " + e.getMessage());
+            e.printStackTrace();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "검사 기록 삭제에 실패했습니다: " + e.getMessage());
             
             return ResponseEntity.badRequest().body(response);
         }

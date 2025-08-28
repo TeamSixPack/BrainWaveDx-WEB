@@ -16,14 +16,14 @@ export const saveAssessmentToDB = async (data: AssessmentData): Promise<boolean>
   try {
     console.log('🔵 검사 결과를 DB에 저장 중...', data);
     
-    const response = await fetch('http://localhost:8090/api/assessment/save', {
+    const response = await fetch('http://localhost:8090/api/assessments', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         userId: data.userId,
         eegResult: data.eegResult,
-        mocaScore: data.mocaScore?.toString() || '',
-        mmseScore: data.mmseScore?.toString() || ''
+        mocaScore: data.mocaScore,
+        mmseScore: data.mmseScore
       })
     });
     
@@ -77,19 +77,39 @@ export const autoSaveAssessment = async (
   eegResult: any,
   mocaScore: number = 0,
   mmseScore: number = 0
-): Promise<void> => {
+): Promise<boolean> => {
+  console.log('🔍 autoSaveAssessment 호출됨:', { eegResult, mocaScore, mmseScore });
+  
   if (!eegResult) {
     console.log('뇌파 검사 결과가 없어 저장하지 않습니다.');
-    return;
+    return false;
+  }
+
+  // 중복 저장 방지: 이미 저장된 결과인지 확인
+  const resultHash = JSON.stringify({
+    predicted_label: eegResult.predicted_label,
+    mocaScore,
+    mmseScore,
+    timestamp: eegResult.analysis_time || new Date().toISOString()
+  });
+  
+  const savedHash = sessionStorage.getItem('last_saved_result_hash');
+  if (savedHash === resultHash) {
+    console.log('⚠️ autoSaveAssessment: 이미 저장된 동일한 검사 결과입니다.');
+    return true; // 이미 저장된 것으로 간주
   }
   
   // 뇌파 진단 결과 결정
   let eegDiagnosis = 'normal';
   if (eegResult.probabilities || eegResult.prob_mean) {
     const probabilities = eegResult.probabilities || eegResult.prob_mean;
+    console.log('🔍 뇌파 확률 데이터:', probabilities);
+    
     const highestProbLabel = Object.entries(probabilities).reduce((a, b) => 
       Number(probabilities[a[0]]) > Number(probabilities[b[0]]) ? a : b
     )[0];
+    
+    console.log('🔍 최고 확률 라벨:', highestProbLabel);
     
     switch (highestProbLabel) {
       case 'CN': eegDiagnosis = 'normal'; break;
@@ -99,6 +119,8 @@ export const autoSaveAssessment = async (
     }
   }
   
+  console.log('🔍 결정된 진단:', eegDiagnosis);
+  
   const assessmentData: AssessmentData = {
     userId: 'test', // 실제로는 로그인된 사용자 ID
     eegResult: convertDiagnosisToKorean(eegDiagnosis),
@@ -106,11 +128,17 @@ export const autoSaveAssessment = async (
     mmseScore: mmseScore > 0 ? mmseScore : undefined
   };
   
+  console.log('🔍 최종 저장 데이터:', assessmentData);
+  
   const success = await saveAssessmentToDB(assessmentData);
   
   if (success) {
     console.log('🎉 검사 결과 자동 저장 완료!');
+    // 세션 스토리지에 저장 완료 상태 기록
+    sessionStorage.setItem('assessment_saved', 'true');
   } else {
     console.error('💥 검사 결과 자동 저장 실패!');
   }
+  
+  return success;
 };

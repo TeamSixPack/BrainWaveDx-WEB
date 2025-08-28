@@ -69,14 +69,20 @@ public class AssessmentRecordService {
                                  ", EEG Result: " + firstRecord.getEegResult());
             }
             
-            // 기본 메서드로 먼저 시도
-            List<AssessmentRecordEntity> records = assessmentRecordRepository.findByUser_UidOrderByAssessmentDateDesc(userId);
-            System.out.println("🔍 기본 메서드로 조회된 기록 수: " + records.size());
+            // JOIN FETCH 쿼리로 조회 (ID 기준 내림차순 정렬 - 최신이 맨 위)
+            List<AssessmentRecordEntity> records = assessmentRecordRepository.findByUserIdOrderByCreatedAtDesc(userId);
+            System.out.println("🔍 JOIN FETCH로 조회된 기록 수: " + records.size());
             
-            if (records.isEmpty()) {
-                // JOIN FETCH 쿼리로 시도
-                records = assessmentRecordRepository.findByUserIdOrderByAssessmentDateDesc(userId);
-                System.out.println("🔍 JOIN FETCH로 조회된 기록 수: " + records.size());
+            // 정렬 순서 확인을 위한 로그
+            if (!records.isEmpty()) {
+                System.out.println("🔍 Repository 정렬 후 순서 확인:");
+                for (int i = 0; i < records.size(); i++) {
+                    AssessmentRecordEntity record = records.get(i);
+                    System.out.println("  " + (i + 1) + "번째: ID=" + record.getId() + 
+                                     ", assessmentDate=" + record.getAssessmentDate() + 
+                                     ", createdAt=" + record.getCreatedAt() + 
+                                     ", 결과=" + record.getEegResult());
+                }
             }
             
             return records;
@@ -95,11 +101,39 @@ public class AssessmentRecordService {
 
     // 특정 기간 내 검사 기록 조회
     public List<AssessmentRecordEntity> getUserAssessmentRecordsByDateRange(String userId, LocalDateTime startDate, LocalDateTime endDate) {
-        return assessmentRecordRepository.findByUserIdAndAssessmentDateBetweenOrderByAssessmentDateDesc(userId, startDate, endDate);
+        return assessmentRecordRepository.findByUserIdAndAssessmentDateBetweenOrderByCreatedAtDesc(userId, startDate, endDate);
     }
 
     // 검사 기록 상세 조회
     public Optional<AssessmentRecordEntity> getAssessmentRecordById(Long recordId) {
         return assessmentRecordRepository.findById(recordId);
+    }
+    
+    // 검사 기록 삭제
+    public boolean deleteAssessmentRecord(Long recordId) {
+        try {
+            System.out.println("🔍 Service에서 검사 기록 삭제 시작: " + recordId);
+            
+            Optional<AssessmentRecordEntity> recordOpt = assessmentRecordRepository.findById(recordId);
+            if (recordOpt.isEmpty()) {
+                System.out.println("❌ 삭제할 검사 기록을 찾을 수 없음: " + recordId);
+                return false;
+            }
+            
+            AssessmentRecordEntity record = recordOpt.get();
+            System.out.println("🔍 삭제할 검사 기록: ID=" + record.getId() + 
+                             ", User=" + (record.getUser() != null ? record.getUser().getUid() : "NULL") +
+                             ", EEG Result=" + record.getEegResult());
+            
+            assessmentRecordRepository.delete(record);
+            System.out.println("✅ 검사 기록 삭제 성공: " + recordId);
+            
+            return true;
+            
+        } catch (Exception e) {
+            System.err.println("❌ Service에서 검사 기록 삭제 실패: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 }
