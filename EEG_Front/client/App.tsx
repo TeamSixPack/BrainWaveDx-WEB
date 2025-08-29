@@ -20,6 +20,7 @@ import MMSE from "./pages/MMSE";
 import AssessmentHistory from "./pages/AssessmentHistory";
 import TestModeSelection from "./pages/TestModeSelection";
 import EegTest from "./pages/EegTest";
+import MemoryHelper from "./pages/MemoryHelper";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/eeg-test" element={<EegTest />} />
           <Route path="/assessment" element={<Assessment />} />
           <Route path="/mmse" element={<MMSE />} />
+          <Route path="/memory-helper" element={<MemoryHelper />} />
           <Route path="/results" element={<Results />} />
           <Route path="/assessment-history" element={<AssessmentHistory />} />
           <Route path="/questionnaire" element={<Questionnaire />} />

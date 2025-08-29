@@ -179,6 +179,12 @@ export default function Index() {
                           뇌파 분석 테스트
                         </Link>
                       </Button>
+                      <Button asChild size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold">
+                        <Link to="/memory-helper">
+                          <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                          기억력 도우미
+                        </Link>
+                      </Button>
                     </div>
                     <Button variant="outline" size="lg" asChild className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold">
                       <Link to="/assessment-history">
@@ -200,6 +206,12 @@ export default function Index() {
                         <Link to="/eeg-test">
                           <Upload className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
                           뇌파 분석 검사
+                        </Link>
+                      </Button>
+                      <Button asChild size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold w-full sm:w-64">
+                        <Link to="/memory-helper">
+                          <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                          기억력 도우미
                         </Link>
                       </Button>
                     </div>
