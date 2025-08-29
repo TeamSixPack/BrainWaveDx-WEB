@@ -497,6 +497,40 @@ export default function MMSE() {
               if (allCorrectWordsFound && answerWords.length === correctWords.length) {
                 totalScore += question.points;
               }
+            } else {
+              // 텍스트 입력의 경우 유사도 체크 (대소문자, 공백 무시)
+              const normalizedAnswer = answer.toLowerCase().trim().replace(/\s+/g, '');
+              const normalizedCorrect = question.correctAnswer.toLowerCase().trim().replace(/\s+/g, '');
+              if (normalizedAnswer === normalizedCorrect) {
+                totalScore += question.points;
+              }
+            }
+          } else if (answer && !question.correctAnswer) {
+            // 정답이 없는 경우 (장소 문제, 이름말하기 문제) 키워드 검증
+            if (question.id === 6) {
+              // 장소 문제: AI API를 사용한 장소 판별
+              if (answer && answer.length > 0) {
+                try {
+                  console.log('🔍 장소 문제 AI 채점 시작:', answer);
+                  const isValidPlace = await checkPlaceWithAI(answer);
+                  console.log('🔍 장소 문제 AI 채점 결과:', isValidPlace);
+                  if (isValidPlace) {
+                    totalScore += question.points; // AI가 장소로 인정하면 점수
+                    console.log('✅ 장소 문제 점수 획득:', question.points, '점');
+                  } else {
+                    console.log('❌ 장소 문제 점수 미획득');
+                  }
+                } catch (error) {
+                  console.error('장소 판별 API 오류:', error);
+                  // API 오류 시 0점 처리
+                }
+              }
+            } else if (question.id === 11) {
+              // 이름말하기 문제: 연필, 시계 순서 정확히 체크
+              const names = answer.split(',').map(n => n.trim());
+              if (names.length === 2 && names[0] === '연필' && names[1] === '시계') {
+                totalScore += question.points; // 2점
+              }
             } else if (question.id === 12) {
               // 12번 문제: 왜 옷은 빨아서 입습니까? - AI API를 사용한 답변 검증
               if (answer && answer.length > 0) {
@@ -532,40 +566,6 @@ export default function MMSE() {
                   console.error('MoCA Q4 검증 API 오류:', error);
                   // API 오류 시 0점 처리
                 }
-              }
-            } else {
-              // 텍스트 입력의 경우 유사도 체크 (대소문자, 공백 무시)
-              const normalizedAnswer = answer.toLowerCase().trim().replace(/\s+/g, '');
-              const normalizedCorrect = question.correctAnswer.toLowerCase().trim().replace(/\s+/g, '');
-              if (normalizedAnswer === normalizedCorrect) {
-                totalScore += question.points;
-              }
-            }
-          } else if (answer && !question.correctAnswer) {
-            // 정답이 없는 경우 (장소 문제, 이름말하기 문제) 키워드 검증
-            if (question.id === 6) {
-              // 장소 문제: AI API를 사용한 장소 판별
-              if (answer && answer.length > 0) {
-                try {
-                  console.log('🔍 장소 문제 AI 채점 시작:', answer);
-                  const isValidPlace = await checkPlaceWithAI(answer);
-                  console.log('🔍 장소 문제 AI 채점 결과:', isValidPlace);
-                  if (isValidPlace) {
-                    totalScore += question.points; // AI가 장소로 인정하면 점수
-                    console.log('✅ 장소 문제 점수 획득:', question.points, '점');
-                  } else {
-                    console.log('❌ 장소 문제 점수 미획득');
-                  }
-                } catch (error) {
-                  console.error('장소 판별 API 오류:', error);
-                  // API 오류 시 0점 처리
-                }
-              }
-            } else if (question.id === 11) {
-              // 이름말하기 문제: 연필, 시계 순서 정확히 체크
-              const names = answer.split(',').map(n => n.trim());
-              if (names.length === 2 && names[0] === '연필' && names[1] === '시계') {
-                totalScore += question.points; // 2점
               }
             }
           }
@@ -724,43 +724,7 @@ export default function MMSE() {
             if (allCorrectWordsFound && answerWords.length === correctWords.length) {
               totalScore += question.points;
             }
-          } else if (question.id === 12) {
-            // 12번 문제: 왜 옷은 빨아서 입습니까? - AI API를 사용한 답변 검증
-            if (answer && answer.length > 0) {
-              try {
-                console.log('🔍 12번 문제 AI 채점 시작:', answer);
-                const isAppropriate = await checkMocaQ3WithAI(answer);
-                console.log('🔍 12번 문제 AI 채점 결과:', isAppropriate);
-                if (isAppropriate) {
-                  totalScore += question.points; // AI가 적절하다고 판단하면 점수
-                  console.log('✅ 12번 문제 점수 획득:', question.points, '점');
-                } else {
-                  console.log('❌ 12번 문제 점수 미획득');
-                }
-              } catch (error) {
-                console.error('MoCA Q3 검증 API 오류:', error);
-                // API 오류 시 0점 처리
-              }
-            }
-          } else if (question.id === 13) {
-            // 13번 문제: 판단 문제 - AI API를 사용한 답변 검증
-            if (answer && answer.length > 0) {
-              try {
-                console.log('🔍 13번 문제 AI 채점 시작:', answer);
-                const isAppropriate = await checkMocaQ4WithAI(answer);
-                console.log('🔍 13번 문제 AI 채점 결과:', isAppropriate);
-                if (isAppropriate) {
-                  totalScore += question.points; // AI가 적절하다고 판단하면 점수
-                  console.log('✅ 13번 문제 점수 획득:', question.points, '점');
-                } else {
-                  console.log('❌ 13번 문제 점수 미획득');
-                }
-              } catch (error) {
-                console.error('MoCA Q4 검증 API 오류:', error);
-                // API 오류 시 0점 처리
-              }
-            }
-          } else {
+                     } else {
             // 텍스트 입력의 경우 유사도 체크 (대소문자, 공백 무시)
             const normalizedAnswer = answer.toLowerCase().trim().replace(/\s+/g, '');
             const normalizedCorrect = question.correctAnswer.toLowerCase().trim().replace(/\s+/g, '');
@@ -768,34 +732,70 @@ export default function MMSE() {
               totalScore += question.points;
             }
           }
-        } else if (answer && !question.correctAnswer) {
-          // 정답이 없는 경우 (장소 문제, 이름말하기 문제) 키워드 검증
-          if (question.id === 6) {
-            // 장소 문제: AI API를 사용한 장소 판별
-            if (answer && answer.length > 0) {
-              try {
-                console.log('🔍 장소 문제 AI 채점 시작:', answer);
-                const isValidPlace = await checkPlaceWithAI(answer);
-                console.log('🔍 장소 문제 AI 채점 결과:', isValidPlace);
-                if (isValidPlace) {
-                  totalScore += question.points; // AI가 장소로 인정하면 점수
-                  console.log('✅ 장소 문제 점수 획득:', question.points, '점');
-                } else {
-                  console.log('❌ 장소 문제 점수 미획득');
-                }
-              } catch (error) {
-                console.error('장소 판별 API 오류:', error);
-                // API 오류 시 0점 처리
-              }
-            }
-          } else if (question.id === 11) {
-            // 이름말하기 문제: 연필, 시계 순서 정확히 체크
-            const names = answer.split(',').map(n => n.trim());
-            if (names.length === 2 && names[0] === '연필' && names[1] === '시계') {
-              totalScore += question.points; // 2점
-            }
-          }
-        }
+                 } else if (answer && !question.correctAnswer) {
+           // 정답이 없는 경우 (장소 문제, 이름말하기 문제, AI 채점 문제) 키워드 검증
+           if (question.id === 6) {
+             // 장소 문제: AI API를 사용한 장소 판별
+             if (answer && answer.length > 0) {
+               try {
+                 console.log('🔍 장소 문제 AI 채점 시작:', answer);
+                 const isValidPlace = await checkPlaceWithAI(answer);
+                 console.log('🔍 장소 문제 AI 채점 결과:', isValidPlace);
+                 if (isValidPlace) {
+                   totalScore += question.points; // AI가 장소로 인정하면 점수
+                   console.log('✅ 장소 문제 점수 획득:', question.points, '점');
+                 } else {
+                   console.log('❌ 장소 문제 점수 미획득');
+                 }
+               } catch (error) {
+                 console.error('장소 판별 API 오류:', error);
+                 // API 오류 시 0점 처리
+               }
+             }
+           } else if (question.id === 11) {
+             // 이름말하기 문제: 연필, 시계 순서 정확히 체크
+             const names = answer.split(',').map(n => n.trim());
+             if (names.length === 2 && names[0] === '연필' && names[1] === '시계') {
+               totalScore += question.points; // 2점
+             }
+           } else if (question.id === 12) {
+             // 12번 문제: 왜 옷은 빨아서 입습니까? - AI API를 사용한 답변 검증
+             if (answer && answer.length > 0) {
+               try {
+                 console.log('🔍 12번 문제 AI 채점 시작:', answer);
+                 const isAppropriate = await checkMocaQ3WithAI(answer);
+                 console.log('🔍 12번 문제 AI 채점 결과:', isAppropriate);
+                 if (isAppropriate) {
+                   totalScore += question.points; // AI가 적절하다고 판단하면 점수
+                   console.log('✅ 12번 문제 점수 획득:', question.points, '점');
+                 } else {
+                   console.log('❌ 12번 문제 점수 미획득');
+                 }
+               } catch (error) {
+                 console.error('MoCA Q3 검증 API 오류:', error);
+                 // API 오류 시 0점 처리
+               }
+             }
+           } else if (question.id === 13) {
+             // 13번 문제: 판단 문제 - AI API를 사용한 답변 검증
+             if (answer && answer.length > 0) {
+               try {
+                 console.log('🔍 13번 문제 AI 채점 시작:', answer);
+                 const isAppropriate = await checkMocaQ4WithAI(answer);
+                 console.log('🔍 13번 문제 AI 채점 결과:', isAppropriate);
+                 if (isAppropriate) {
+                   totalScore += question.points; // AI가 적절하다고 판단하면 점수
+                   console.log('✅ 13번 문제 점수 획득:', question.points, '점');
+                 } else {
+                   console.log('❌ 13번 문제 점수 미획득');
+                 }
+               } catch (error) {
+                 console.error('MoCA Q4 검증 API 오류:', error);
+                 // API 오류 시 0점 처리
+               }
+             }
+           }
+         }
       }
       
       console.log('🔍 calculateScore 함수 최종 총점:', totalScore);
@@ -967,35 +967,55 @@ export default function MMSE() {
                       // AI 채점 문제(12번, 13번)는 이미 finalScore에 반영됨
                     });
 
-                    // AI 채점 문제 점수 계산 - finalScore에서 다른 영역 점수를 빼서 계산
-                    // 이해와 판단 문제는 이미 finalScore에 반영되어 있음
-                    const otherScores = scores.orientation + scores.memory + scores.calculation + scores.recall + scores.naming + scores.basic;
-                    const aiTotalScore = mmseScore - otherScores;
-                    
-                    // 이해 문제(12번)와 판단 문제(13번)의 점수를 적절히 분배
-                    if (aiTotalScore >= 4) {
-                      // 이해 3점 + 판단 1점
-                      scores.comprehension = 3;
-                      scores.judgment = 1;
-                    } else if (aiTotalScore >= 3) {
-                      // 이해 3점 + 판단 0점
-                      scores.comprehension = 3;
-                      scores.judgment = 0;
-                    } else if (aiTotalScore >= 1) {
-                      // 이해 0점 + 판단 1점
-                      scores.comprehension = 0;
-                      scores.judgment = 1;
-                    } else {
-                      // 둘 다 0점
-                      scores.comprehension = 0;
-                      scores.judgment = 0;
-                    }
-                    
-                    console.log('🔍 AI 채점 문제 최종 점수:', {
-                      comprehension: scores.comprehension,
-                      judgment: scores.judgment,
-                      aiTotalScore: aiTotalScore
-                    });
+                     // AI 채점 문제 점수 계산 - finalScore에서 다른 영역 점수를 빼서 AI 점수 역산
+                     // finalScore는 이미 AI 채점 결과가 반영된 최종 점수
+                     const otherScores = scores.orientation + scores.memory + scores.calculation + scores.recall + scores.naming + scores.basic;
+                     const aiTotalScore = mmseScore - otherScores;
+                     
+                     console.log('🔍 결과창 AI 점수 역산:', {
+                       mmseScore: mmseScore,
+                       otherScores: otherScores,
+                       aiTotalScore: aiTotalScore,
+                       answer12: answers[12] || '답변 없음',
+                       answer13: answers[13] || '답변 없음'
+                     });
+                     
+                     // AI 총점을 이해(3점)와 판단(1점)으로 분배
+                     // aiTotalScore는 실제 AI 채점에서 얻은 점수의 합
+                     if (aiTotalScore === 4) {
+                       // 둘 다 맞음: 이해 3점 + 판단 1점
+                       scores.comprehension = 3;
+                       scores.judgment = 1;
+                     } else if (aiTotalScore === 3) {
+                       // 이해만 맞음: 이해 3점 + 판단 0점
+                       scores.comprehension = 3;
+                       scores.judgment = 0;
+                     } else if (aiTotalScore === 1) {
+                       // 판단만 맞음: 이해 0점 + 판단 1점
+                       scores.comprehension = 0;
+                       scores.judgment = 1;
+                     } else {
+                       // 둘 다 틀림 또는 답변 없음: 이해 0점 + 판단 0점
+                       scores.comprehension = 0;
+                       scores.judgment = 0;
+                     }
+                     
+                     console.log('🔍 AI 채점 문제 최종 점수:', {
+                       '12번(이해) 점수': scores.comprehension,
+                       '13번(판단) 점수': scores.judgment,
+                       'AI 총점': aiTotalScore
+                     });
+                     
+                     console.log('🔍 AI 채점 문제 최종 점수:', {
+                       comprehension: scores.comprehension,
+                       judgment: scores.judgment
+                     });
+                     
+                     // AI 채점 문제 답변 디버깅
+                     console.log('🔍 AI 채점 문제 답변:', {
+                       '12번(이해)': answers[12] || '답변 없음',
+                       '13번(판단)': answers[13] || '답변 없음'
+                     });
 
                     return [
                       // 지남력
@@ -1068,9 +1088,9 @@ export default function MMSE() {
               </div>
             </CardContent>
           </Card>
-          <div className="flex justify-center">
-            <Button onClick={handleComplete}>결과 확인하기</Button>
-          </div>
+                                           <div className="flex justify-center space-x-4">
+              <Button onClick={handleComplete}>결과 확인하기</Button>
+            </div>
         </div>
       </div>
     );
@@ -1790,53 +1810,7 @@ export default function MMSE() {
                       maxLength={currentQ.maxLength}
                     />
                     
-                    {/* AI 채점 테스트 버튼 (12번, 13번 문제) */}
-                    {(currentQ.id === 12 || currentQ.id === 13) && (
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            const answer = answers[currentQ.id];
-                            if (answer && answer.length > 0) {
-                              try {
-                                if (currentQ.id === 12) {
-                                  console.log('🧪 12번 문제 AI 채점 테스트:', answer);
-                                  const result = await checkMocaQ3WithAI(answer);
-                                  alert(`12번 문제 AI 채점 결과: ${result ? '적절함 (3점)' : '부적절함 (0점)'}`);
-                                } else if (currentQ.id === 13) {
-                                  console.log('🧪 13번 문제 AI 채점 테스트:', answer);
-                                  const result = await checkMocaQ4WithAI(answer);
-                                  alert(`13번 문제 AI 채점 결과: ${result ? '적절함 (1점)' : '부적절함 (0점)'}`);
-                                }
-                              } catch (error) {
-                                alert(`AI 채점 오류: ${error}`);
-                              }
-                            } else {
-                              alert('답변을 먼저 입력해주세요!');
-                            }
-                          }}
-                          className="text-blue-600 border-blue-300 hover:bg-blue-50"
-                        >
-                          🧪 AI 채점 테스트
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const answer = answers[currentQ.id];
-                            if (answer) {
-                              console.log(`🔍 ${currentQ.id}번 문제 답변:`, answer);
-                              console.log(`🔍 ${currentQ.id}번 문제 점수:`, currentQ.points);
-                            }
-                          }}
-                          className="text-gray-600 border-gray-300 hover:bg-gray-50"
-                        >
-                          📊 답변 확인
-                        </Button>
-                      </div>
-                    )}
+                    
                   </div>
                 ) : (
                   <div className="space-y-2">
