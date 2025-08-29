@@ -635,50 +635,69 @@ def run_muse2_eeg_collection(serial_number):
 
 def run_automatic_eeg_analysis(file_path, serial_number):
     """
-    수집된 뇌파 데이터를 자동으로 분석하는 함수
+    수집된 뇌파 데이터를 자동으로 분석하는 함수 (2-class 모델 사용)
     """
     print(f"[DEBUG] 뇌파 분석 시작: {file_path}")
     print(f"[DEBUG] 시리얼 넘버: {serial_number}")
     
     try:
-        print(f"[DEBUG] 캐시된 EEGInferenceEngine 사용...")
-        # 캐시된 엔진 사용 (기존 /infer 엔드포인트와 동일한 방식)
+        print(f"[DEBUG] 2-class EEGInferenceEngine 사용...")
+        # 2-class 엔진 사용
         device = "muse"
-        ver = "14"
+        ver = "53"
         csv_order = None
         
-        # 엔진 캐시 키
+        # 2-class 엔진 캐시 키
         cache_key = (device, ver, csv_order)
-        engine = _ENGINES.get(cache_key)
+        engine = _ENGINES2.get(cache_key)
         if engine is None:
-            print(f"[DEBUG] 새로운 EEGInferenceEngine 생성...")
-            engine = EEGInferenceEngine(device_type=device, version=ver, csv_order=csv_order)
-            _ENGINES[cache_key] = engine
-            print(f"[DEBUG] EEGInferenceEngine 생성 완료")
+            print(f"[DEBUG] 새로운 2-class EEGInferenceEngine 생성...")
+            engine = EEGEngine2(device_type=device, version=ver, csv_order=csv_order)
+            _ENGINES2[cache_key] = engine
+            print(f"[DEBUG] 2-class EEGInferenceEngine 생성 완료")
         else:
-            print(f"[DEBUG] 기존 캐시된 EEGInferenceEngine 사용")
+            print(f"[DEBUG] 기존 캐시된 2-class EEGInferenceEngine 사용")
         
-        print(f"[DEBUG] 분석 실행 시작...")
-        # 분석 실행 (기존 /infer 엔드포인트와 동일한 파라미터)
+        print(f"[DEBUG] 2-class 분석 실행 시작...")
+        # 2-class 분석 실행
         result = engine.infer(file_path=file_path, subject_id=f"sub-{serial_number}", enforce_two_minutes=True)
-        print(f"[DEBUG] 분석 실행 완료: {result}")
+        print(f"[DEBUG] 2-class 분석 실행 완료: {result}")
         
-        # 결과 정리 (기존 /infer 엔드포인트와 동일한 방식)
+        # 2-class 결과 정리
         prob_mean = result['prob_mean']
         subject_pred_label = max(prob_mean.items(), key=lambda x: x[1])[0]
         result['subject_pred_label'] = subject_pred_label
+        
+        # 2-class 결과를 사용자 친화적으로 변환
+        if 'CN' in prob_mean and 'AD' in prob_mean:
+            # CN/AD 형태인 경우
+            if subject_pred_label == 'CN':
+                user_friendly_label = '정상'
+            else:
+                user_friendly_label = '비정상'
+        elif 'Normal' in prob_mean and 'Abnormal' in prob_mean:
+            # Normal/Abnormal 형태인 경우
+            if subject_pred_label == 'Normal':
+                user_friendly_label = '정상'
+            else:
+                user_friendly_label = '비정상'
+        else:
+            # 기타 형태인 경우
+            user_friendly_label = subject_pred_label
         
         analysis_result = {
             'status': 'success',
             'subject_id': f"sub-{serial_number}",
             'predicted_label': subject_pred_label,
+            'user_friendly_label': user_friendly_label,
             'probabilities': prob_mean,
             'confidence': max(prob_mean.values()) if prob_mean else 0,
             'analysis_time': time.strftime('%Y-%m-%d %H:%M:%S'),
-            'file_path': file_path
+            'file_path': file_path,
+            'model_type': '2-class'
         }
         
-        print(f"[DEBUG] 분석 결과 정리 완료: {analysis_result}")
+        print(f"[DEBUG] 2-class 분석 결과 정리 완료: {analysis_result}")
         return analysis_result
         
     except Exception as e:

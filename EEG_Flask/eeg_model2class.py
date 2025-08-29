@@ -348,8 +348,8 @@ class EEGInferenceEngine2Class:
         base = f"ardor924/EEGNetV4-{ch_len}ch-{self.device_type}-{self.version}"
 
         repo_candidates = [
-            f"{base}-2Class",  # 대소문자 정확
-            f"{base}-2class",  # 소문자 변형도 시도
+            f"{base}-2Class-extradataset",  # 대소문자 정확
+            f"{base}-2class-extradataset",  # 소문자 변형도 시도
         ]
         # 사용자가 comment를 정확히 '2Class'로 줬다면 위와 동일하므로 중복 제거
         if self.comment not in ("2Class", "2class"):
