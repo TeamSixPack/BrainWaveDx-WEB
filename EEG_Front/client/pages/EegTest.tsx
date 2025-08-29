@@ -19,6 +19,7 @@ interface EegResult {
   prob_mean: Record<string, number>;
   channels_used: string[];           // 추가 정보
   window?: { start: number; need: number }; // 추가 정보
+  class_mode?: number;               // 2클래스 또는 3클래스 모드
 }
 
 export default function EegTest() {
@@ -69,10 +70,17 @@ export default function EegTest() {
 
       const result = await response.json();
       
+      // 디버깅: 실제 API 응답 확인
+      console.log('🔍 API 응답 전체:', result);
+      console.log('🔍 API 상태:', result.status);
+      console.log('🔍 API 결과:', result.result);
+      
       if (result.status === 'ok' && result.result) {
+        console.log('✅ 실제 뇌파 분석 결과 설정:', result.result);
         setEegResult(result.result);
         setCurrentStep("result");
       } else {
+        console.error('❌ API 오류:', result.error);
         throw new Error(result.error || '분석 결과를 받아오는데 실패했습니다.');
       }
     } catch (err: any) {
@@ -94,11 +102,16 @@ export default function EegTest() {
 
   const getDiagnosisColor = (label: string) => {
     switch (label) {
-      case 'CN': return 'bg-green-500';
-      case 'AD': return 'bg-red-500';
-      case 'FTD': return 'bg-orange-500';
-             default: return 'bg-blue-500';
+      case 'CN': return 'bg-green-500 text-green-900 border-green-300';
+      case 'AD': return 'bg-red-500 text-white border-red-300';
+      case 'FTD': return 'bg-orange-500 text-white border-orange-300';
+      default: return 'bg-blue-500 text-white border-blue-300';
     }
+  };
+
+  // 2클래스 모드인지 확인
+  const is2ClassMode = () => {
+    return eegResult?.class_mode === 2;
   };
 
   const getHighestProbLabel = (probMean: Record<string, number>) => {
@@ -316,7 +329,7 @@ export default function EegTest() {
               </div>
               <CardTitle className="text-2xl">뇌파 분석 완료</CardTitle>
               <CardDescription className="text-lg">
-                AI 분석 결과입니다
+                AI 분석 결과입니다 {is2ClassMode() && <Badge variant="secondary" className="ml-2">2클래스 모드</Badge>}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -325,7 +338,7 @@ export default function EegTest() {
                 <h3 className="text-lg font-semibold mb-4">진단 결과</h3>
                 <div className="flex items-center space-x-4">
                   <Badge 
-                    className={`${getDiagnosisColor(getHighestProbLabel(eegResult.prob_mean))} text-white px-4 py-2 text-lg`}
+                    className={`${getDiagnosisColor(getHighestProbLabel(eegResult.prob_mean))} px-4 py-2 text-lg`}
                   >
                     {getDiagnosisLabel(getHighestProbLabel(eegResult.prob_mean))}
                   </Badge>
@@ -383,6 +396,55 @@ export default function EegTest() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 맞춤형 가이드 */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4 text-blue-800">맞춤형 가이드</h3>
+                <div className="space-y-4">
+                  {getHighestProbLabel(eegResult.prob_mean) === 'CN' ? (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <span className="font-semibold text-green-800">정상 뇌파 패턴</span>
+                      </div>
+                      <div className="text-sm text-green-700 space-y-2">
+                        <p>• 현재 뇌파 상태는 정상 범위 내에 있습니다</p>
+                        <p>• 정기적인 뇌 건강 체크를 권장합니다 (6개월~1년)</p>
+                        <p>• 균형잡힌 식단과 규칙적인 운동을 유지하세요</p>
+                        <p>• 충분한 수면과 스트레스 관리를 해주세요</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <AlertCircle className="h-5 w-5 text-amber-600" />
+                        <span className="font-semibold text-amber-800">주의가 필요한 뇌파 패턴</span>
+                      </div>
+                      <div className="text-sm text-amber-700 space-y-2">
+                        <p>• 전문의와 상담을 권장합니다</p>
+                        <p>• 추가적인 인지 기능 검사가 필요할 수 있습니다</p>
+                        <p>• 정기적인 의료진과의 상담을 유지하세요</p>
+                        <p>• 생활 습관 개선과 함께 의학적 관리가 중요합니다</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* 공통 권장사항 */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Brain className="h-5 w-5 text-blue-600" />
+                      <span className="font-semibold text-blue-800">일반적인 뇌 건강 관리</span>
+                    </div>
+                    <div className="text-sm text-blue-700 space-y-2">
+                      <p>• 오메가-3, 비타민 B군이 풍부한 식단</p>
+                      <p>• 규칙적인 유산소 운동 (주 3-4회, 30분 이상)</p>
+                      <p>• 충분한 수면 (7-8시간)</p>
+                      <p>• 스트레스 관리 및 명상</p>
+                      <p>• 사회적 활동과 새로운 학습</p>
+                    </div>
                   </div>
                 </div>
               </div>

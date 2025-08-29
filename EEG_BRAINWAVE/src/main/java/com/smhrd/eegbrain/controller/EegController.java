@@ -63,9 +63,9 @@ public class EegController {
             req.setSubjectId(subjectId);
             req.setEnforceTwoMinutes(Boolean.parseBoolean(enforceTwoMinutes));
             
-            System.out.println("Flask 서버로 분석 요청 시작");
-            // Flask 서버로 분석 요청
-            InferResponse resp = flaskClientService.callInferSync(req);
+            System.out.println("Flask 서버로 2클래스 분석 요청 시작");
+            // Flask 서버로 2클래스 분석 요청 (/infer2class 엔드포인트 사용)
+            InferResponse resp = flaskClientService.callInfer2Class(req);
             System.out.println("Flask 서버 분석 완료");
             
             return ResponseEntity.ok(resp);
@@ -104,9 +104,9 @@ public class EegController {
             req.setSubjectId(subjectId);
             req.setEnforceTwoMinutes(Boolean.parseBoolean(enforceTwoMinutes));
             
-            System.out.println("Flask 서버로 derivatives 파일 분석 요청 시작");
-            // Flask 서버로 분석 요청
-            InferResponse resp = flaskClientService.callInferSync(req);
+            System.out.println("Flask 서버로 derivatives 파일 2클래스 분석 요청 시작");
+            // Flask 서버로 2클래스 분석 요청
+            InferResponse resp = flaskClientService.callInfer2Class(req);
             System.out.println("Flask 서버 derivatives 파일 분석 완료");
             
             return ResponseEntity.ok(resp);

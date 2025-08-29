@@ -55,4 +55,32 @@ public class FlaskClientService {
 
         return resp.getBody();
     }
+
+    /** 2클래스 추론 (CN/AD) */
+    public InferResponse callInfer2Class(InferRequest req) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<InferRequest> entity = new HttpEntity<>(req, headers);
+
+        // 2클래스 전용 엔드포인트 호출
+        String infer2ClassUrl = inferUrl.replace("/infer", "/infer2class");
+        ResponseEntity<InferResponse> resp =
+                restTemplate.exchange(infer2ClassUrl, HttpMethod.POST, entity, InferResponse.class);
+
+        return resp.getBody();
+    }
+
+    /** 3클래스 추론 (CN/AD/FTD) */
+    public InferResponse callInfer3Class(InferRequest req) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<InferRequest> entity = new HttpEntity<>(req, headers);
+
+        // 3클래스 전용 엔드포인트 호출
+        String infer3ClassUrl = inferUrl.replace("/infer", "/infer3class");
+        ResponseEntity<InferResponse> resp =
+                restTemplate.exchange(infer3ClassUrl, HttpMethod.POST, entity, InferResponse.class);
+
+        return resp.getBody();
+    }
 }

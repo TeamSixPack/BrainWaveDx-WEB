@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 app.py
-- /health, /infer
+- /health, /infer, /infer2class, /infer3class
 - 요청 예:
   {
     "file_path": "/path/to/muselab.csv or .set",
@@ -25,7 +25,11 @@ from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 import openai
 from dotenv import load_dotenv
-from eeg_model import EEGInferenceEngine, CHANNEL_GROUPS
+
+# --- 엔진/채널 ---
+from eeg_model3class import EEGInferenceEngine3Class as EEGEngine3, CHANNEL_GROUPS
+from eeg_model2class import EEGInferenceEngine2Class as EEGEngine2
+from eeg_model import EEGInferenceEngine
 
 # .env 파일 로드
 load_dotenv()
@@ -34,8 +38,9 @@ PORT = int(os.getenv("FLASK_PORT", "8000"))
 app = Flask(__name__)
 CORS(app)  # CORS 활성화
 
-# 간단 엔진 캐시(동일 (device, ver, csv_order) 조합 재사용)
-_ENGINES = {}
+# 동일 (device, ver, comment, csv_order) 조합 재사용
+_ENGINES2 = {}  # 2-class 캐시
+_ENGINES3 = {}  # 3-class 캐시
 VER = 'V1'
 
 # OpenAI API 키 설정 (환경변수에서 가져오기)
@@ -97,69 +102,139 @@ def _truthy(v, default=True):
     s = str(v).strip().lower()
     return s in ("1","true","on","yes","y")
 
+def _parse_common_params():
+    p = request.get_json(force=True) or {}
+    file_path = p.get("file_path")
+    if not file_path:
+        return None, ("file_path is required", 400)
+        
+    # device
+    device = p.get("device")
+    if isinstance(device, str) and device.strip():
+        device = device.strip().lower()
+        if device not in CHANNEL_GROUPS:
+            return None, (f"Unsupported device '{device}'", 400)
+    else:
+        device = None  # 엔진이 DEFAULT_DEVICE 사용
+
+    # ver/comment
+    ver = p.get("ver")
+    ver = ver.strip() if isinstance(ver, str) and ver.strip() else None
+    comment = p.get("comment")
+    comment = (str(comment).strip() if comment is not None else None)
+
+    subject_id = p.get("subject_id")
+    true_label = p.get("true_label")
+    enforce_two_minutes = _truthy(p.get("enforce_two_minutes"), True)
+        
+    # Muse CSV 물리 채널 순서(옵션)
+    csv_order_str = p.get("csv_order")
+    csv_order = None
+    if isinstance(csv_order_str, str) and csv_order_str.strip():
+        items = [s.strip().upper() for s in csv_order_str.split(",") if s.strip()]
+        if len(items) == 4:
+            csv_order = tuple(items)
+        
+    parsed = {
+        "file_path": file_path,
+        "device": device,
+        "ver": ver,
+        "comment": comment,
+        "subject_id": subject_id,
+        "true_label": true_label,
+        "enforce_two_minutes": enforce_two_minutes,
+        "csv_order": csv_order
+    }
+    return parsed, None
+
+def _engine3(device, ver, comment, csv_order):
+    cache_key = (device or "__auto__", ver or "__auto__", comment or "__auto__", csv_order)
+    eng = _ENGINES3.get(cache_key)
+    if eng is None:
+        eng = EEGEngine3(device_type=device, version=ver, comment=comment, csv_order=csv_order)
+        _ENGINES3[cache_key] = eng
+    return eng
+
+def _engine2(device, ver, comment, csv_order):
+    cache_key = (device or "__auto__", ver or "__auto__", comment or "__auto__", csv_order)
+    eng = _ENGINES2.get(cache_key)
+    if eng is None:
+        eng = EEGEngine2(device_type=device, version=ver, comment=comment, csv_order=csv_order)
+        _ENGINES2[cache_key] = eng
+    return eng
+
+def _normalize_true_label_3(tl: str | None):
+    if not tl: return None
+    tl = tl.strip().upper()
+    if tl in ["C", "CN"]:  return "CN"
+    if tl in ["A", "AD"]:  return "AD"
+    if tl in ["F", "FTD"]: return "FTD"
+    return tl
+
+def _normalize_true_label_2(tl: str | None):
+    if not tl: return None
+    tl = tl.strip().upper()
+    if tl in ["C", "CN"]: return "CN"
+    if tl in ["A", "AD"]: return "AD"
+    # FTD는 2진분류에서 제외
+    return None
+
 @app.get("/health")
 def health():
-    return jsonify({"status": "flask-ok"}), 200
+    return jsonify({"status": "flask-ok", "routes": ["/infer(3-class)", "/infer2class(2-class)", "/infer3class(3-class)", "/check_place", "/check_moca_q3", "/check_moca_q4"]}), 200
 
-@app.post("/infer")
-def infer():
+def _infer_common(engine_kind: str):
     try:
-        p = request.get_json(force=True) or {}
-        file_path = p.get("file_path")
-        if not file_path:
-            return jsonify({"status":"error","error":"file_path is required"}), 400
-        
-        device = (p.get("device") or "muse").strip().lower()
-        if device not in CHANNEL_GROUPS:
-            return jsonify({"status":"error","error":f"Unsupported device '{device}'"}), 400
-        
-        ver = str(p.get("ver") or os.getenv("EEG_WEIGHTS_VER",VER)).strip()
-        subject_id = p.get("subject_id")
-        true_label = p.get("true_label")
-        enforce_two_minutes = _truthy(p.get("enforce_two_minutes"), True)
-        
-        # Muse CSV 물리 채널 순서(옵션): "TP9,AF7,AF8,TP10"
-        csv_order_str = p.get("csv_order")
-        csv_order = None
-        if csv_order_str:
-            items = [s.strip().upper() for s in str(csv_order_str).split(",") if s.strip()]
-            if len(items) == 4:
-                csv_order = tuple(items)
-        
-        # 엔진 캐시 키
-        cache_key = (device, ver, csv_order)
-        engine = _ENGINES.get(cache_key)
-        if engine is None:
-            engine = EEGInferenceEngine(device_type=device, version=ver, csv_order=csv_order)
-            _ENGINES[cache_key] = engine
-        
-        result = engine.infer(file_path=file_path, subject_id=subject_id, true_label=true_label, enforce_two_minutes=enforce_two_minutes)
-        
-        # subject-level 예측 레이블 계산
-        prob_mean = result['prob_mean']
+        parsed, err = _parse_common_params()
+        if err:
+            msg, code = err
+            return jsonify({"status":"error","error":msg}), code
+
+        file_path       = parsed["file_path"]
+        device          = parsed["device"]
+        ver             = parsed["ver"]
+        comment         = parsed["comment"]
+        subject_id      = parsed["subject_id"]
+        true_label_in   = parsed["true_label"]
+        enforce_2min    = parsed["enforce_two_minutes"]
+        csv_order       = parsed["csv_order"]
+
+        if engine_kind == "2c":
+            engine = _engine2(device, ver, comment, csv_order)
+        else:
+            engine = _engine3(device, ver, comment, csv_order)
+
+        # 추론
+        result = engine.infer(
+            file_path=file_path,
+            subject_id=subject_id,
+            true_label=true_label_in,
+            enforce_two_minutes=enforce_2min
+        )
+        result['class_mode'] = (2 if engine_kind == "2c" else 3)
+
+        # subject-level 예측 레이블
+        prob_mean = result.get('prob_mean', {})
+        if not prob_mean:
+            return jsonify({"status":"error","error":"empty prob_mean"}), 500
         subject_pred_label = max(prob_mean.items(), key=lambda x: x[1])[0]
         result['subject_pred_label'] = subject_pred_label
         
-        # true_label이 제공된 경우 정확도 계산
-        if true_label:
-            # true_label 표준화 (C->CN, A->AD, F->FTD)
-            tl = true_label.strip().upper()
-            if tl in ["C", "CN"]:
-                tl_std = "CN"
-            elif tl in ["A", "AD"]:
-                tl_std = "AD"
-            elif tl in ["F", "FTD"]:
-                tl_std = "FTD"
-            else:
-                tl_std = tl
-            
+        # 정확도(옵션)
+        if engine_kind == "2c":
+            tl_std = _normalize_true_label_2(true_label_in)
             result['true_label'] = tl_std
-            result['subject_accuracy'] = 1.0 if subject_pred_label == tl_std else 0.0
+            result['subject_accuracy'] = (None if tl_std is None
+                                          else (1.0 if subject_pred_label == tl_std else 0.0))
         else:
-            result['true_label'] = None
-            result['subject_accuracy'] = None
+            tl_std = _normalize_true_label_3(true_label_in)
+            result['true_label'] = tl_std
+            if tl_std is None:
+                result['subject_accuracy'] = None
+            else:
+                result['subject_accuracy'] = 1.0 if subject_pred_label == tl_std else 0.0
         
-        # subject_probs 필드 추가 (prob_mean과 동일)
+        # 편의 필드
         result['subject_probs'] = result['prob_mean']
         
         return jsonify({"status": "ok", "result": result}), 200
@@ -171,8 +246,25 @@ def infer():
     except HTTPException as e:
         return jsonify({"status":"error","error":f"{e.name}: {e.description}"}), e.code
     except Exception as e:
-        # 예기치 않은 오류도 추적 가능하도록 repr 포함
         return jsonify({"status":"error","error":repr(e)}), 500
+
+# --- 라우트 ---
+# (1) 기본 /infer: 항상 3진분류
+@app.post("/infer")
+def infer_default_3():
+    return _infer_common("3c")
+
+# (2) 강제 3진분류
+@app.post("/infer3class")
+def infer_3():
+    return _infer_common("3c")
+
+# (3) 강제 2진분류(CN/AD)
+@app.post("/infer2class")
+def infer_2():
+    return _infer_common("2c")
+
+# 중복된 /infer 엔드포인트 제거됨 - 위의 _infer_common 함수로 대체
 
 @app.post("/start_eeg_collection")
 def start_eeg_collection():
@@ -218,10 +310,10 @@ def check_place_api():
     """장소 판별 API"""
     try:
         data = request.get_json()
-        word = data.get('word', '')
+        word = data.get('place', '')  # 'word' -> 'place'로 변경
         
         if not word:
-            return jsonify({'error': '단어가 필요합니다'}), 400
+            return jsonify({'error': '장소가 필요합니다'}), 400
         
         print(f"[DEBUG] 장소 판별 요청: {word}")
         
@@ -229,8 +321,8 @@ def check_place_api():
         score = check_place(word)
         
         result = {
-            'word': word,
-            'is_place': score == 1,
+            'status': 'ok',
+            'detected_place': score == 1,  # Frontend와 일치하도록 수정
             'score': score
         }
         
@@ -330,6 +422,7 @@ def check_moca_q3_api():
         print(f"[DEBUG] MoCA Q3 검증 요청: {answer}")
         score = check_moca_q3(answer)
         result = {
+            'status': 'ok',
             'answer': answer,
             'is_appropriate': score == 1,
             'score': score
@@ -352,6 +445,7 @@ def check_moca_q4_api():
         print(f"[DEBUG] MoCA Q4 검증 요청: {answer}")
         score = check_moca_q4(answer)
         result = {
+            'status': 'ok',
             'answer': answer,
             'is_appropriate': score == 1,
             'score': score

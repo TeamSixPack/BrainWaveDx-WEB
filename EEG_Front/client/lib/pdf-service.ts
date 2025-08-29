@@ -26,6 +26,7 @@ export interface AssessmentData {
   personalizedGuide?: {
     title: string;
     color: string;
+    pdfColor?: string;
     guides: {
       food: { title: string; items: string[] };
       exercise: { title: string; items: string[] };
@@ -92,9 +93,16 @@ export class PDFService {
 
           .cards { display: flex; flex-wrap: wrap; gap: 10px; }
           .card { flex: 1 1 130px; background: #f9fafb; padding: 10px; border-radius: 6px; text-align: center; }
-          .score-value { font-size: 20px; font-weight: 800; color: #2563eb; }
+          .score-value { 
+            font-size: 20px; 
+            font-weight: 800; 
+            text-align: center;
+            /* 색상은 인라인 스타일로만 제어 */
+          }
+          
+
           .score-label { font-size: 12px; color: #6b7280; }
-          .risk-low { color: #16a34a; } .risk-medium { color: #eab308; } .risk-high { color: #dc2626; }
+          .risk-low { color: #16a34a; }
 
           .k-desc { font-size: 13px; color: #111827; }
           .muted { color: #6b7280; font-size: 12px; }
@@ -104,13 +112,11 @@ export class PDFService {
 
           .recommendations { list-style: none; padding: 0; margin: 0; }
           .recommendations li { background: #eff6ff; margin: 5px 0; padding: 8px 10px; border-left: 2px solid #2563eb; border-radius: 4px; font-size: 13px; }
-          .disclaimer { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 5px; padding: 10px; font-size: 12px; }
+          .disclaimer { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 5px; padding: 10px; font-size: 12px; }
           
           .guide-card { 
-            background: #f9fafb; 
             padding: 10px; 
             border-radius: 5px; 
-            border: 1px solid #e5e7eb;
             margin-bottom: 8px;
           }
           .guide-card h4 { font-size: 13px; font-weight: 600; }
@@ -133,7 +139,7 @@ export class PDFService {
             <div class="section-title">1) 요약 결과</div>
             <div class="cards">
               <div class="card">
-                <div class="score-value">${data.overallRisk}</div>
+                <div class="score-value" style="color: ${data.personalizedGuide?.pdfColor || '#2563eb'}; font-weight: 800; text-align: center;">${data.overallRisk}</div>
                 <div class="score-label">진단 요약</div>
               </div>
               ${typeof data.confidenceLevel === 'number' ? `
@@ -165,8 +171,8 @@ export class PDFService {
           <div class="section compact">
             <div class="section-title">4) 맞춤형 생활 가이드 - ${data.personalizedGuide.title}</div>
             <div class="two-column">
-              <div class="guide-card">
-                <h4 style="color: ${data.personalizedGuide.color === 'red' ? '#dc2626' : data.personalizedGuide.color === 'orange' ? '#ea580c' : '#16a34a'}; margin: 0 0 6px 0; font-size: 13px;">
+              <div class="guide-card" style="background: ${data.personalizedGuide.pdfColor ? `${data.personalizedGuide.pdfColor}10` : '#f9fafb'}; border: 1px solid ${data.personalizedGuide.pdfColor ? `${data.personalizedGuide.pdfColor}30` : '#e5e7eb'};">
+                <h4 style="color: ${data.personalizedGuide.pdfColor || '#059669'}; margin: 0 0 6px 0; font-size: 13px; font-weight: 600;">
                   🍽️ ${data.personalizedGuide.guides.food.title}
                 </h4>
                 <ul style="margin: 0; padding-left: 16px; font-size: 12px;">
@@ -174,8 +180,8 @@ export class PDFService {
                 </ul>
               </div>
               
-              <div class="guide-card">
-                <h4 style="color: ${data.personalizedGuide.color === 'red' ? '#dc2626' : data.personalizedGuide.color === 'orange' ? '#ea580c' : '#16a34a'}; margin: 0 0 6px 0; font-size: 13px;">
+              <div class="guide-card" style="background: ${data.personalizedGuide.pdfColor ? `${data.personalizedGuide.pdfColor}10` : '#f9fafb'}; border: 1px solid ${data.personalizedGuide.pdfColor ? `${data.personalizedGuide.pdfColor}30` : '#e5e7eb'};">
+                <h4 style="color: ${data.personalizedGuide.pdfColor || '#059669'}; margin: 0 0 6px 0; font-size: 13px; font-weight: 600;">
                   🏃‍♂️ ${data.personalizedGuide.guides.exercise.title}
                 </h4>
                 <ul style="margin: 0; padding-left: 16px; font-size: 12px;">
@@ -184,8 +190,8 @@ export class PDFService {
               </div>
             </div>
             
-            <div class="guide-card" style="margin-top: 8px;">
-              <h4 style="color: ${data.personalizedGuide.color === 'red' ? '#dc2626' : data.personalizedGuide.color === 'orange' ? '#ea580c' : '#16a34a'}; margin: 0 0 6px 0; font-size: 13px;">
+            <div class="guide-card" style="margin-top: 8px; background: ${data.personalizedGuide.pdfColor ? `${data.personalizedGuide.pdfColor}10` : '#f9fafb'}; border: 1px solid ${data.personalizedGuide.pdfColor ? `${data.personalizedGuide.pdfColor}30` : '#e5e7eb'};">
+              <h4 style="color: ${data.personalizedGuide.pdfColor || '#059669'}; margin: 0 0 6px 0; font-size: 13px; font-weight: 600;">
                 🎯 ${data.personalizedGuide.guides.behavior.title}
               </h4>
               <ul style="margin: 0; padding-left: 16px; font-size: 12px;">

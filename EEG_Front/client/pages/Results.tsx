@@ -83,6 +83,16 @@ export default function Results() {
     console.log('🔍 eegResult:', eegResult);
     return result;
   }, [autoEegResult, eegResult]);
+
+  // finalEegResult가 변경될 때마다 맞춤형 가이드 업데이트
+  useEffect(() => {
+    if (finalEegResult && !personalizedGuide) {
+      console.log('🔍 맞춤형 가이드 생성 시작:', finalEegResult);
+      const guide = getPersonalizedGuide(finalEegResult);
+      setPersonalizedGuide(guide);
+      console.log('✅ 맞춤형 가이드 생성 완료:', guide);
+    }
+  }, [finalEegResult, personalizedGuide]);
   
   // 뇌파 분석 결과가 있으면 가장 높은 확률값을 신뢰도로 사용, 없으면 기본값 사용
   const actualConfidenceLevel = useMemo(() => {
@@ -169,75 +179,47 @@ export default function Results() {
     if (!probabilities) return null;
     
     const highestProbLabel = getHighestProbLabel(probabilities);
+    console.log('🔍 최고 확률 라벨:', highestProbLabel);
+    console.log('🔍 확률 분포:', probabilities);
     
     // 맞춤형 가이드 데이터 반환
     switch (highestProbLabel) {
       case 'CN':
         return {
-          title: "정상 뇌파 패턴",
-          color: "text-green-600",
+          title: "정상 뇌파 패턴 - 건강 유지 가이드",
+          bgColor: "from-green-50 to-emerald-50",
+          borderColor: "border-green-200",
+          dotColor: "bg-green-500",
+          textColor: "text-green-800",
+          accentColor: "text-green-700",
+          pdfColor: "#16a34a", // PDF에서 초록색으로 표시
           guides: {
             food: {
-              title: "뇌 건강을 위한 식단",
+              title: "식단 습관",
               items: [
-                "오메가-3가 풍부한 생선 (연어, 고등어, 청어)",
-                "항산화 물질이 풍부한 베리류 (블루베리, 딸기, 라즈베리)",
-                "전곡류 (현미, 귀리, 퀴노아)",
-                "견과류 (호두, 아몬드, 브라질넛)",
-                "잎채소 (시금치, 케일, 브로콜리)"
+                "지중해 식단: 채소, 과일, 통곡물, 생선(연어, 고등어), 올리브유",
+                "적당한 단백질: 살코기, 두부, 콩류 고르게 섭취",
+                "항산화 식품: 블루베리, 브로콜리, 시금치, 녹차",
+                "좋은 지방: 오메가-3(생선, 호두), 불포화지방(아보카도)",
+                "피해야 할 것: 과도한 설탕, 가공식품, 튀김, 과음"
               ]
             },
             exercise: {
-              title: "뇌 활성화 운동",
+              title: "운동 습관",
               items: [
-                "유산소 운동 (걷기, 조깅, 수영) - 주 3-4회, 30분",
-                "근력 운동 (스쿼트, 플랭크, 푸시업) - 주 2-3회",
-                "균형 운동 (요가, 타이치) - 주 2-3회",
-                "댄스나 테니스 같은 복합 운동"
+                "유산소 운동: 빠른 걷기, 수영, 조깅 - 주 3-5회, 30분 이상",
+                "근력 운동: 덤벨, 밴드, 스쿼트 - 주 2-3회",
+                "균형 운동: 요가, 필라테스, 태극권 - 주 2-3회",
+                "조합 운동: 유산소 + 근력 + 스트레칭 효과적"
               ]
             },
             behavior: {
-              title: "뇌 건강 습관",
+              title: "생활 습관",
               items: [
-                "규칙적인 수면 (7-8시간)",
-                "스트레스 관리 (명상, 호흡 운동)",
-                "사회적 활동 (친구와의 만남, 취미 활동)",
-                "새로운 기술 학습 (언어, 악기, 요리)"
-              ]
-            }
-          }
-        };
-      case 'AD':
-        return {
-          title: "알츠하이머 치매 패턴",
-          color: "text-red-600",
-          guides: {
-            food: {
-              title: "치매 예방 식단",
-              items: [
-                "MIND 다이어트 (지중해식 + DASH 다이어트)",
-                "항산화 물질 (비타민 E, C, 베타카로틴)",
-                "오메가-3 지방산 (생선, 호두, 아마씨)",
-                "비타민 B군 (전곡류, 계란, 녹색채소)",
-                "항염증 식품 (강황, 생강, 마늘)"
-              ]
-            },
-            exercise: {
-              title: "인지 기능 향상 운동",
-              items: [
-                "가벼운 유산소 운동 (걷기) - 매일 30분",
-                "스트레칭과 요가 - 주 3-4회",
-                "손가락 운동 (뜨개질, 퍼즐)",
-                "균형 운동 (한 발로 서기, 뒤로 걷기)"
-              ]
-            },
-            behavior: {
-              title: "인지 기능 보호",
-              items: [
-                "규칙적인 생활 리듬",
-                "충분한 수면 (8-9시간)",
-                "정신적 자극 (독서, 퍼즐, 게임)",
-                "가족과의 대화 및 사회적 활동"
+                "두뇌 활동: 독서, 악기, 퍼즐, 외국어 학습",
+                "사회적 교류: 가족, 친구와 대화, 사회 활동 지속",
+                "수면 관리: 하루 7시간 규칙적이고 깊은 수면",
+                "스트레스 관리: 명상, 호흡법, 취미 활동"
               ]
             }
           }
@@ -245,40 +227,126 @@ export default function Results() {
       case 'FTD':
         return {
           title: "전두측두엽 치매 패턴",
-          color: "text-orange-600",
+          bgColor: "from-red-50 to-rose-50",
+          borderColor: "border-red-200",
+          dotColor: "bg-red-500",
+          textColor: "text-red-800",
+          accentColor: "text-red-700",
+          pdfColor: "#C00000", // 더 가독성 높은 빨간색으로 변경
           guides: {
             food: {
-              title: "전두엽 기능 향상 식단",
+              title: "FTD 예방 식단",
               items: [
-                "고품질 단백질 (닭고기, 생선, 콩)",
-                "복합 탄수화물 (현미, 귀리, 퀴노아)",
-                "뇌 에너지 공급 (코코넛 오일, MCT 오일)",
-                "항산화 물질 (베리류, 다크 초콜릿)",
-                "오메가-3 지방산 (생선, 아마씨)"
+                "항산화 물질이 풍부한 식품 (베리류, 녹색채소)",
+                "오메가-3 지방산 (생선, 호두, 아마씨)",
+                "비타민 B군 (전곡류, 계란, 녹색채소)",
+                "항염증 식품 (강황, 생강, 마늘)",
+                "프로바이오틱스 (요거트, 김치, 된장)"
               ]
             },
             exercise: {
-              title: "집행 기능 향상 운동",
+              title: "FTD 예방 운동",
               items: [
-                "복합 운동 (테니스, 배드민턴)",
-                "춤추기 (댄스, 줌바)",
-                "요가와 필라테스",
-                "자연 속 걷기 (숲길, 공원)"
+                "가벼운 유산소 운동 (걷기) - 매일 20-30분",
+                "스트레칭과 요가 - 주 3-4회",
+                "균형 운동 (타이치, 간단한 요가)",
+                "뇌 훈련 게임 (퍼즐, 카드 게임)",
+                "사회적 활동 (그룹 활동, 취미 모임)"
               ]
             },
             behavior: {
-              title: "집행 기능 훈련",
+              title: "FTD 예방 행동",
               items: [
-                "계획 세우기 (일정표 작성)",
-                "문제 해결 게임 (체스, 퍼즐)",
-                "새로운 언어나 악기 학습",
-                "정리 정돈 습관 형성"
+                "규칙적인 생활 패턴 유지",
+                "스트레스 관리 (명상, 호흡 운동)",
+                "충분한 수면 (7-8시간)",
+                "사회적 연결 유지 (가족, 친구와의 교류)",
+                "새로운 취미나 기술 학습"
+              ]
+            }
+          }
+        };
+      case 'AD':
+        return {
+          title: "알츠하이머 치매 패턴 - 관리 가이드",
+          bgColor: "from-red-50 to-rose-50",
+          borderColor: "border-red-200",
+          dotColor: "bg-red-500",
+          textColor: "text-red-800",
+          accentColor: "text-red-700",
+          pdfColor: "#C00000", // 더 가독성 높은 빨간색으로 변경
+          guides: {
+            food: {
+              title: "식단 습관 (AD 환자)",
+              items: [
+                "MIND 식단: 지중해식+DASH식 응용, 인지 기능 유지에 효과적",
+                "권장 식품: 녹색 잎채소, 베리류, 통곡물, 견과류, 생선, 올리브유",
+                "제한 식품: 붉은 고기, 버터, 치즈, 과자, 튀김류, 패스트푸드",
+                "적절한 단백질: 살코기, 두부, 달걀, 생선으로 근육량 유지",
+                "삼킴 장애 고려: 잘게 썰거나 부드럽게 조리 (죽, 스무디, 수프)",
+                "수분 보충: 물, 수분 많은 과일(수박, 오렌지) - 탈수 방지"
+              ]
+            },
+            exercise: {
+              title: "운동 습관 (AD 환자)",
+              items: [
+                "가벼운 유산소: 걷기, 실내 산책 - 하루 20-30분, 주 3-5회",
+                "간단한 근력: 고무 밴드, 가벼운 아령, 앉았다 일어서기",
+                "균형/유연성: 스트레칭, 간단한 요가, 태극권 - 낙상 예방",
+                "규칙적 루틴: 같은 시간·같은 장소에서 운동 - 안정감 제공",
+                "안전 주의: 보호자 동반, 넘어질 위험 고려"
+              ]
+            },
+            behavior: {
+              title: "생활 습관",
+              items: [
+                "인지 훈련: 단순 퍼즐, 그림 맞추기, 옛날 사진 보며 대화",
+                "규칙적 수면: 일정한 시간에 자고 일어나도록 환경 조정",
+                "사회적 교류: 가족, 요양원 프로그램, 음악/미술 치료",
+                "안전 관리: 낙상 방지, 삼킴 곤란 시 식사 보조, 약물 관리"
               ]
             }
           }
         };
       default:
-        return null;
+        return {
+          title: "일반적인 뇌 건강 관리",
+          bgColor: "from-blue-50 to-indigo-50",
+          borderColor: "border-blue-200",
+          dotColor: "bg-blue-500",
+          textColor: "text-blue-800",
+          accentColor: "text-blue-700",
+          pdfColor: "#2563eb", // PDF에서 파란색으로 표시
+          guides: {
+            food: {
+              title: "일반 뇌 건강 식단",
+              items: [
+                "균형잡힌 영양소 (단백질, 탄수화물, 지방)",
+                "항산화 물질 (과일, 채소, 견과류)",
+                "오메가-3 지방산 (생선, 아마씨, 호두)",
+                "비타민과 미네랄 (전곡류, 유제품, 계란)"
+              ]
+            },
+            exercise: {
+              title: "일반 뇌 건강 운동",
+              items: [
+                "규칙적인 유산소 운동 (주 3-4회, 30분)",
+                "근력 운동 (주 2-3회)",
+                "균형 운동 (요가, 타이치)",
+                "스트레칭과 유연성 운동"
+              ]
+            },
+            behavior: {
+              title: "일반 뇌 건강 습관",
+              items: [
+                "규칙적인 수면 (7-8시간)",
+                "스트레스 관리 (명상, 취미 활동)",
+                "사회적 활동과 새로운 학습",
+                "정기적인 건강 검진"
+              ]
+            }
+          }
+        };
     }
   };
 
@@ -400,6 +468,7 @@ export default function Results() {
         personalizedGuide: personalizedGuide ? {
           title: personalizedGuide.title,
           color: personalizedGuide.color,
+          pdfColor: personalizedGuide.pdfColor,
           guides: {
             food: {
               title: personalizedGuide.guides.food.title,
@@ -997,7 +1066,7 @@ export default function Results() {
         </Card>
 
         {/* Personalized Guidance Section */}
-        <Card className="mb-8 bg-gradient-to-r from-primary/5 to-blue-50 border-primary/20">
+        <Card className="mb-8 bg-gradient-to-r from-primary/5 to-blue-50 border-primary/20 max-w-7xl mx-auto">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Bot className="h-5 w-5 text-primary" />
@@ -1018,40 +1087,40 @@ export default function Results() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* 음식 가이드 */}
-                    <div className="bg-white/70 rounded-lg p-4">
+                    <div className="bg-white/70 rounded-lg p-4 min-w-0">
                       <h5 className={`font-semibold ${personalizedGuide.accentColor} mb-2 flex items-center`}>
                         <Utensils className="h-4 w-4 mr-2" />
                         {personalizedGuide.guides.food.title}
                       </h5>
                       <ul className={`text-sm ${personalizedGuide.textColor} space-y-1`}>
                         {personalizedGuide.guides.food.items.map((item, index) => (
-                          <li key={index}>• {item}</li>
+                          <li key={index} className="leading-relaxed">• {item}</li>
                         ))}
                       </ul>
                     </div>
 
                     {/* 운동 가이드 */}
-                    <div className="bg-white/70 rounded-lg p-4">
+                    <div className="bg-white/70 rounded-lg p-4 min-w-0">
                       <h5 className={`font-semibold ${personalizedGuide.accentColor} mb-2 flex items-center`}>
                         <Activity className="h-4 w-4 mr-2" />
                         {personalizedGuide.guides.exercise.title}
                       </h5>
                       <ul className={`text-sm ${personalizedGuide.textColor} space-y-1`}>
                         {personalizedGuide.guides.exercise.items.map((item, index) => (
-                          <li key={index}>• {item}</li>
+                          <li key={index} className="leading-relaxed">• {item}</li>
                         ))}
                       </ul>
                     </div>
 
-                    {/* 행동강령 */}
-                    <div className="bg-white/70 rounded-lg p-4">
+                    {/* 생활 습관 */}
+                    <div className="bg-white/70 rounded-lg p-4 min-w-0">
                       <h5 className={`font-semibold ${personalizedGuide.accentColor} mb-2 flex items-center`}>
                         <Target className="h-4 w-4 mr-2" />
                         {personalizedGuide.guides.behavior.title}
                       </h5>
                       <ul className={`text-sm ${personalizedGuide.textColor} space-y-1`}>
                         {personalizedGuide.guides.behavior.items.map((item, index) => (
-                          <li key={index}>• {item}</li>
+                          <li key={index} className="leading-relaxed">• {item}</li>
                         ))}
                       </ul>
                     </div>

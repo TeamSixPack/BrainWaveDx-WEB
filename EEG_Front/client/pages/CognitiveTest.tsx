@@ -30,7 +30,7 @@ const checkPlaceWithAI = async (word: string): Promise<boolean> => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ word }),
+      body: JSON.stringify({ place: word }),
     });
 
     if (!response.ok) {
@@ -40,7 +40,8 @@ const checkPlaceWithAI = async (word: string): Promise<boolean> => {
     const result = await response.json();
     console.log('장소 판별 결과:', result);
     
-    return result.is_place;
+    // Flask 서버 응답 형식에 맞춰 수정
+    return result.status === 'ok' && result.detected_place;
   } catch (error) {
     console.error('장소 판별 API 호출 오류:', error);
     throw error;
