@@ -36,6 +36,32 @@ export default function Results() {
   const [assessmentSaved, setAssessmentSaved] = useState(() => {
     // 세션 스토리지에서 저장 상태 확인
     const saved = sessionStorage.getItem('assessment_saved');
+    const eegResult = sessionStorage.getItem('eeg_analysis_result');
+    
+    // 새로운 뇌파 결과가 있으면 저장 상태 초기화
+    if (eegResult) {
+      try {
+        const parsedResult = JSON.parse(eegResult);
+        const lastSavedHash = sessionStorage.getItem('last_saved_result_hash');
+        const currentHash = JSON.stringify({
+          predicted_label: parsedResult.predicted_label,
+          timestamp: parsedResult.analysis_time || new Date().toISOString()
+        });
+        
+        if (lastSavedHash !== currentHash) {
+          console.log('🔍 새로운 뇌파 결과 감지! 저장 상태 초기화');
+          sessionStorage.removeItem('assessment_saved');
+          sessionStorage.removeItem('last_saved_result_hash');
+          sessionStorage.removeItem('last_saved_timestamp');
+          // 강제 저장 플래그는 설정하지 않음 (시간 기반 방지 우선)
+          console.log('🔧 새로운 결과 감지로 저장 상태 초기화 (강제 저장 플래그 설정 안함)');
+          return false;
+        }
+      } catch (error) {
+        console.error('뇌파 결과 파싱 오류:', error);
+      }
+    }
+    
     return saved === 'true';
   });
 
@@ -154,6 +180,24 @@ export default function Results() {
         const guide = getPersonalizedGuide(parsedResult);
         setPersonalizedGuide(guide);
         console.log('맞춤형 가이드 생성됨:', guide);
+        
+        // 새로운 뇌파 결과가 있으면 저장 상태 초기화
+        const lastSavedHash = sessionStorage.getItem('last_saved_result_hash');
+        const currentHash = JSON.stringify({
+          predicted_label: parsedResult.predicted_label,
+          mocaScore: mocaScore || 0,
+          mmseScore: mmseScore || 0,
+          timestamp: parsedResult.analysis_time || new Date().toISOString()
+        });
+        
+        if (lastSavedHash !== currentHash) {
+          console.log('🔍 새로운 뇌파 결과 감지! 저장 상태 초기화');
+          updateAssessmentSaved(false);
+          sessionStorage.removeItem('last_saved_result_hash');
+          sessionStorage.removeItem('last_saved_timestamp');
+          // 강제 저장 플래그는 설정하지 않음 (시간 기반 방지 우선)
+          console.log('🔧 새로운 결과 감지로 저장 상태 초기화 (강제 저장 플래그 설정 안함)');
+        }
       } catch (error) {
         console.error('자동 분석 결과 파싱 오류:', error);
       }

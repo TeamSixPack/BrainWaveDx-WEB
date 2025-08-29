@@ -165,28 +165,21 @@ export default function Index() {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center pt-4 sm:pt-7">
                 {/* 테스트 시작하기 버튼 */}
                 {isLoggedIn ? (
-                  <div className="space-y-3 sm:space-y-4">
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                      <Button asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold text-white !text-white">
-                        <Link to="/test-mode-selection" className="override-white">
-                          <Brain className="mr-2 h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                          테스트 시작하기
-                        </Link>
-                      </Button>
-                      <Button asChild size="lg" variant="secondary" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold">
-                        <Link to="/eeg-test">
-                          <Upload className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                          뇌파 분석 테스트
-                        </Link>
-                      </Button>
-                      <Button asChild size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold">
-                        <Link to="/memory-helper">
-                          <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                          기억력 도우미
-                        </Link>
-                      </Button>
-                    </div>
-                    <Button variant="outline" size="lg" asChild className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold">
+                  <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center">
+                    <Button asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold text-white !text-white w-full sm:w-80">
+                      <Link to="/test-mode-selection" className="override-white">
+                        <Brain className="mr-2 h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                        테스트 시작하기
+                      </Link>
+                    </Button>
+                    {/* 뇌파 분석 테스트 버튼 제거됨 */}
+                    <Button asChild size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
+                      <Link to="/memory-helper">
+                        <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                        기억력 도우미
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="lg" asChild className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
                       <Link to="/assessment-history">
                         <FileText className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
                         검사기록 보기
@@ -194,28 +187,21 @@ export default function Index() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                      <Button variant="default" asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-64 text-white !text-white">
-                        <Link to="/test-mode-selection" className="override-white">
-                          <Brain className="mr-2 h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                          비회원으로 검사하기
-                        </Link>
-                      </Button>
-                      <Button asChild size="lg" variant="secondary" className="px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold w-full sm:w-64">
-                        <Link to="/eeg-test">
-                          <Upload className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                          뇌파 분석 검사
-                        </Link>
-                      </Button>
-                      <Button asChild size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold w-full sm:w-64">
-                        <Link to="/memory-helper">
-                          <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                          기억력 도우미
-                        </Link>
-                      </Button>
-                    </div>
-                    <Button variant="outline" size="lg" onClick={() => setLoginModalOpen(true)} className="px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold w-full sm:w-64">
+                  <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center">
+                    <Button variant="default" asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80 text-white !text-white">
+                      <Link to="/test-mode-selection" className="override-white">
+                        <Brain className="mr-2 h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                        비회원으로 검사하기
+                      </Link>
+                    </Button>
+                    {/* 뇌파 분석 검사 버튼 제거됨 */}
+                    <Button asChild size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
+                      <Link to="/memory-helper">
+                        <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                        기억력 도우미
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="lg" onClick={() => setLoginModalOpen(true)} className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
                       로그인하여 기록 저장
                     </Button>
                   </div>
