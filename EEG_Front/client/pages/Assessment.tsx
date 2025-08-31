@@ -177,7 +177,7 @@ export default function Assessment() {
         
         // 성공 음성 안내
         if (isVoiceMode && isTTSEnabled) {
-          speakText("뇌파 데이터 수집이 시작되었습니다. 3분간 측정이 진행됩니다. 눈을 감고 편안하게 앉아있어주세요.");
+          speakText("뇌파 데이터 수집이 시작되었습니다. 2분 30초간 측정이 진행됩니다. 눈을 감고 편안하게 앉아있어주세요.");
         }
         
       } else {
@@ -303,18 +303,18 @@ export default function Assessment() {
     }
   }, [currentStep, isVoiceMode, isRecording]);
 
-  // recording 진행률에 따른 자동 음성 안내
+  // recording 진행률에 따른 자동 음성 안내 (실제 측정 시간: 3분 10초 기준)
   useEffect(() => {
     if (isVoiceMode && currentStep === "recording" && isRecording) {
       let progressText = "";
       
-      if (recordingTime === 50) {
-        progressText = "측정이 50초 진행되었습니다. 눈을 감고 편안하게 앉아있어주세요.";
-      } else if (recordingTime === 100) {
-        progressText = "측정이 1분 40초 진행되었습니다. 움직이지 말고 편안한 상태를 유지해주세요.";
-      } else if (recordingTime === 130) {
+      if (recordingTime === 60) {
+        progressText = "측정이 1분 진행되었습니다. 눈을 감고 편안하게 앉아있어주세요.";
+      } else if (recordingTime === 120) {
+        progressText = "측정이 2분 진행되었습니다. 움직이지 말고 편안한 상태를 유지해주세요.";
+      } else if (recordingTime === 160) {
         progressText = "측정이 거의 완료되었습니다. 조금만 더 기다려주세요.";
-      } else if (recordingTime === 150) {
+      } else if (recordingTime === 190) {
         progressText = "뇌파 측정이 완료되었습니다! 데이터를 분석하고 있습니다.";
       }
       
@@ -334,9 +334,11 @@ export default function Assessment() {
 
   useEffect(() => {
     if (currentStep === 'recording' && isRecording) {
-      // recording 단계에서는 시간에 따라 진행률 계산 (40% ~ 80%)
-      const recordingProgress = 40 + (recordingTime / 150) * 40;
-      setProgress(Math.min(recordingProgress, 80));
+      // recording 단계에서는 시간에 따라 진행률 계산 (0% ~ 100%)
+      // 실제 측정 시간: 3분 10초 = 190초 기준으로 계산
+      // 190초에서 정확히 100%가 되도록 설정
+      const recordingProgress = (recordingTime / 190) * 100;
+      setProgress(Math.min(recordingProgress, 100));
     } else {
       setProgress(stepProgress[currentStep]);
     }
@@ -344,25 +346,28 @@ export default function Assessment() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isRecording && recordingTime < 150) { // 2분 30초 = 150 seconds
+    if (isRecording && recordingTime < 190) { // 실제 측정 시간: 3분 10초 = 190 seconds
       interval = setInterval(() => {
         setRecordingTime(prev => {
-          if (prev >= 149) {
+          if (prev >= 189) {
+            // 정확히 190초(3분 10초)에서 측정 완료
             setIsRecording(false);
             setCurrentStep("processing");
             // 뇌파 측정 완료 시 음성 안내
             if (isVoiceMode) {
               speakText("뇌파 측정이 완료되었습니다! 데이터를 분석하고 있습니다.");
             }
-            return 150;
+            return 190;
           }
           return prev + 1;
         });
       }, 1000);
-    } else if (recordingTime >= 150) {
-      // 150초에 도달했는데도 아직 recording 상태라면 강제로 중단
+    } else if (recordingTime >= 190) {
+      // 190초에 도달했는데도 아직 recording 상태라면 강제로 중단
       setIsRecording(false);
       setCurrentStep("processing");
+      // recordingTime이 190을 넘어가지 않도록 강제 제한
+      setRecordingTime(190);
     }
     return () => clearInterval(interval);
   }, [isRecording, recordingTime, isVoiceMode]);
@@ -414,6 +419,13 @@ export default function Assessment() {
       // 더 이상 자동으로 넘어가지 않음
     }
   }, [currentStep]);
+
+  // recordingTime이 190을 넘어가지 않도록 안전장치
+  useEffect(() => {
+    if (recordingTime > 190) {
+      setRecordingTime(190);
+    }
+  }, [recordingTime]);
 
   useEffect(() => {
     return () => {
@@ -1044,7 +1056,7 @@ export default function Assessment() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">진행률</span>
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-muted-foreground">{Math.round((recordingTime / 120) * 100)}%</span>
+                      <span className="text-sm text-muted-foreground">{Math.round((recordingTime / 190) * 100)}%</span>
                       {/* 진행률 음성 안내 버튼 */}
                       {isTTSEnabled && (
                         <Button

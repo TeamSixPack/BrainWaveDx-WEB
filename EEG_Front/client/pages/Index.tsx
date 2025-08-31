@@ -80,9 +80,9 @@ export default function Index() {
     <div className="min-h-screen relative bg-gradient-to-br from-[#f8fafc] via-[#dbeafe] to-[#f1f5f9] overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 left-10 w-32 h-32 bg-[#2563eb] rounded-full blur-xl"></div>
-        <div className="absolute bottom-20 right-20 w-40 h-40 bg-[#1d4ed8] rounded-full blur-xl"></div>
-        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-[#f59e0b] rounded-lg"></div>
+        <div className="absolute top-10 left-10 w-32 h-32 bg-[#dbeafe] rounded-full blur-xl"></div>
+        <div className="absolute bottom-20 right-20 w-40 h-40 bg-[#f1f5f9] rounded-full blur-xl"></div>
+        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-[#f8fafc] rounded-lg"></div>
       </div>
 
       {/* Header */}
@@ -146,19 +146,10 @@ export default function Index() {
               </div>
               <div className="space-y-2 sm:space-y-3">
                 <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-foreground leading-tight px-2">
-                  AI 기술로 뇌 건강을 예측하세요.
+                  집에서 간편하게<br></br>나만의 AI 뇌 건강 지킴이
                 </h1>
-                <p className="text-base sm:text-lg lg:text-xl text-blue-700 max-w-2xl mx-auto leading-relaxed px-4">
-                  인지 기능 테스트를 통해 빠르고 쉽게 뇌 건강 상태를 확인하세요.
-                </p>
                 {!isLoggedIn && (
                   <div className="login-info-text text-sm sm:text-base text-muted-foreground max-w-lg mx-auto px-4">
-                    <p className="leading-relaxed">
-                      로그인 없이도 테스트를 진행할 수 있습니다.
-                    </p>
-                    <p className="leading-relaxed mt-1">
-                      결과는 PDF로 다운로드 가능하며, 로그인 시 검사 기록을 저장하고 추이를 확인할 수 있습니다.
-                    </p>
                   </div>
                 )}
               </div>
@@ -176,7 +167,7 @@ export default function Index() {
                     <Button asChild size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
                       <Link to="/memory-helper">
                         <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                        기억력 도우미
+                        AI 음성챗봇
                       </Link>
                     </Button>
                     <Button variant="outline" size="lg" asChild className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
@@ -195,14 +186,13 @@ export default function Index() {
                       </Link>
                     </Button>
                     {/* 뇌파 분석 검사 버튼 제거됨 */}
-                    <Button asChild size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
-                      <Link to="/memory-helper">
-                        <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                        기억력 도우미
-                      </Link>
+                    <Button size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80 opacity-50 cursor-not-allowed" disabled>
+                      <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                      AI 음성챗봇 (로그인 필요)
                     </Button>
-                    <Button variant="outline" size="lg" onClick={() => setLoginModalOpen(true)} className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
-                      로그인하여 기록 저장
+                    <Button size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80 opacity-50 cursor-not-allowed" disabled>
+                      <FileText className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
+                      검사기록 보기 (로그인 필요)
                     </Button>
                   </div>
                 )}
@@ -213,7 +203,6 @@ export default function Index() {
 
             {/* Footer Info */}
             <div className="text-center space-y-2 sm:space-y-3 pt-8 sm:pt-12">
-              <p className="text-base sm:text-lg text-muted-foreground">직관적인 인지 기능 테스트</p>
               <p className="text-sm sm:text-base text-muted-foreground italic">
                 정확한 진단은 전문 의료기관에서 받으시기 바랍니다.
               </p>

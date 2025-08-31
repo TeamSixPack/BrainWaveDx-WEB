@@ -17,6 +17,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        'sans': ['GounBatang', 'Noto Sans KR', 'sans-serif'],
+        'goun': ['GounBatang', 'serif'],
+      },
       fontSize: {
         'xs': ['14px', { lineHeight: '1.5' }],
         'sm': ['16px', { lineHeight: '1.6' }],

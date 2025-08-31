@@ -27,7 +27,7 @@ export default function Demo() {
       icon: Microscope,
       title: "종합 인지검사",
       description: "전반적인 인지 기능을 종합적으로 평가하는 검사",
-      duration: "약 3분",
+      duration: "약 2분 30초",
       points: "최대 30점"
     },
     {
@@ -35,7 +35,7 @@ export default function Demo() {
       icon: Stethoscope,
       title: "간이 인지검사",
       description: "기본적인 인지 기능을 빠르게 평가하는 검사",
-      duration: "약 3분", 
+      duration: "약 2분 30초", 
       points: "최대 30점"
     }
   ];
@@ -290,7 +290,7 @@ export default function Demo() {
               {Object.values(selectedTests).some(test => test) 
                 ? `선택된 검사: ${Object.entries(selectedTests)
                     .filter(([_, selected]) => selected)
-                    .map(([testName]) => testName === 'MOCA' ? '종합인지 평가' : '간이 인지 검사')
+                    .map(([testName]) => testName === 'MOCA' ? '종합 인지 평가' : '간이 인지 검사')
                     .join(', ')}`
                 : '진행할 검사를 선택해주세요 (둘 다 선택하거나 하나만 선택할 수 있습니다)'
               }
