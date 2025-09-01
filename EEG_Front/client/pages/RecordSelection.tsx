@@ -14,6 +14,8 @@ import {
   User
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import styles from "./RecordSelection.module.css";
+import "./RecordSelection.css";
 
 export default function RecordSelection() {
   const { isLoggedIn } = useAuth();
@@ -51,7 +53,7 @@ export default function RecordSelection() {
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
           {/* 뇌파 검사 기록 */}
           <Card className="shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer group">
-            <Link to="/assessment-history" className="block">
+            <Link to="/assessment-history" className={`block ${styles.noUnderline}`} style={{ textDecoration: 'none !important', textDecorationLine: 'none !important', textDecorationStyle: 'none !important', textDecorationColor: 'transparent !important' }}>
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
                   <Brain className="h-8 w-8 text-blue-600" />
@@ -91,7 +93,7 @@ export default function RecordSelection() {
 
           {/* 음성 상담 기록 */}
           <Card className="shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer group">
-            <Link to="/voice-consultation-history" className="block">
+            <Link to="/voice-consultation-history" className={`block ${styles.noUnderline}`} style={{ textDecoration: 'none !important', textDecorationLine: 'none !important', textDecorationStyle: 'none !important', textDecorationColor: 'transparent !important' }}>
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-200 transition-colors">
                   <MessageCircle className="h-8 w-8 text-green-600" />
@@ -120,11 +122,11 @@ export default function RecordSelection() {
                     <span>사용자</span>
                   </div>
                 </div>
-                <div className="pt-4">
-                  <Button className="w-full" variant="outline" size="lg">
-                    음성 상담 기록 보기
-                  </Button>
-                </div>
+                                 <div className="pt-4">
+                   <Button className="w-full" size="lg">
+                     음성 상담 기록 보기
+                   </Button>
+                 </div>
               </CardContent>
             </Link>
           </Card>

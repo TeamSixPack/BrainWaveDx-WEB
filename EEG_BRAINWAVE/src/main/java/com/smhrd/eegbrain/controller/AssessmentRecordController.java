@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/assessments")
@@ -78,69 +79,120 @@ public class AssessmentRecordController {
                 ));
             }
             
+            System.out.println("🔍 Service 호출 시작");
             List<AssessmentRecordEntity> records = assessmentRecordService.getUserAssessmentRecords(userId);
-            System.out.println("🔍 조회된 검사 기록 수: " + records.size());
+            System.out.println("🔍 Service 호출 완료, 조회된 검사 기록 수: " + records.size());
             
             // user 정보를 포함하여 응답
             List<Map<String, Object>> responseRecords = records.stream()
                 .map(record -> {
-                    System.out.println("🔍 검사 기록 처리 중: " + record.getId() + ", User: " + record.getUser());
+                    try {
+                        System.out.println("🔍 검사 기록 처리 중: " + record.getId() + ", User: " + record.getUser());
+                        
+                        // null 값 안전하게 처리
+                        Map<String, Object> userMap = new HashMap<>();
+                        if (record.getUser() != null) {
+                            userMap.put("uid", record.getUser().getUid() != null ? record.getUser().getUid() : "");
+                            userMap.put("name", record.getUser().getName() != null ? record.getUser().getName() : "");
+                            userMap.put("phone", record.getUser().getPhone() != null ? record.getUser().getPhone() : "");
+                        } else {
+                            userMap.put("uid", "");
+                            userMap.put("name", "");
+                            userMap.put("phone", "");
+                        }
+                        
+                        Map<String, Object> recordMap = new HashMap<>();
+                        recordMap.put("id", record.getId() != null ? record.getId() : 0L);
+                        recordMap.put("assessmentDate", record.getAssessmentDate() != null ? record.getAssessmentDate() : "");
+                        recordMap.put("eegResult", record.getEegResult() != null ? record.getEegResult() : "");
+                        recordMap.put("mocaScore", record.getMocaScore() != null ? record.getMocaScore() : 0);
+                        recordMap.put("mmseScore", record.getMmseScore() != null ? record.getMmseScore() : 0);
+                        recordMap.put("createdAt", record.getCreatedAt() != null ? record.getCreatedAt() : "");
+                        recordMap.put("user", userMap);
+                        
+                        return recordMap;
+                    } catch (Exception e) {
+                        System.err.println("❌ 검사 기록 처리 중 오류: " + e.getMessage());
+                        e.printStackTrace();
+                        return null;
+                    }
+                })
+                .filter(record -> record != null) // null 값 제거
+                .collect(Collectors.toList()); // 변경 가능한 ArrayList 생성
+            
+            // 백엔드에서 정렬 순서를 강제로 보장 (JSON 직렬화 문제 방지)
+            System.out.println("🔍 백엔드에서 정렬 순서 강제 보장 시작");
+            List<Map<String, Object>> sortedRecords = responseRecords.stream()
+                .sorted((a, b) -> {
+                    Object createdAtA = a.get("createdAt");
+                    Object createdAtB = b.get("createdAt");
                     
-                    // null 값 안전하게 처리
-                    Map<String, Object> userMap = new HashMap<>();
-                    if (record.getUser() != null) {
-                        userMap.put("uid", record.getUser().getUid() != null ? record.getUser().getUid() : "");
-                        userMap.put("name", record.getUser().getName() != null ? record.getUser().getName() : "");
-                        userMap.put("phone", record.getUser().getPhone() != null ? record.getUser().getPhone() : "");
-                    } else {
-                        userMap.put("uid", "");
-                        userMap.put("name", "");
-                        userMap.put("phone", "");
+                    if (createdAtA == null || createdAtB == null) {
+                        return 0;
                     }
                     
-                    Map<String, Object> recordMap = new HashMap<>();
-                    recordMap.put("id", record.getId());
-                    recordMap.put("assessmentDate", record.getAssessmentDate());
-                    recordMap.put("eegResult", record.getEegResult() != null ? record.getEegResult() : "");
-                    recordMap.put("mocaScore", record.getMocaScore());
-                    recordMap.put("mmseScore", record.getMmseScore());
-                    recordMap.put("createdAt", record.getCreatedAt());
-                    recordMap.put("user", userMap);
-                    
-                    return recordMap;
+                    // createdAt 기준 내림차순 정렬 (최신순)
+                    String dateStrA = createdAtA.toString();
+                    String dateStrB = createdAtB.toString();
+                    return dateStrB.compareTo(dateStrA);
                 })
-                .sorted((a, b) -> {
-                    // Controller에서도 ID 기준 내림차순 정렬 보장
-                    Long idA = (Long) a.get("id");
-                    Long idB = (Long) b.get("id");
-                    return idB.compareTo(idA);
-                })
-                .toList();
+                .collect(Collectors.toList());
+            
+            responseRecords = sortedRecords;
+            
+            // 강제 정렬 후 순서 확인
+            System.out.println("🔍 강제 정렬 후 순서 확인:");
+            for (int i = 0; i < sortedRecords.size(); i++) {
+                Map<String, Object> record = sortedRecords.get(i);
+                System.out.println("  " + (i + 1) + "번째: ID=" + record.get("id") + 
+                                 ", createdAt=" + record.get("createdAt"));
+            }
             
             System.out.println("✅ 응답 데이터 생성 완료");
             
-            // 응답 데이터 순서 확인
-            System.out.println("🔍 컨트롤러에서 응답 데이터 순서 확인:");
+            // 응답 데이터 순서 확인 (createdAt 기준)
+            System.out.println("🔍 컨트롤러에서 createdAt 기준 응답 데이터 순서 확인:");
             for (int i = 0; i < responseRecords.size(); i++) {
                 Map<String, Object> record = responseRecords.get(i);
                 System.out.println("  " + (i + 1) + "번째: ID=" + record.get("id") + 
-                                 ", 날짜=" + record.get("assessmentDate") + 
+                                 ", createdAt=" + record.get("createdAt") + 
+                                 ", assessmentDate=" + record.get("assessmentDate") + 
                                  ", 결과=" + record.get("eegResult"));
             }
             
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("records", responseRecords);
-            response.put("count", responseRecords.size());
+            // createdAt 정렬 상태 확인
+            if (responseRecords.size() > 1) {
+                Object firstCreatedAt = responseRecords.get(0).get("createdAt");
+                Object lastCreatedAt = responseRecords.get(responseRecords.size() - 1).get("createdAt");
+                System.out.println("🔍 첫 번째 createdAt: " + firstCreatedAt);
+                System.out.println("🔍 마지막 createdAt: " + lastCreatedAt);
+                
+                if (firstCreatedAt != null && lastCreatedAt != null) {
+                    // 문자열 비교로 정렬 순서 확인 (더 안전한 방법)
+                    String firstStr = firstCreatedAt.toString();
+                    String lastStr = lastCreatedAt.toString();
+                    boolean isCorrectOrder = firstStr.compareTo(lastStr) > 0;
+                    System.out.println("🔍 createdAt 정렬 순서: " + (isCorrectOrder ? "올바름 (최신순)" : "잘못됨 (오래된순)"));
+                }
+            }
             
-            return ResponseEntity.ok(response);
+            // 음성챗봇과 동일한 응답 구조로 변경
+            return ResponseEntity.ok(responseRecords);
         } catch (Exception e) {
             System.err.println("❌ 오류 발생: " + e.getMessage());
             e.printStackTrace();
             
+            // 더 자세한 오류 정보 제공
+            String errorMessage = e.getMessage();
+            if (errorMessage == null || errorMessage.trim().isEmpty()) {
+                errorMessage = "알 수 없는 오류가 발생했습니다";
+            }
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("message", "검사 기록 조회에 실패했습니다: " + e.getMessage());
+            response.put("message", "검사 기록 조회에 실패했습니다: " + errorMessage);
+            response.put("error", e.getClass().getSimpleName());
+            response.put("details", e.toString());
             
             return ResponseEntity.badRequest().body(response);
         }

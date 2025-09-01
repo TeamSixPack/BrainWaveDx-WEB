@@ -69,29 +69,20 @@ public class AssessmentRecordService {
                                  ", EEG Result: " + firstRecord.getEegResult());
             }
             
-            // 새로운 강력한 ID 기준 정렬 메서드 사용
-            List<AssessmentRecordEntity> records = assessmentRecordRepository.findByUserIdOrderByIdDesc(userId);
-            System.out.println("🔍 새로운 ID 기준 정렬로 조회된 기록 수: " + records.size());
+            // createdAt 기준 내림차순 정렬 메서드 사용 (음성챗봇과 동일)
+            List<AssessmentRecordEntity> records = assessmentRecordRepository.findByUserIdOrderByCreatedAtDesc(userId);
+            System.out.println("🔍 createdAt 기준 정렬로 조회된 기록 수: " + records.size());
             
-            // 만약 여전히 정렬이 안 되면 네이티브 쿼리 시도
+            // createdAt 기준 정렬 확인
             if (records.size() > 1) {
                 AssessmentRecordEntity first = records.get(0);
                 AssessmentRecordEntity last = records.get(records.size() - 1);
-                if (first.getId() < last.getId()) {
-                    System.out.println("⚠️ JPQL 정렬이 실패했습니다. 네이티브 쿼리로 재시도합니다.");
-                    try {
-                        List<Object[]> nativeResults = assessmentRecordRepository.findByUserIdOrderByIdDescNative(userId);
-                        // 네이티브 쿼리 결과를 Entity로 변환
-                        records = convertNativeResultsToEntities(nativeResults);
-                        System.out.println("🔍 네이티브 쿼리로 재조회된 기록 수: " + records.size());
-                    } catch (Exception e) {
-                        System.err.println("❌ 네이티브 쿼리 실패: " + e.getMessage());
-                    }
-                }
+                System.out.println("🔍 첫 번째 기록 createdAt: " + first.getCreatedAt());
+                System.out.println("🔍 마지막 기록 createdAt: " + last.getCreatedAt());
             }
             
-            // 최종 보장을 위한 Java 레벨 강제 정렬
-            records.sort((a, b) -> Long.compare(b.getId(), a.getId()));
+            // 최종 보장을 위한 Java 레벨 createdAt 기준 정렬 (음성챗봇과 동일)
+            records.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
             
             // 정렬 순서 확인을 위한 로그
             if (!records.isEmpty()) {
@@ -114,38 +105,7 @@ public class AssessmentRecordService {
         }
     }
     
-    // 네이티브 쿼리 결과를 Entity로 변환하는 메서드
-    private List<AssessmentRecordEntity> convertNativeResultsToEntities(List<Object[]> nativeResults) {
-        List<AssessmentRecordEntity> entities = new ArrayList<>();
-        
-        for (Object[] result : nativeResults) {
-            try {
-                AssessmentRecordEntity entity = new AssessmentRecordEntity();
-                
-                // assessment_records 테이블 컬럼들
-                entity.setId(((Number) result[0]).longValue()); // id
-                entity.setAssessmentDate(((java.sql.Timestamp) result[2]).toLocalDateTime()); // assessment_date
-                entity.setEegResult((String) result[3]); // eeg_result
-                entity.setMocaScore((Integer) result[4]); // moca_score
-                entity.setMmseScore((Integer) result[5]); // mmse_score
-                entity.setCreatedAt(((java.sql.Timestamp) result[6]).toLocalDateTime()); // created_at
-                
-                // users 테이블 컬럼들
-                UserEntity user = new UserEntity();
-                user.setUid((String) result[7]); // uid
-                user.setName((String) result[8]); // name
-                user.setPhone((String) result[9]); // phone
-                
-                entity.setUser(user);
-                entities.add(entity);
-                
-            } catch (Exception e) {
-                System.err.println("❌ 네이티브 결과 변환 실패: " + e.getMessage());
-            }
-        }
-        
-        return entities;
-    }
+
 
     // 사용자별 검사 기록 수 조회
     public Long getUserAssessmentCount(String userId) {

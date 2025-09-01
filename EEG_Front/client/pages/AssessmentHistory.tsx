@@ -72,92 +72,56 @@ export default function AssessmentHistory() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ API 응답 오류:', errorText);
-        throw new Error(`검사 기록을 불러오는데 실패했습니다. (${response.status})`);
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          console.error('❌ 오류 상세 정보:', errorData);
+          
+          if (errorData.message) {
+            throw new Error(errorData.message);
+          } else {
+            throw new Error(`검사 기록을 불러오는데 실패했습니다. (${response.status})`);
+          }
+        } catch (parseError) {
+          throw new Error(`검사 기록을 불러오는데 실패했습니다. (${response.status}): ${errorText}`);
+        }
       }
       
       const data = await response.json();
       console.log('🔍 API 응답 데이터:', data);
       
-      if (data.success) {
-        console.log('🔍 백엔드에서 받은 검사 기록:', data.records);
-        
-        // 백엔드에서 이미 정렬된 데이터를 받음
-        const records = data.records;
-        
-        // 데이터 순서 확인을 위한 로그
-        console.log('🔍 백엔드에서 받은 데이터 순서:');
-        records.forEach((record: any, index: number) => {
-          console.log(`  ${index + 1}번째: ID=${record.id}, 날짜=${record.assessmentDate}, 결과=${record.eegResult}`);
+      // 백엔드에서 받은 데이터를 createdAt 기준으로 강제 정렬 (JSON 직렬화 문제 방지)
+      console.log('🔍 백엔드에서 받은 검사 기록:', data);
+      
+      // 데이터 정렬 순서 확인을 위한 상세 로그
+      if (Array.isArray(data) && data.length > 0) {
+        console.log('🔍 백엔드에서 받은 원본 데이터 순서:');
+        data.forEach((record: any, index: number) => {
+          console.log(`  ${index + 1}번째: ID=${record.id}, createdAt=${record.createdAt}, assessmentDate=${record.assessmentDate}`);
         });
         
-        // 백엔드 정렬이 실패했으므로 프론트엔드에서 강제로 정렬
-        console.log('⚠️ 백엔드에서 오래된 순서로 데이터 전송됨. 프론트엔드에서 강제 정렬합니다.');
-        
-        // 1단계: ID 기준 내림차순 정렬
-        let finalRecords = [...records].sort((a, b) => {
-          const idA = parseInt(a.id);
-          const idB = parseInt(b.id);
-          
-          if (isNaN(idA) || isNaN(idB)) {
-            // ID가 숫자가 아니면 문자열로 비교
-            return String(b.id).localeCompare(String(a.id));
-          }
-          
-          return idB - idA;
+        // 프론트엔드에서 createdAt 기준으로 강제 정렬
+        console.log('🔍 프론트엔드에서 createdAt 기준 강제 정렬 시작');
+        const sortedData = [...data].sort((a: any, b: any) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // 최신순 (내림차순)
         });
         
-        // 2단계: 정렬 결과 검증 및 강제 수정
-        if (finalRecords.length > 1) {
-          const firstId = parseInt(finalRecords[0]?.id);
-          const lastId = parseInt(finalRecords[finalRecords.length - 1]?.id);
-          
-          if (!isNaN(firstId) && !isNaN(lastId) && firstId < lastId) {
-            console.log('⚠️ 정렬이 실패했습니다. 배열을 강제로 뒤집습니다.');
-            finalRecords = finalRecords.reverse();
-            
-            // 다시 한 번 검증
-            const newFirstId = parseInt(finalRecords[0]?.id);
-            const newLastId = parseInt(finalRecords[finalRecords.length - 1]?.id);
-            if (!isNaN(newFirstId) && !isNaN(newLastId) && newFirstId < newLastId) {
-              console.error('❌ 정렬이 완전히 실패했습니다. 수동으로 정렬합니다.');
-              // 수동으로 ID 순서대로 재배열
-              const idMap = new Map();
-              finalRecords.forEach(record => idMap.set(parseInt(record.id), record));
-              const sortedIds = Array.from(idMap.keys()).sort((a, b) => b - a);
-              finalRecords = sortedIds.map(id => idMap.get(id));
-            }
-          }
-        }
-        
-        console.log('🔍 강제 정렬 후 결과:');
-        finalRecords.forEach((record: any, index: number) => {
-          console.log(`  ${index + 1}번째: ID=${record.id}, 날짜=${record.assessmentDate}, 결과=${record.eegResult}`);
+        console.log('🔍 강제 정렬 후 데이터 순서:');
+        sortedData.forEach((record: any, index: number) => {
+          console.log(`  ${index + 1}번째: ID=${record.id}, createdAt=${record.createdAt}, assessmentDate=${record.assessmentDate}`);
         });
         
-        // 최종 데이터 사용
-        setAssessments(finalRecords);
-        console.log('✅ 검사 기록 로드 완료:', finalRecords);
-        
-        // 추가 검증: 실제로 최신이 맨 위에 있는지 확인
-        if (finalRecords.length > 1) {
-          const firstId = parseInt(finalRecords[0]?.id);
-          const secondId = parseInt(finalRecords[1]?.id);
-          
-          if (!isNaN(firstId) && !isNaN(secondId) && firstId < secondId) {
-            console.error('❌ 최종 정렬 실패! 첫 번째 ID가 두 번째 ID보다 작습니다.');
-            console.error(`  첫 번째: ID=${firstId}, 두 번째: ID=${secondId}`);
-          } else {
-            console.log('✅ 최종 정렬 성공! 최신 검사 기록이 맨 위에 있습니다.');
-          }
-        }
+        // 정렬된 데이터 사용
+        setAssessments(sortedData);
       } else {
-        throw new Error(data.message || '검사 기록을 불러오는데 실패했습니다.');
+        setAssessments(data);
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ 검사 기록 로드 에러:', error);
-      setError(error.message);
-      setAssessments([]);
+      setError(error.message || '검사 기록을 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
     }
