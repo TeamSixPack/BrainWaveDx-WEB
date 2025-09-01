@@ -45,6 +45,30 @@ export default function Assessment() {
     }
   }, []);
 
+  // 페이지 로드 시 뇌파 세션 정리 (다시 검사하기 대비)
+  useEffect(() => {
+    const resetEegSession = async () => {
+      try {
+        console.log('[DEBUG] 페이지 로드 시 뇌파 세션 정리 시작...');
+        const response = await fetch('http://localhost:8000/reset_eeg_session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('[DEBUG] 페이지 로드 시 세션 정리 완료:', result.message);
+        } else {
+          console.warn('[DEBUG] 페이지 로드 시 세션 정리 실패, 무시하고 계속 진행');
+        }
+      } catch (error) {
+        console.warn('[DEBUG] 페이지 로드 시 세션 정리 중 오류, 무시하고 계속 진행:', error);
+      }
+    };
+    
+    resetEegSession();
+  }, []); // 페이지 로드 시 한 번만 실행
+
   // TTS 기능 함수들
   const speakText = (text: string, autoPlay = true) => {
     // 일반 모드일 때는 TTS 완전 비활성화

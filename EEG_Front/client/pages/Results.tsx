@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { PDFService, type AssessmentData } from "@/lib/pdf-service";
 import { AssessmentStorageService } from "@/lib/assessment-storage";
-import { autoSaveAssessment } from "@/lib/assessment-save";
+import { saveAssessment } from "@/lib/assessment-save";
 import Chatbot from "@/components/Chatbot";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -25,7 +25,8 @@ import {
   MessageCircle,
   Bot,
   Utensils,
-  History
+  History,
+  Save
 } from "lucide-react";
 
 type DiagnosisResult = "normal" | "mci" | "dementia";
@@ -33,30 +34,18 @@ type DiagnosisResult = "normal" | "mci" | "dementia";
 export default function Results() {
   const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // 저장 중 상태 추가
   const [assessmentSaved, setAssessmentSaved] = useState(() => {
-    // 세션 스토리지에서 저장 상태 확인
-    const saved = sessionStorage.getItem('assessment_saved');
+    // localStorage에서 저장 상태 확인 (새로고침 시에도 유지)
+    const saved = localStorage.getItem('assessment_saved');
     const eegResult = sessionStorage.getItem('eeg_analysis_result');
     
     // 새로운 뇌파 결과가 있으면 저장 상태 초기화
     if (eegResult) {
       try {
         const parsedResult = JSON.parse(eegResult);
-        const lastSavedHash = sessionStorage.getItem('last_saved_result_hash');
-        const currentHash = JSON.stringify({
-          predicted_label: parsedResult.predicted_label,
-          timestamp: parsedResult.analysis_time || new Date().toISOString()
-        });
-        
-        if (lastSavedHash !== currentHash) {
-          console.log('🔍 새로운 뇌파 결과 감지! 저장 상태 초기화');
-          sessionStorage.removeItem('assessment_saved');
-          sessionStorage.removeItem('last_saved_result_hash');
-          sessionStorage.removeItem('last_saved_timestamp');
-          // 강제 저장 플래그는 설정하지 않음 (시간 기반 방지 우선)
-          console.log('🔧 새로운 결과 감지로 저장 상태 초기화 (강제 저장 플래그 설정 안함)');
-          return false;
-        }
+        // localStorage에서 저장 상태 확인
+        return localStorage.getItem('assessment_saved') === 'true';
       } catch (error) {
         console.error('뇌파 결과 파싱 오류:', error);
       }
@@ -65,11 +54,13 @@ export default function Results() {
     return saved === 'true';
   });
 
-  // assessmentSaved 상태를 업데이트할 때 세션 스토리지도 함께 업데이트
+  // assessmentSaved 상태를 업데이트할 때 localStorage도 함께 업데이트
   const updateAssessmentSaved = useCallback((saved: boolean) => {
     setAssessmentSaved(saved);
-    sessionStorage.setItem('assessment_saved', saved.toString());
+    localStorage.setItem('assessment_saved', saved.toString());
   }, []);
+
+
   
   // 툴팁 위치 조정을 위한 상태
   const [tooltipPosition, setTooltipPosition] = useState<'top' | 'bottom'>('top');
@@ -110,6 +101,8 @@ export default function Results() {
     return result;
   }, [autoEegResult, eegResult]);
 
+
+
   // finalEegResult가 변경될 때마다 맞춤형 가이드 업데이트
   useEffect(() => {
     if (finalEegResult && !personalizedGuide) {
@@ -119,6 +112,49 @@ export default function Results() {
       console.log('✅ 맞춤형 가이드 생성 완료:', guide);
     }
   }, [finalEegResult, personalizedGuide]);
+
+  // URL 파라미터 변경 시 저장 상태 초기화 (새로운 검사 감지)
+  useEffect(() => {
+    // 새로운 검사 결과면 저장 상태 초기화
+    console.log('[DEBUG] 새로운 검사 결과 감지, 저장 상태 초기화');
+    setAssessmentSaved(false);
+    setIsSaving(false);
+    localStorage.removeItem('assessment_saved');
+    localStorage.removeItem('last_saved_hash');
+  }, [mocaScore, mmseScore]); // MOCA/MMSE 점수가 변경되면 새로운 검사로 간주
+
+  // 페이지 로드 시 저장 상태 확인
+  useEffect(() => {
+    // 페이지 로드 시 저장 상태 확인
+    const saved = localStorage.getItem('assessment_saved');
+    const savedHash = localStorage.getItem('last_saved_hash');
+    
+    if (saved === 'true' && savedHash && finalEegResult) {
+      // 저장된 해시와 현재 결과 비교
+      const currentHash = JSON.stringify({
+        predicted_label: finalEegResult.predicted_label,
+        mocaScore,
+        mmseScore,
+        timestamp: finalEegResult.analysis_time || new Date().toISOString()
+      });
+      
+      if (savedHash === currentHash) {
+        // 동일한 결과면 저장 완료 상태 유지
+        console.log('[DEBUG] 페이지 로드 시: 동일한 결과 확인, 저장 완료 상태 유지');
+        setAssessmentSaved(true);
+      } else {
+        // 다른 결과면 저장 상태 초기화
+        console.log('[DEBUG] 페이지 로드 시: 다른 결과 확인, 저장 상태 초기화');
+        setAssessmentSaved(false);
+        localStorage.removeItem('assessment_saved');
+        localStorage.removeItem('last_saved_hash');
+      }
+    } else {
+      // 저장 정보가 없으면 저장되지 않은 상태
+      console.log('[DEBUG] 페이지 로드 시: 저장 정보 없음, 저장되지 않은 상태');
+      setAssessmentSaved(false);
+    }
+  }, [finalEegResult, mocaScore, mmseScore]);
   
   // 뇌파 분석 결과가 있으면 가장 높은 확률값을 신뢰도로 사용, 없으면 기본값 사용
   const actualConfidenceLevel = useMemo(() => {
@@ -190,25 +226,13 @@ export default function Results() {
           timestamp: parsedResult.analysis_time || new Date().toISOString()
         });
         
-        if (lastSavedHash !== currentHash) {
-          console.log('🔍 새로운 뇌파 결과 감지!');
-          
-          // 5분 쿨타임 체크 후에만 저장 상태 초기화
-          const lastSavedTime = sessionStorage.getItem('last_saved_timestamp');
-          const currentTime = new Date().getTime();
-          const timeDiff = lastSavedTime ? currentTime - parseInt(lastSavedTime) : Infinity;
-          const fiveMinutes = 5 * 60 * 1000;
-          
-          if (timeDiff >= fiveMinutes) {
-            console.log('✅ 5분 쿨타임 경과! 저장 상태 초기화');
-            updateAssessmentSaved(false);
-            sessionStorage.removeItem('last_saved_result_hash');
-            sessionStorage.removeItem('last_saved_timestamp');
-          } else {
-            console.log('⚠️ 5분 쿨타임 내! 저장 상태 유지');
-            console.log('⏰ 남은 시간:', Math.round((fiveMinutes - timeDiff) / 1000 / 60), '분', Math.round((fiveMinutes - timeDiff) / 1000 % 60), '초');
-          }
-        }
+        // 새로운 뇌파 결과가 있으면 저장 상태 초기화
+        console.log('🔍 새로운 뇌파 결과 감지! 저장 상태 초기화');
+        updateAssessmentSaved(false);
+        setIsSaving(false); // 저장 중 상태도 초기화
+        // localStorage에서도 저장 상태 제거
+        localStorage.removeItem('assessment_saved');
+        localStorage.removeItem('last_saved_hash'); // 해시도 제거
       } catch (error) {
         console.error('자동 분석 결과 파싱 오류:', error);
       }
@@ -432,55 +456,14 @@ export default function Results() {
     }
   }), [finalEegResult, actualConfidenceLevel, mocaScore, mmseScore]);
 
-  // 검사 결과가 있으면 자동으로 DB에 저장 (무한 루프 방지)
-  useEffect(() => {
-    // 이미 저장되었으면 실행하지 않음
-    if (assessmentSaved) {
-      return;
-    }
-    
-    // finalEegResult가 없으면 실행하지 않음
-    if (!finalEegResult) {
-      return;
-    }
-    
-    console.log('🔍 자동 저장 시작 (한 번만)');
-    
-    // 저장 시작 시 즉시 상태 업데이트하여 중복 실행 방지
-    setAssessmentSaved(true);
-    sessionStorage.setItem('assessment_saved', 'true');
-    
-    // 해시 기반 중복 방지 (정확한 중복 방지)
-    const resultHash = JSON.stringify({
-      predicted_label: finalEegResult.predicted_label,
-      mocaScore,
-      mmseScore,
-      timestamp: finalEegResult.analysis_time || new Date().toISOString()
-    });
-    sessionStorage.setItem('last_saved_result_hash', resultHash);
-    
-    // 비동기로 저장 실행
-    autoSaveAssessment(finalEegResult, mocaScore, mmseScore).then((success) => {
-      if (success) {
-        console.log('✅ 자동 저장 완료!');
-      } else {
-        console.log('❌ 자동 저장 실패!');
-        // 실패 시 상태 초기화 (무한 루프 방지)
-        setAssessmentSaved(false);
-        sessionStorage.setItem('assessment_saved', 'false');
-        // 해시 관련 세션 스토리지 정리
-        sessionStorage.removeItem('last_saved_result_hash');
-        sessionStorage.removeItem('last_saved_timestamp');
-      }
-    });
-  }, [finalEegResult, mocaScore, mmseScore]); // assessmentSaved 의존성 제거
+  // 자동 저장 로직 제거 - 이제 수동 저장만 사용
 
   // 페이지를 떠날 때 세션 스토리지 정리
   useEffect(() => {
     const handleBeforeUnload = () => {
       // 페이지를 떠날 때 저장 상태는 유지하되, 임시 데이터는 정리
       // assessment_saved는 유지 (중복 저장 방지용)
-      // last_saved_result_hash는 유지 (중복 저장 방지용)
+              // 저장 상태는 유지
     };
 
     const handlePageHide = () => {
@@ -1235,11 +1218,63 @@ export default function Results() {
                 )}
               </Button>
 
-              <Button variant="outline" className="w-full h-12" asChild>
-                <Link to="/assessment">
-                  <Activity className="h-4 w-4 mr-2" />
-                  다시 검사하기
-                </Link>
+              <Button 
+                variant="outline" 
+                className="w-full h-12"
+                onClick={async () => {
+                  try {
+                    // Flask 서버 자동 재시작 (Windows DLL 문제 해결)
+                    console.log('[DEBUG] Flask 서버 재시작 시작...');
+                    
+                    const response = await fetch('http://localhost:8000/restart_flask_server', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                      const result = await response.json();
+                      console.log('[DEBUG] Flask 서버 재시작 요청 성공:', result.message);
+                      
+                      // 사용자에게 세션 정리 완료 안내
+                      alert(`Flask 서버 세션이 정리되었습니다!\n\n이제 새 검사를 시작할 수 있습니다.\n\nAssessment 페이지로 이동합니다.`);
+                      
+                    } else {
+                      console.warn('[DEBUG] Flask 서버 재시작 실패, 세션 정리로 대체');
+                      
+                      // 재시작 실패 시 기존 세션 정리 방식 사용
+                      await fetch('http://localhost:8000/reset_eeg_session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                      });
+                    }
+                    
+                  } catch (error) {
+                    console.warn('[DEBUG] Flask 서버 재시작 중 오류, 세션 정리로 대체:', error);
+                    
+                    // 오류 발생 시 기존 세션 정리 방식 사용
+                    try {
+                      await fetch('http://localhost:8000/reset_eeg_session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                      });
+                    } catch (resetError) {
+                      console.warn('[DEBUG] 세션 정리도 실패:', resetError);
+                    }
+                  }
+                  
+                  // 프론트엔드 스토리지 정리
+                  sessionStorage.removeItem('eeg_analysis_result');
+                  sessionStorage.removeItem('muse2_serial_number');
+                  localStorage.removeItem('assessment_saved'); // localStorage에서도 제거
+                  localStorage.removeItem('last_saved_hash'); // 해시도 제거
+                  console.log('[DEBUG] 프론트엔드 스토리지 정리 완료');
+                  
+                  // 페이지 이동
+                  navigate('/assessment');
+                }}
+              >
+                <Activity className="h-4 w-4 mr-2" />
+                다시 검사하기
               </Button>
 
               <Button 
@@ -1256,6 +1291,62 @@ export default function Results() {
               >
                 <History className="h-4 w-4 mr-2" />
                 검사 기록 보기
+              </Button>
+
+              <Button 
+                variant="outline" 
+                className="w-full h-12"
+                disabled={isSaving || assessmentSaved}
+                onClick={async () => {
+                  // 이미 저장 중이거나 저장 완료된 경우 클릭 무시
+                  if (isSaving || assessmentSaved) {
+                    if (assessmentSaved) {
+                      alert('이미 저장된 검사 결과입니다.');
+                    }
+                    return;
+                  }
+                  
+                  try {
+                    setIsSaving(true); // 저장 시작
+                    setAssessmentSaved(true); // 즉시 저장 완료 상태로 변경 (중복 클릭 방지)
+                    console.log('[DEBUG] 검사 결과 저장 시작...');
+                    
+                    // 저장 실행
+                    const success = await saveAssessment(finalEegResult, mocaScore, mmseScore);
+                    
+                    if (success) {
+                      alert('검사 결과가 성공적으로 저장되었습니다!');
+                      // localStorage에 저장 상태 기록 (새로고침 시에도 유지)
+                      localStorage.setItem('assessment_saved', 'true');
+                      
+                      // 결과 해시도 localStorage에 저장 (중복 저장 방지용)
+                      const resultHash = JSON.stringify({
+                        predicted_label: finalEegResult.predicted_label,
+                        mocaScore,
+                        mmseScore,
+                        timestamp: finalEegResult.analysis_time || new Date().toISOString()
+                      });
+                      localStorage.setItem('last_saved_hash', resultHash);
+                      
+                      console.log('[DEBUG] 검사 결과 저장 완료');
+                    } else {
+                      alert('검사 결과 저장에 실패했습니다. 다시 시도해주세요.');
+                      console.log('[DEBUG] 검사 결과 저장 실패');
+                      // 실패 시 상태 되돌리기
+                      setAssessmentSaved(false);
+                    }
+                  } catch (error) {
+                    console.error('[DEBUG] 수동 저장 중 오류:', error);
+                    alert('검사 결과 저장 중 오류가 발생했습니다.');
+                    // 오류 시 상태 되돌리기
+                    setAssessmentSaved(false);
+                  } finally {
+                    setIsSaving(false); // 저장 완료 (성공/실패 상관없이)
+                  }
+                }}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {isSaving ? '저장 중...' : assessmentSaved ? '저장 완료' : '검사 결과 저장'}
               </Button>
             </div>
           </CardContent>

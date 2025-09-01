@@ -1,4 +1,4 @@
-// 검사 결과를 백엔드 DB에 자동 저장하는 유틸리티
+// 검사 결과를 백엔드 DB에 저장하는 유틸리티
 
 export interface AssessmentData {
   userId: string;
@@ -70,88 +70,22 @@ export const convertDiagnosisToKorean = (diagnosis: string): string => {
 };
 
 /**
- * 검사 완료 후 자동 저장 (Results 페이지에서 사용)
+ * 검사 결과를 수동으로 저장 (Results 페이지에서 사용)
  * @param eegResult 뇌파 분석 결과
  * @param mocaScore MOCA 점수
  * @param mmseScore MMSE 점수
  */
-export const autoSaveAssessment = async (
+export const saveAssessment = async (
   eegResult: any,
   mocaScore: number = 0,
   mmseScore: number = 0
 ): Promise<boolean> => {
-  console.log('🔍 autoSaveAssessment 호출됨:', { eegResult, mocaScore, mmseScore });
+  console.log('🔍 saveAssessment 호출됨:', { eegResult, mocaScore, mmseScore });
   
   if (!eegResult) {
     console.log('뇌파 검사 결과가 없어 저장하지 않습니다.');
     return false;
   }
-
-  // 시간 기반 중복 저장 방지 제거 (해시 기반만 사용)
-  // const lastSavedTime = sessionStorage.getItem('last_saved_timestamp');
-  // const currentTime = new Date().getTime();
-  // const timeDiff = lastSavedTime ? currentTime - parseInt(lastSavedTime) : Infinity;
-  // const fiveMinutes = 5 * 60 * 1000; // 5분을 밀리초로
-  
-  // console.log('🔍 시간 기반 중복 저장 방지 체크:');
-  // console.log('  - 마지막 저장 시간:', lastSavedTime ? new Date(parseInt(lastSavedTime)).toLocaleString() : '없음');
-  // console.log('  - 현재 시간:', new Date(currentTime).toLocaleString());
-  // console.log('  - 시간 차이:', Math.round(timeDiff / 1000 / 60), '분');
-  // console.log('  - 5분 경과:', timeDiff >= fiveMinutes);
-  
-  // 5분 이내에 저장된 기록이 있으면 중복 저장 방지 (비활성화)
-  // if (lastSavedTime && timeDiff < fiveMinutes) {
-  //   console.log('⚠️ autoSaveAssessment: 5분 이내에 이미 저장된 기록이 있습니다.');
-  //   console.log('💡 5분 후에 다시 시도해주세요');
-  //   console.log('⏰ 남은 시간:', Math.round((fiveMinutes - timeDiff) / 1000 / 60), '분', Math.round((fiveMinutes - timeDiff) / 1000 % 60), '초');
-  //   return true; // 이미 저장된 것으로 간주
-  // }
-  
-  // 해시 기반 중복 저장 방지 (정확한 중복 방지)
-  const resultHash = JSON.stringify({
-    predicted_label: eegResult.predicted_label,
-    mocaScore,
-    mmseScore,
-    timestamp: eegResult.analysis_time || new Date().toISOString()
-  });
-  
-  const savedHash = sessionStorage.getItem('last_saved_result_hash');
-  console.log('🔍 해시 기반 중복 저장 방지 체크:');
-  console.log('  - 현재 해시:', resultHash);
-  console.log('  - 저장된 해시:', savedHash);
-  console.log('  - 해시 일치:', savedHash === resultHash);
-  
-  // 정확히 동일한 결과는 절대 저장하지 않음
-  if (savedHash === resultHash) {
-    console.log('⚠️ autoSaveAssessment: 정확히 동일한 검사 결과입니다. 저장하지 않습니다.');
-    return true; // 이미 저장된 것으로 간주
-  }
-  
-  // 강제 저장 플래그는 더 이상 사용하지 않음 (시간 기반 방지만 사용)
-  // const forceSave = sessionStorage.getItem('force_save_assessment') === 'true';
-  
-  // 강제 저장 플래그 관련 로직 제거
-  // if (forceSave && lastSavedTime && timeDiff < tenMinutes) {
-  //   console.log('⚠️ autoSaveAssessment: 강제 저장 플래그가 설정되어 있지만 10분 이내라서 무시합니다.');
-  //   console.log('⏰ 남은 시간:', Math.round((tenMinutes - timeDiff) / 1000 / 60), '분', Math.round((tenMinutes - timeDiff) / 1000 % 60), '초');
-  //   console.log('🔒 시간 기반 방지가 강제 저장 플래그보다 우선합니다.');
-  //   return true; // 강제 저장 플래그 무시
-  // }
-  
-  // 해시 기반 중복 방지 일시 비활성화 (시간 기반만 사용)
-  // if (savedHash === resultHash) {
-  //   console.log('⚠️ autoSaveAssessment: 이미 저장된 동일한 검사 결과입니다.');
-  //   console.log('💡 시간 기반 방지가 적용되어 1분 이내에는 저장되지 않습니다.');
-  //   return true; // 이미 저장된 것으로 간주
-  // }
-  
-  // 강제 저장 플래그는 더 이상 사용하지 않음 (시간 기반 방지만 사용)
-  // if (forceSave) {
-  //   sessionStorage.removeItem('force_save_assessment');
-  //   sessionStorage.removeItem('last_saved_result_hash');
-  //   sessionStorage.removeItem('last_saved_timestamp');
-  //   console.log('🔧 강제 저장 모드로 중복 저장 방지 해제 (해시 + 타임스탬프 제거)');
-  // }
   
   // 뇌파 진단 결과 결정
   let eegDiagnosis = 'normal';
@@ -169,6 +103,7 @@ export const autoSaveAssessment = async (
       case 'CN': eegDiagnosis = 'normal'; break;
       case 'AD': eegDiagnosis = 'dementia'; break;
       case 'FTD': eegDiagnosis = 'mci'; break;
+      case 'MCI': eegDiagnosis = 'mci'; break;
       default: eegDiagnosis = 'normal'; break;
     }
   }
@@ -187,15 +122,15 @@ export const autoSaveAssessment = async (
   const success = await saveAssessmentToDB(assessmentData);
   
   if (success) {
-    console.log('🎉 검사 결과 자동 저장 완료!');
+    console.log('🎉 검사 결과 저장 완료!');
     // 세션 스토리지에 저장 완료 상태 기록
     sessionStorage.setItem('assessment_saved', 'true');
-    // 저장 시간 기록 (5분 중복 저장 방지용)
+    // 저장 시간 기록
     const currentTime = new Date().getTime();
     sessionStorage.setItem('last_saved_timestamp', currentTime.toString());
     console.log('📅 저장 시간 기록됨:', new Date(currentTime).toLocaleString());
   } else {
-    console.error('💥 검사 결과 자동 저장 실패!');
+    console.error('💥 검사 결과 저장 실패!');
   }
   
   return success;

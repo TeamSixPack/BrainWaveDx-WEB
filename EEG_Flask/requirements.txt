@@ -8,3 +8,4 @@ brainflow
 pandas
 python-dotenv
 openai
+psutil

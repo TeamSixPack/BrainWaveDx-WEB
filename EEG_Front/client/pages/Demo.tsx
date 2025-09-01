@@ -27,7 +27,7 @@ export default function Demo() {
       icon: Microscope,
       title: "종합 인지검사",
       description: "전반적인 인지 기능을 종합적으로 평가하는 검사",
-      duration: "약 2분 30초",
+      duration: "약 3분",
       points: "최대 30점"
     },
     {
@@ -35,7 +35,7 @@ export default function Demo() {
       icon: Stethoscope,
       title: "간이 인지검사",
       description: "기본적인 인지 기능을 빠르게 평가하는 검사",
-      duration: "약 2분 30초", 
+      duration: "약 3분", 
       points: "최대 30점"
     }
   ];

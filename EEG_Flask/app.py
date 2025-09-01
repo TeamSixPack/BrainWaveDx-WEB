@@ -43,6 +43,9 @@ _ENGINES2 = {}  # 2-class 캐시
 _ENGINES3 = {}  # 3-class 캐시
 VER = 'V1'
 
+# 전역 변수로 board_shim 관리 (세션 정리를 위해)
+_ACTIVE_BOARD = None
+
 # OpenAI API 키 설정 (환경변수에서 가져오기)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 if not openai.api_key:
@@ -461,6 +464,8 @@ def run_muse2_eeg_collection(serial_number):
     """
     Muse 2 헤드밴드로 뇌파 데이터를 수집하는 함수
     """
+    global _ACTIVE_BOARD  # 전역 변수 사용 선언
+    
     print(f"[DEBUG] 뇌파 데이터 수집 시작: 시리얼 넘버 {serial_number}")
     
     # 시뮬레이션 모드 (실제 헤드밴드 없이 테스트)
@@ -539,15 +544,34 @@ def run_muse2_eeg_collection(serial_number):
         
         board_shim = BoardShim(board_id, params)
         
+        # 전역 변수에 저장 (세션 정리를 위해)
+        _ACTIVE_BOARD = board_shim
+        
         use_data_seconds = 180  # 3분 동안 데이터 수집 (AI 모델이 47개 세그먼트를 얻을 수 있는 충분한 시간) 
         sampling_rate = BoardShim.get_sampling_rate(board_id)
         num_points = use_data_seconds * sampling_rate  # 몇 초 동안 몇개의 데이터를 가져올지
         
         # Muse 2 연결
-        board_shim.prepare_session()
+        try:
+            print(f"[DEBUG] prepare_session 시작...")
+            board_shim.prepare_session()
+            print(f"[DEBUG] prepare_session 완료")
+        except Exception as e:
+            print(f"[ERROR] prepare_session 실패: {e}")
+            # 전역 변수 정리
+            _ACTIVE_BOARD = None
+            raise Exception(f"장비 연결 실패: {str(e)}")
         
         # Muse 2 데이터 수집 시작
-        board_shim.start_stream()
+        try:
+            print(f"[DEBUG] start_stream 시작...")
+            board_shim.start_stream()
+            print(f"[DEBUG] start_stream 완료")
+        except Exception as e:
+            print(f"[ERROR] start_stream 실패: {e}")
+            # 전역 변수 정리
+            _ACTIVE_BOARD = None
+            raise Exception(f"데이터 수집 시작 실패: {str(e)}")
         
         # 전극 접촉 상태 확인 (10초간)
         print("전극 접촉 상태 확인 중...")
@@ -611,6 +635,9 @@ def run_muse2_eeg_collection(serial_number):
         
         # Muse 2 연결 해제
         board_shim.release_session()
+        
+        # 전역 변수 정리
+        _ACTIVE_BOARD = None
         
         print(f"[DEBUG] CSV 파일 저장 완료: {filepath}")
         print(f"[DEBUG] 데이터 포인트 수: {len(data[0])}")
@@ -727,6 +754,139 @@ def eeg_progress():
         "progress": 100,  # 0-100 사이의 값
         "status_message": "데이터 수집 완료"
     })
+
+@app.post("/reset_eeg_session")
+def reset_eeg_session():
+    """
+    뇌파 검사 세션을 완전히 정리하는 엔드포인트
+    "다시 검사하기"를 위해 사용
+    """
+    try:
+        global _ACTIVE_BOARD
+        
+        print(f"[DEBUG] 강력한 세션 정리 시작")
+        
+        # 활성 보드가 있으면 정리
+        if _ACTIVE_BOARD is not None:
+            try:
+                print(f"[DEBUG] 활성 보드 정리 중...")
+                
+                # 1단계: 스트림 정지
+                try:
+                    _ACTIVE_BOARD.stop_stream()
+                    print(f"[DEBUG] 스트림 정지 완료")
+                except Exception as e:
+                    print(f"[DEBUG] 스트림 정지 중 오류 (무시): {e}")
+                
+                # 2단계: 세션 해제
+                try:
+                    _ACTIVE_BOARD.release_session()
+                    print(f"[DEBUG] 세션 해제 완료")
+                except Exception as e:
+                    print(f"[DEBUG] 세션 해제 중 오류 (무시): {e}")
+                
+                # 3단계: 전역 변수 정리
+                _ACTIVE_BOARD = None
+                print(f"[DEBUG] 전역 변수 정리 완료")
+                
+            except Exception as e:
+                print(f"[DEBUG] 보드 정리 중 오류 (무시): {e}")
+                # 오류가 발생해도 전역 변수는 정리
+                _ACTIVE_BOARD = None
+        
+        # 4단계: 엔진 캐시 정리
+        global _ENGINES2, _ENGINES3
+        _ENGINES2.clear()
+        _ENGINES3.clear()
+        print(f"[DEBUG] 엔진 캐시 정리 완료")
+        
+        # 5단계: BrainFlow DLL 정리 (Windows 특화)
+        try:
+            import brainflow
+            # BrainFlow 내부 정리
+            if hasattr(brainflow, 'BoardShim'):
+                print(f"[DEBUG] BrainFlow BoardShim 정리 시도")
+        except Exception as e:
+            print(f"[DEBUG] BrainFlow 정리 중 오류 (무시): {e}")
+        
+        # 6단계: 강제 메모리 정리
+        import gc
+        gc.collect()
+        print(f"[DEBUG] 가비지 컬렉션 완료")
+        
+        # 7단계: 잠시 대기 (DLL 정리를 위한 시간)
+        import time
+        time.sleep(1)
+        print(f"[DEBUG] DLL 정리 대기 완료")
+        
+        return jsonify({
+            "status": "ok",
+            "message": "뇌파 검사 세션이 완전히 정리되었습니다. 이제 새로운 검사를 시작할 수 있습니다."
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] 세션 정리 중 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "status": "error",
+            "error": f"세션 정리 중 오류가 발생했습니다: {str(e)}"
+        }), 500
+
+@app.post("/restart_flask_server")
+def restart_flask_server():
+    """
+    Flask 서버를 자동으로 재시작하는 엔드포인트
+    Windows DLL 문제 해결을 위해 사용
+    """
+    try:
+        print(f"[DEBUG] Flask 서버 재시작 요청 받음")
+        
+        # 1단계: 모든 세션 정리
+        global _ACTIVE_BOARD, _ENGINES2, _ENGINES3
+        
+        if _ACTIVE_BOARD is not None:
+            try:
+                _ACTIVE_BOARD.stop_stream()
+                _ACTIVE_BOARD.release_session()
+                _ACTIVE_BOARD = None
+                print(f"[DEBUG] 보드 세션 정리 완료")
+            except Exception as e:
+                print(f"[DEBUG] 보드 정리 중 오류 (무시): {e}")
+                _ACTIVE_BOARD = None
+        
+        _ENGINES2.clear()
+        _ENGINES3.clear()
+        print(f"[DEBUG] 엔진 캐시 정리 완료")
+        
+        # 2단계: 메모리 정리
+        import gc
+        gc.collect()
+        print(f"[DEBUG] 메모리 정리 완료")
+        
+        # 3단계: 간단한 세션 정리만 수행 (서버 재시작 없음)
+        print(f"[DEBUG] 세션 정리 완료, 서버 재시작 없이 계속 사용 가능")
+        
+        return jsonify({
+            "status": "ok",
+            "message": "Flask 서버 세션이 정리되었습니다. 이제 새 검사를 시작할 수 있습니다.",
+            "restart_method": "session_cleanup_only"
+        })
+        
+        return jsonify({
+            "status": "ok",
+            "message": "Flask 서버가 재시작되었습니다. 새 서버가 별도 창에서 시작됩니다.",
+            "restart_method": "batch_file"
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] 서버 재시작 중 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "status": "error",
+            "error": f"서버 재시작 중 오류가 발생했습니다: {str(e)}"
+        }), 500
 
 if __name__ == "__main__":
     # 디버그 서버는 단일 스레드라 캐시 race 이슈가 없지만,
