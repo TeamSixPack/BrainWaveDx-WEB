@@ -14,6 +14,7 @@ app.py
   }
 """
 import os
+import sys
 import time
 import json
 import traceback
@@ -836,11 +837,11 @@ def reset_eeg_session():
 @app.post("/restart_flask_server")
 def restart_flask_server():
     """
-    Flask 서버를 자동으로 재시작하는 엔드포인트
+    Flask 서버를 강제로 재시작하는 엔드포인트
     Windows DLL 문제 해결을 위해 사용
     """
     try:
-        print(f"[DEBUG] Flask 서버 재시작 요청 받음")
+        print(f"[DEBUG] Flask 서버 강제 재시작 요청 받음")
         
         # 1단계: 모든 세션 정리
         global _ACTIVE_BOARD, _ENGINES2, _ENGINES3
@@ -864,19 +865,40 @@ def restart_flask_server():
         gc.collect()
         print(f"[DEBUG] 메모리 정리 완료")
         
-        # 3단계: 간단한 세션 정리만 수행 (서버 재시작 없음)
-        print(f"[DEBUG] 세션 정리 완료, 서버 재시작 없이 계속 사용 가능")
+        # 3단계: Flask 서버 강제 종료 후 재시작
+        print(f"[DEBUG] Flask 서버 강제 종료 시작...")
         
-        return jsonify({
-            "status": "ok",
-            "message": "Flask 서버 세션이 정리되었습니다. 이제 새 검사를 시작할 수 있습니다.",
-            "restart_method": "session_cleanup_only"
-        })
+        # 현재 프로세스 ID
+        import os
+        current_pid = os.getpid()
+        
+        # Windows에서 새 콘솔로 Flask 서버 재시작
+        if os.name == 'nt':
+            import subprocess
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            python_exe = sys.executable
+            
+            # 새 콘솔에서 Flask 서버 시작
+            restart_cmd = f'start "Flask EEG Server" cmd /k "cd /d {base_dir} && {python_exe} app.py"'
+            subprocess.run(restart_cmd, shell=True)
+            
+            print(f"[DEBUG] 새 Flask 서버 시작 명령 실행됨")
+            
+            # 잠시 대기 후 현재 프로세스 강제 종료
+            import time
+            time.sleep(2)
+            
+            # 현재 프로세스 강제 종료
+            os._exit(0)
+        else:
+            # Linux/Mac에서는 signal로 재시작
+            import signal
+            os.kill(current_pid, signal.SIGTERM)
         
         return jsonify({
             "status": "ok",
             "message": "Flask 서버가 재시작되었습니다. 새 서버가 별도 창에서 시작됩니다.",
-            "restart_method": "batch_file"
+            "restart_method": "force_restart"
         })
         
     except Exception as e:

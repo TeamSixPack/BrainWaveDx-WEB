@@ -1,0 +1,23 @@
+.btnLarge {
+  height: 3.5rem !important; /* h-14 */
+  padding-left: 2rem !important; /* px-8 */
+  padding-right: 2rem !important; /* px-8 */
+  font-size: 1.25rem !important; /* text-xl */
+  font-weight: 700 !important; /* font-bold */
+}
+
+.btnOutlineBlue {
+  background-color: #ffffff !important;
+  /* 전역의 `border: none !important`를 이기기 위해 shorthand로 재지정 */
+  border: 2px solid #2563eb !important;
+  border-width: 2px !important; /* 안전망 */
+  border-style: solid !important; /* none을 덮어씀 */
+  border-color: #2563eb !important; /* tailwind blue-600 */
+  color: #2563eb !important;
+}
+
+.btnOutlineBlue:hover {
+  background-color: rgba(37, 99, 235, 0.08) !important; /* blue-600/10 */
+}
+
+

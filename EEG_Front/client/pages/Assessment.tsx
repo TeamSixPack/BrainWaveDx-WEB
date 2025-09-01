@@ -268,7 +268,8 @@ export default function Assessment() {
           setCountdown(prev => {
             if (prev <= 1) {
               clearInterval(countdownInterval);
-              setCurrentStep('preparation');
+              // 5초 카운트가 끝나면 바로 녹화 단계로 진입
+              startRecording();
               return 0;
             }
             return prev - 1;
@@ -1096,7 +1097,8 @@ export default function Assessment() {
                       )}
                     </div>
                   </div>
-                  <Progress value={(recordingTime / 120) * 100} className="h-3" />
+                  {/* 전체 측정 시간 190초(3분 10초) 기준 진행률 */}
+                  <Progress value={(recordingTime / 190) * 100} className="h-3" />
                   
                   {/* 진행률에 따른 동적 안내 메시지 */}
                   {isTTSEnabled && (

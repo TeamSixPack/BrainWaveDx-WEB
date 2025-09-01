@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
+import styles from "./AssessmentHistoryButton.module.css";
 import { 
   Brain,
   Calendar,
@@ -533,24 +534,14 @@ export default function AssessmentHistory() {
         </div>
 
         {/* Action Buttons */}
-        <Card className="mt-8">
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <Button asChild>
-                <Link to="/assessment">
-                  <Activity className="h-4 w-4 mr-2" />
-                  새로운 검사 시작
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/results">
-                  <Target className="h-4 w-4 mr-2" />
-                  최신 결과 보기
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mt-8 flex justify-center">
+          <Button asChild className={styles.primaryCta}>
+            <Link to="/assessment" className={`${styles.textWhiteForce} !no-underline`}>
+              <Activity className="h-6 w-6 mr-2" />
+              <span className={styles.textWhiteForce}>새로운 검사 시작</span>
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

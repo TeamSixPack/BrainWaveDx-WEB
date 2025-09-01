@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import styles from "./ResultsButtons.module.css";
 import { PDFService, type AssessmentData } from "@/lib/pdf-service";
 import { AssessmentStorageService } from "@/lib/assessment-storage";
 import { saveAssessment } from "@/lib/assessment-save";
@@ -1199,11 +1200,12 @@ export default function Results() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="flex flex-wrap justify-center gap-4">
+              {/* 1. PDF 다운로드 */}
               <Button
                 onClick={handleDownloadPDF}
                 disabled={downloadingPDF}
-                className="w-full h-12"
+                className={`${styles.btnLarge}`}
               >
                 {downloadingPDF ? (
                   <>
@@ -1212,15 +1214,90 @@ export default function Results() {
                   </>
                 ) : (
                   <>
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="h-5 w-5 mr-2" />
                     PDF 다운로드
                   </>
                 )}
               </Button>
 
+              {/* 2. 검사 결과 저장 */}
               <Button 
                 variant="outline" 
-                className="w-full h-12"
+                className={`${styles.btnLarge} ${styles.btnOutlineBlue}`}
+                disabled={isSaving || assessmentSaved}
+                onClick={async () => {
+                  // 이미 저장 중이거나 저장 완료된 경우 클릭 무시
+                  if (isSaving || assessmentSaved) {
+                    if (assessmentSaved) {
+                      alert('이미 저장된 검사 결과입니다.');
+                    }
+                    return;
+                  }
+                  
+                  try {
+                    setIsSaving(true); // 저장 시작
+                    setAssessmentSaved(true); // 즉시 저장 완료 상태로 변경 (중복 클릭 방지)
+                    console.log('[DEBUG] 검사 결과 저장 시작...');
+                    
+                    // 저장 실행
+                    const success = await saveAssessment(finalEegResult, mocaScore, mmseScore);
+                    
+                    if (success) {
+                      alert('검사 결과가 성공적으로 저장되었습니다!');
+                      // localStorage에 저장 상태 기록 (새로고침 시에도 유지)
+                      localStorage.setItem('assessment_saved', 'true');
+                      
+                      // 결과 해시도 localStorage에 저장 (중복 저장 방지용)
+                      const resultHash = JSON.stringify({
+                        predicted_label: finalEegResult.predicted_label,
+                        mocaScore,
+                        mmseScore,
+                        timestamp: finalEegResult.analysis_time || new Date().toISOString()
+                      });
+                      localStorage.setItem('last_saved_hash', resultHash);
+                      
+                      console.log('[DEBUG] 검사 결과 저장 완료');
+                    } else {
+                      alert('검사 결과 저장에 실패했습니다. 다시 시도해주세요.');
+                      console.log('[DEBUG] 검사 결과 저장 실패');
+                      // 실패 시 상태 되돌리기
+                      setAssessmentSaved(false);
+                    }
+                  } catch (error) {
+                    console.error('[DEBUG] 수동 저장 중 오류:', error);
+                    alert('검사 결과 저장 중 오류가 발생했습니다.');
+                    // 오류 시 상태 되돌리기
+                    setAssessmentSaved(false);
+                  } finally {
+                    setIsSaving(false); // 저장 완료 (성공/실패 상관없이)
+                  }
+                }}
+              >
+                <Save className="h-5 w-5 mr-2" />
+                {isSaving ? '저장 중...' : assessmentSaved ? '저장 완료' : '검사 결과 저장'}
+              </Button>
+
+              {/* 3. 검사 기록 보기 */}
+              <Button 
+                variant="outline" 
+                className={`${styles.btnLarge} ${styles.btnOutlineBlue}`}
+                onClick={() => {
+                  if (isLoggedIn) {
+                    navigate('/assessment-history');
+                  } else {
+                    // 비로그인 사용자에게 로그인 필요 안내
+                    alert('검사 기록을 보려면 로그인이 필요합니다.\n로그인 후 이용해주세요.');
+                  }
+                }}
+              >
+                <History className="h-5 w-5 mr-2" />
+                검사 기록 보기
+              </Button>
+
+              {/* 4. 다시 검사하기 */}
+              <Button 
+                variant="outline" 
+                className={`${styles.btnLarge} ${styles.btnOutlineBlue}`}
                 onClick={async () => {
                   try {
                     // Flask 서버 자동 재시작 (Windows DLL 문제 해결)
@@ -1273,80 +1350,8 @@ export default function Results() {
                   navigate('/assessment');
                 }}
               >
-                <Activity className="h-4 w-4 mr-2" />
+                <Activity className="h-5 w-5 mr-2" />
                 다시 검사하기
-              </Button>
-
-              <Button 
-                variant="outline" 
-                className="w-full h-12"
-                onClick={() => {
-                  if (isLoggedIn) {
-                    navigate('/assessment-history');
-                  } else {
-                    // 비로그인 사용자에게 로그인 필요 안내
-                    alert('검사 기록을 보려면 로그인이 필요합니다.\n로그인 후 이용해주세요.');
-                  }
-                }}
-              >
-                <History className="h-4 w-4 mr-2" />
-                검사 기록 보기
-              </Button>
-
-              <Button 
-                variant="outline" 
-                className="w-full h-12"
-                disabled={isSaving || assessmentSaved}
-                onClick={async () => {
-                  // 이미 저장 중이거나 저장 완료된 경우 클릭 무시
-                  if (isSaving || assessmentSaved) {
-                    if (assessmentSaved) {
-                      alert('이미 저장된 검사 결과입니다.');
-                    }
-                    return;
-                  }
-                  
-                  try {
-                    setIsSaving(true); // 저장 시작
-                    setAssessmentSaved(true); // 즉시 저장 완료 상태로 변경 (중복 클릭 방지)
-                    console.log('[DEBUG] 검사 결과 저장 시작...');
-                    
-                    // 저장 실행
-                    const success = await saveAssessment(finalEegResult, mocaScore, mmseScore);
-                    
-                    if (success) {
-                      alert('검사 결과가 성공적으로 저장되었습니다!');
-                      // localStorage에 저장 상태 기록 (새로고침 시에도 유지)
-                      localStorage.setItem('assessment_saved', 'true');
-                      
-                      // 결과 해시도 localStorage에 저장 (중복 저장 방지용)
-                      const resultHash = JSON.stringify({
-                        predicted_label: finalEegResult.predicted_label,
-                        mocaScore,
-                        mmseScore,
-                        timestamp: finalEegResult.analysis_time || new Date().toISOString()
-                      });
-                      localStorage.setItem('last_saved_hash', resultHash);
-                      
-                      console.log('[DEBUG] 검사 결과 저장 완료');
-                    } else {
-                      alert('검사 결과 저장에 실패했습니다. 다시 시도해주세요.');
-                      console.log('[DEBUG] 검사 결과 저장 실패');
-                      // 실패 시 상태 되돌리기
-                      setAssessmentSaved(false);
-                    }
-                  } catch (error) {
-                    console.error('[DEBUG] 수동 저장 중 오류:', error);
-                    alert('검사 결과 저장 중 오류가 발생했습니다.');
-                    // 오류 시 상태 되돌리기
-                    setAssessmentSaved(false);
-                  } finally {
-                    setIsSaving(false); // 저장 완료 (성공/실패 상관없이)
-                  }
-                }}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {isSaving ? '저장 중...' : assessmentSaved ? '저장 완료' : '검사 결과 저장'}
               </Button>
             </div>
           </CardContent>
