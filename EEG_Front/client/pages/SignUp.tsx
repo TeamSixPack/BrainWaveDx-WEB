@@ -100,7 +100,7 @@ export default function SignUp() {
     
     try {
       const signupData = {
-        id: formData.username,
+        uid: formData.username,
         pw: formData.password,
         name: formData.name,
         phone: formData.phone

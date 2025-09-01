@@ -17,7 +17,7 @@ public class UserService {
 	@Autowired
 	private PasswordService passwordService;
 	
-    // 로그인 처리 (기존 평문 비밀번호를 안전하게 해시로 업그레이드)
+    // 로그인 처리 (기존 평문/BCrypt 비밀번호를 안전하게 Argon2 해시로 업그레이드)
     public Optional<UserEntity> login(String uid, String pw) {
         Optional<UserEntity> userOpt = userRepository.findByUid(uid);
         if (userOpt.isEmpty()) {
@@ -27,15 +27,25 @@ public class UserService {
         UserEntity user = userOpt.get();
         String stored = user.getPw();
 
-        boolean isBcrypt = stored != null && stored.startsWith("$2");
-        if (isBcrypt) {
+        // Argon2 해시인 경우
+        if (passwordService.isArgon2Hash(stored)) {
             if (passwordService.matches(pw, stored)) {
                 return userOpt;
             }
             return Optional.empty();
         }
+        
+        // BCrypt 해시인 경우 - 로그인 성공 시 Argon2로 업그레이드
+        if (passwordService.isBcryptHash(stored)) {
+            if (passwordService.matches(pw, stored)) {
+                // BCrypt에서 Argon2로 업그레이드
+                updatePassword(user, pw);
+                return Optional.of(user);
+            }
+            return Optional.empty();
+        }
 
-        // 기존 평문 저장 사용자: 평문 비교 성공 시 즉시 해시로 업그레이드
+        // 기존 평문 저장 사용자: 평문 비교 성공 시 즉시 Argon2 해시로 업그레이드
         if (stored != null && stored.equals(pw)) {
             updatePassword(user, pw);
             return Optional.of(user);
