@@ -21,7 +21,7 @@ public class UserRestController {
 	
     // 아이디 중복 확인 (AJAX 요청 처리)
     @PostMapping("/checkId")
-    public ResponseEntity<Map<String, Object>> checkIdDuplicate(@RequestParam("id") String uid) {
+    public ResponseEntity<Map<String, Object>> checkIdDuplicate(@RequestParam("uid") String uid) {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -49,7 +49,7 @@ public class UserRestController {
     // 비밀번호 변경 API
     @PostMapping("/api/changePassword")
     public ResponseEntity<Map<String, Object>> changePassword(
-            @RequestParam("id") String uid,
+            @RequestParam("uid") String uid,
             @RequestParam("currentPw") String currentPw,
             @RequestParam("newPw") String newPw) {
         Map<String, Object> response = new HashMap<>();
@@ -94,7 +94,7 @@ public class UserRestController {
     // 회원가입 API
     @PostMapping("/api/signup")
     public ResponseEntity<Map<String, Object>> signup(
-            @RequestParam("id") String uid,
+            @RequestParam("uid") String uid,
             @RequestParam("pw") String pw,
             @RequestParam("name") String name,
             @RequestParam("phone") String phone) {
@@ -135,7 +135,7 @@ public class UserRestController {
     // 로그인 API
     @PostMapping("/api/login")
     public ResponseEntity<Map<String, Object>> login(
-            @RequestParam("id") String uid,
+            @RequestParam("uid") String uid,
             @RequestParam("pw") String pw) {
         
         Map<String, Object> response = new HashMap<>();
@@ -162,7 +162,7 @@ public class UserRestController {
             response.put("success", true);
             response.put("message", "로그인 성공");
             response.put("user", Map.of(
-                "id", user.getUid(),
+                "uid", user.getUid(),
                 "name", user.getName(),
                 "phone", user.getPhone()
             ));
@@ -180,7 +180,7 @@ public class UserRestController {
     @PostMapping("/api/findPassword")
     public ResponseEntity<Map<String, Object>> findPassword(
             @RequestParam(value = "phone", required = false) String phone,
-            @RequestParam(value = "id", required = false) String uid) {
+            @RequestParam(value = "uid", required = false) String uid) {
         
         Map<String, Object> response = new HashMap<>();
         
@@ -209,7 +209,7 @@ public class UserRestController {
             response.put("message", "비밀번호를 확인했습니다.");
             response.put("tempPassword", tempPassword);
             response.put("user", Map.of(
-                "id", user.getUid(),
+                "uid", user.getUid(),
                 "name", user.getName()
             ));
             

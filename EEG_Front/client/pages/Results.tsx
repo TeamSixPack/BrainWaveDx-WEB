@@ -191,12 +191,23 @@ export default function Results() {
         });
         
         if (lastSavedHash !== currentHash) {
-          console.log('🔍 새로운 뇌파 결과 감지! 저장 상태 초기화');
-          updateAssessmentSaved(false);
-          sessionStorage.removeItem('last_saved_result_hash');
-          sessionStorage.removeItem('last_saved_timestamp');
-          // 강제 저장 플래그는 설정하지 않음 (시간 기반 방지 우선)
-          console.log('🔧 새로운 결과 감지로 저장 상태 초기화 (강제 저장 플래그 설정 안함)');
+          console.log('🔍 새로운 뇌파 결과 감지!');
+          
+          // 5분 쿨타임 체크 후에만 저장 상태 초기화
+          const lastSavedTime = sessionStorage.getItem('last_saved_timestamp');
+          const currentTime = new Date().getTime();
+          const timeDiff = lastSavedTime ? currentTime - parseInt(lastSavedTime) : Infinity;
+          const fiveMinutes = 5 * 60 * 1000;
+          
+          if (timeDiff >= fiveMinutes) {
+            console.log('✅ 5분 쿨타임 경과! 저장 상태 초기화');
+            updateAssessmentSaved(false);
+            sessionStorage.removeItem('last_saved_result_hash');
+            sessionStorage.removeItem('last_saved_timestamp');
+          } else {
+            console.log('⚠️ 5분 쿨타임 내! 저장 상태 유지');
+            console.log('⏰ 남은 시간:', Math.round((fiveMinutes - timeDiff) / 1000 / 60), '분', Math.round((fiveMinutes - timeDiff) / 1000 % 60), '초');
+          }
         }
       } catch (error) {
         console.error('자동 분석 결과 파싱 오류:', error);
@@ -421,58 +432,48 @@ export default function Results() {
     }
   }), [finalEegResult, actualConfidenceLevel, mocaScore, mmseScore]);
 
-  // 검사 결과가 있으면 자동으로 DB에 저장
+  // 검사 결과가 있으면 자동으로 DB에 저장 (무한 루프 방지)
   useEffect(() => {
-    console.log('🔍 자동 저장 useEffect 실행됨');
-    console.log('🔍 finalEegResult:', finalEegResult);
-    console.log('🔍 assessmentSaved:', assessmentSaved);
-    console.log('🔍 mocaScore:', mocaScore);
-    console.log('🔍 mmseScore:', mmseScore);
-    
-    // 검사 결과가 있고 아직 저장되지 않았으면 자동으로 DB에 저장
-    if (finalEegResult && !assessmentSaved) {
-      // 중복 저장 방지를 위한 고유 식별자 생성
-      const resultHash = JSON.stringify({
-        predicted_label: finalEegResult.predicted_label,
-        mocaScore,
-        mmseScore,
-        timestamp: finalEegResult.analysis_time || new Date().toISOString()
-      });
-      
-      // 이미 저장된 결과인지 확인
-      const savedHash = sessionStorage.getItem('last_saved_result_hash');
-      if (savedHash === resultHash) {
-        console.log('⚠️ 이미 저장된 동일한 검사 결과입니다. 중복 저장을 건너뜁니다.');
-        updateAssessmentSaved(true);
-        return;
-      }
-      
-      console.log('🔵 검사 완료! 자동으로 DB에 저장합니다...');
-      console.log('🔍 저장할 데이터:', { finalEegResult, mocaScore, mmseScore });
-      
-      // 저장 시작 시 상태 업데이트하여 중복 실행 방지
-      updateAssessmentSaved(true);
-      
-      // 결과 해시를 세션 스토리지에 저장
-      sessionStorage.setItem('last_saved_result_hash', resultHash);
-      
-      // 비동기로 저장 실행
-      autoSaveAssessment(finalEegResult, mocaScore, mmseScore).then((success) => {
-        if (success) {
-          console.log('✅ 자동 저장 완료!');
-        } else {
-          console.log('❌ 자동 저장 실패! 다시 시도 가능하도록 상태 초기화');
-          updateAssessmentSaved(false);
-          // 실패 시 해시도 제거
-          sessionStorage.removeItem('last_saved_result_hash');
-        }
-      });
-    } else if (!finalEegResult) {
-      console.log('❌ finalEegResult가 없습니다!');
-    } else if (assessmentSaved) {
-      console.log('❌ 이미 저장되었습니다!');
+    // 이미 저장되었으면 실행하지 않음
+    if (assessmentSaved) {
+      return;
     }
-  }, [finalEegResult, assessmentSaved, mocaScore, mmseScore, updateAssessmentSaved]); // updateAssessmentSaved 의존성 추가
+    
+    // finalEegResult가 없으면 실행하지 않음
+    if (!finalEegResult) {
+      return;
+    }
+    
+    console.log('🔍 자동 저장 시작 (한 번만)');
+    
+    // 저장 시작 시 즉시 상태 업데이트하여 중복 실행 방지
+    setAssessmentSaved(true);
+    sessionStorage.setItem('assessment_saved', 'true');
+    
+    // 해시 기반 중복 방지 (정확한 중복 방지)
+    const resultHash = JSON.stringify({
+      predicted_label: finalEegResult.predicted_label,
+      mocaScore,
+      mmseScore,
+      timestamp: finalEegResult.analysis_time || new Date().toISOString()
+    });
+    sessionStorage.setItem('last_saved_result_hash', resultHash);
+    
+    // 비동기로 저장 실행
+    autoSaveAssessment(finalEegResult, mocaScore, mmseScore).then((success) => {
+      if (success) {
+        console.log('✅ 자동 저장 완료!');
+      } else {
+        console.log('❌ 자동 저장 실패!');
+        // 실패 시 상태 초기화 (무한 루프 방지)
+        setAssessmentSaved(false);
+        sessionStorage.setItem('assessment_saved', 'false');
+        // 해시 관련 세션 스토리지 정리
+        sessionStorage.removeItem('last_saved_result_hash');
+        sessionStorage.removeItem('last_saved_timestamp');
+      }
+    });
+  }, [finalEegResult, mocaScore, mmseScore]); // assessmentSaved 의존성 제거
 
   // 페이지를 떠날 때 세션 스토리지 정리
   useEffect(() => {

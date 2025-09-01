@@ -45,30 +45,7 @@ public class VoiceConsultationController {
         }
     }
     
-    // 상담 유형으로 상담 기록 조회
-    @GetMapping("/type/{consultationType}")
-    public ResponseEntity<List<VoiceConsultationResponse>> getConsultationsByType(
-            @PathVariable String consultationType) {
-        try {
-            List<VoiceConsultationResponse> consultations = voiceConsultationService.getConsultationsByType(consultationType);
-            return ResponseEntity.ok(consultations);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-    
-    // 사용자 ID와 상담 유형으로 상담 기록 조회
-    @GetMapping("/user/{uid}/type/{consultationType}")
-    public ResponseEntity<List<VoiceConsultationResponse>> getConsultationsByUidAndType(
-            @PathVariable String uid,
-            @PathVariable String consultationType) {
-        try {
-            List<VoiceConsultationResponse> consultations = voiceConsultationService.getConsultationsByUidAndType(uid, consultationType);
-            return ResponseEntity.ok(consultations);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
+
     
     // 특정 기간 동안의 상담 기록 조회
     @GetMapping("/date-range")
@@ -108,29 +85,7 @@ public class VoiceConsultationController {
         }
     }
     
-    // 상담 기록 개수 조회 (상담 유형별)
-    @GetMapping("/count/type/{consultationType}")
-    public ResponseEntity<Long> getConsultationCountByType(@PathVariable String consultationType) {
-        try {
-            long count = voiceConsultationService.getConsultationCountByType(consultationType);
-            return ResponseEntity.ok(count);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-    
-    // 사용자 ID와 상담 유형별 상담 기록 개수 조회
-    @GetMapping("/count/user/{uid}/type/{consultationType}")
-    public ResponseEntity<Long> getConsultationCountByUidAndType(
-            @PathVariable String uid,
-            @PathVariable String consultationType) {
-        try {
-            long count = voiceConsultationService.getConsultationCountByUidAndType(uid, consultationType);
-            return ResponseEntity.ok(count);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
+
     
     // 상담 기록 삭제
     @DeleteMapping("/{consultationId}")

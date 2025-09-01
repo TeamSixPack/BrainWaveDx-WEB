@@ -29,7 +29,7 @@ public class UserController {
 	
 	// 로그인 기능
 	@PostMapping(value = "/login.do")
-	public ResponseEntity<?> login(@RequestParam("id") String uid, @RequestParam String pw, HttpSession session) {
+	public ResponseEntity<?> login(@RequestParam("uid") String uid, @RequestParam String pw, HttpSession session) {
 
 		// 1. 아이디 존재 여부 확인
 		Optional<UserEntity> userOpt = userService.findByUid(uid);
@@ -69,7 +69,7 @@ public class UserController {
 	
 	// 회원가입 기능
 	@PostMapping({ "/join.do" })
-	public ModelAndView joinUser(@RequestParam("id") String uid, @RequestParam("pw") String pw,
+	public ModelAndView joinUser(@RequestParam("uid") String uid, @RequestParam("pw") String pw,
 			@RequestParam("name") String name, @RequestParam("phone") String phone,
 			Model model, HttpServletRequest request) {
 

@@ -7,7 +7,6 @@ public class VoiceConsultationResponse {
     private Long id;
     private String rawData;
     private String aiSummary;
-    private String consultationType;
     private String uid;
     private String username; // 사용자명 (선택적)
     private LocalDateTime createdAt;
@@ -16,21 +15,19 @@ public class VoiceConsultationResponse {
     public VoiceConsultationResponse() {}
     
     // 생성자
-    public VoiceConsultationResponse(Long id, String rawData, String aiSummary, String consultationType, String uid, LocalDateTime createdAt) {
+    public VoiceConsultationResponse(Long id, String rawData, String aiSummary, String uid, LocalDateTime createdAt) {
         this.id = id;
         this.rawData = rawData;
         this.aiSummary = aiSummary;
-        this.consultationType = consultationType;
         this.uid = uid;
         this.createdAt = createdAt;
     }
     
     // 생성자 (사용자명 포함)
-    public VoiceConsultationResponse(Long id, String rawData, String aiSummary, String consultationType, String uid, String username, LocalDateTime createdAt) {
+    public VoiceConsultationResponse(Long id, String rawData, String aiSummary, String uid, String username, LocalDateTime createdAt) {
         this.id = id;
         this.rawData = rawData;
         this.aiSummary = aiSummary;
-        this.consultationType = consultationType;
         this.uid = uid;
         this.username = username;
         this.createdAt = createdAt;
@@ -61,13 +58,7 @@ public class VoiceConsultationResponse {
         this.aiSummary = aiSummary;
     }
     
-    public String getConsultationType() {
-        return consultationType;
-    }
-    
-    public void setConsultationType(String consultationType) {
-        this.consultationType = consultationType;
-    }
+
     
     public String getUid() {
         return uid;

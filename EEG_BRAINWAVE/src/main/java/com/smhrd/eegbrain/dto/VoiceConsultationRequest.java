@@ -11,26 +11,21 @@ public class VoiceConsultationRequest {
     @NotBlank(message = "AI 요약 데이터는 필수입니다")
     private String aiSummary;
     
-    @NotNull(message = "상담 유형은 필수입니다")
-    private String consultationType;
-    
     private String uid; // 선택적 (로그인된 사용자의 경우)
     
     // 기본 생성자
     public VoiceConsultationRequest() {}
     
     // 생성자
-    public VoiceConsultationRequest(String rawData, String aiSummary, String consultationType) {
+    public VoiceConsultationRequest(String rawData, String aiSummary) {
         this.rawData = rawData;
         this.aiSummary = aiSummary;
-        this.consultationType = consultationType;
     }
     
     // 생성자 (사용자 ID 포함)
-    public VoiceConsultationRequest(String rawData, String aiSummary, String consultationType, String uid) {
+    public VoiceConsultationRequest(String rawData, String aiSummary, String uid) {
         this.rawData = rawData;
         this.aiSummary = aiSummary;
-        this.consultationType = consultationType;
         this.uid = uid;
     }
     
@@ -51,13 +46,7 @@ public class VoiceConsultationRequest {
         this.aiSummary = aiSummary;
     }
     
-    public String getConsultationType() {
-        return consultationType;
-    }
-    
-    public void setConsultationType(String consultationType) {
-        this.consultationType = consultationType;
-    }
+
     
     public String getUid() {
         return uid;

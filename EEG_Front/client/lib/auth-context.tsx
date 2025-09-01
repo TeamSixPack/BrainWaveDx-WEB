@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface User {
-  id: string;
+  uid: string;
+  id?: string; // 백엔드 호환성을 위해 id도 지원
   name: string;
   phone: string;
 }

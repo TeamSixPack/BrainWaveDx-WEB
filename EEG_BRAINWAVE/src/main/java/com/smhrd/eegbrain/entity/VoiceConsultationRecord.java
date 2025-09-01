@@ -24,8 +24,7 @@ public class VoiceConsultationRecord {
     @Column(name = "ai_summary", columnDefinition = "TEXT", nullable = false)
     private String aiSummary;
     
-    @Column(name = "consultation_type", length = 50)
-    private String consultationType = "memory_helper";
+
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -36,20 +35,18 @@ public class VoiceConsultationRecord {
     }
     
     // 생성자
-    public VoiceConsultationRecord(String rawData, String aiSummary, String consultationType) {
+    public VoiceConsultationRecord(String rawData, String aiSummary) {
         this.rawData = rawData;
         this.aiSummary = aiSummary;
-        this.consultationType = consultationType;
         this.createdAt = LocalDateTime.now();
     }
     
     // 생성자 (사용자 포함)
-    public VoiceConsultationRecord(UserEntity user, String rawData, String aiSummary, String consultationType) {
+    public VoiceConsultationRecord(UserEntity user, String rawData, String aiSummary) {
         this.user = user;
         this.uid = user.getUid();
         this.rawData = rawData;
         this.aiSummary = aiSummary;
-        this.consultationType = consultationType;
         this.createdAt = LocalDateTime.now();
     }
     
@@ -94,13 +91,7 @@ public class VoiceConsultationRecord {
         this.aiSummary = aiSummary;
     }
     
-    public String getConsultationType() {
-        return consultationType;
-    }
-    
-    public void setConsultationType(String consultationType) {
-        this.consultationType = consultationType;
-    }
+
     
     public LocalDateTime getCreatedAt() {
         return createdAt;

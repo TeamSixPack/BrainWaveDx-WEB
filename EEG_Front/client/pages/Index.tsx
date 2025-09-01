@@ -24,7 +24,7 @@ export default function Index() {
   const performLogin = async (uid: string, pw: string) => {
     setIsLoading(true);
     try {
-      const result = await login({ id: uid, pw });
+      const result = await login({ uid: uid, pw });
       if (result.success && result.user) {
         authLogin(result.user);
         setLoginModalOpen(false);
@@ -171,7 +171,7 @@ export default function Index() {
                       </Link>
                     </Button>
                     <Button variant="outline" size="lg" asChild className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
-                      <Link to="/assessment-history">
+                      <Link to="/record-selection">
                         <FileText className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
                         검사기록 보기
                       </Link>
@@ -304,9 +304,9 @@ export default function Index() {
             <div className="px-6 pb-6">
               <form className="space-y-5" onSubmit={async (e) => {
                 e.preventDefault();
-                if (!user?.id) return;
+                                  if (!user?.uid) return;
                 try {
-                  const res = await changePassword({ id: user.id, currentPw, newPw });
+                  const res = await changePassword({ uid: user.uid, currentPw, newPw });
                   alert(res.message || '비밀번호가 변경되었습니다.');
                   setChangePwOpen(false);
                   setCurrentPw("");

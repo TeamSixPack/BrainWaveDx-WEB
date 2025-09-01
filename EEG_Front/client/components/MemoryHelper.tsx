@@ -3,10 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Mic, Upload, Bot, Volume2, ArrowRight, CheckCircle, AlertCircle, Home, RotateCcw, Square, CheckSquare, Lock } from "lucide-react";
 import QuestionSelector from "@/components/memory-helper/QuestionSelector";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { useNavigate } from "react-router-dom";
 
 type Step = 'start' | 'welcome' | 'question' | 'recording' | 'processing' | 'result';
 
 export default function MemoryHelper() {
+  const { user, isLoggedIn } = useAuth();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<Exclude<Step, 'welcome'>>('start');
   const [isRecording, setIsRecording] = useState(false);
   const [userResponse, setUserResponse] = useState('');
@@ -20,6 +24,34 @@ export default function MemoryHelper() {
   const recognizedTextRef = useRef<string>('');
   const interimTextRef = useRef<string>('');
   const fullTextRef = useRef<string>('');
+  
+  // 로그인 상태 디버깅
+  useEffect(() => {
+    console.log('🔍 MemoryHelper - 컴포넌트 마운트');
+    console.log('🔍 MemoryHelper - isLoggedIn:', isLoggedIn);
+    console.log('🔍 MemoryHelper - user:', user);
+    console.log('🔍 MemoryHelper - user?.uid:', user?.uid);
+    
+    // 로컬 스토리지 직접 확인
+    const storedUser = localStorage.getItem('neuroscan_user');
+    console.log('🔍 MemoryHelper - localStorage neuroscan_user:', storedUser);
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        console.log('🔍 MemoryHelper - parsedUser:', parsedUser);
+        console.log('🔍 MemoryHelper - parsedUser.uid:', parsedUser.uid);
+      } catch (e) {
+        console.error('🔍 MemoryHelper - JSON 파싱 오류:', e);
+      }
+    }
+  }, [isLoggedIn, user]);
+  
+  // 로그인 상태 변경 감지
+  useEffect(() => {
+    console.log('🔍 MemoryHelper - 로그인 상태 변경됨');
+    console.log('🔍 MemoryHelper - isLoggedIn:', isLoggedIn);
+    console.log('🔍 MemoryHelper - user:', user);
+  }, [isLoggedIn, user]);
   
   // 날짜 포맷터 (YYYY-MM-DD)
   const formatDate = (date: Date) => {
@@ -42,6 +74,7 @@ export default function MemoryHelper() {
   const hasSpokenStartHintRef = useRef<boolean>(false);
   const [micPermission, setMicPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
   const [isResultReady, setIsResultReady] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [micActive, setMicActive] = useState(false);
   const [hasRequestedMic, setHasRequestedMic] = useState(false);
 
@@ -574,9 +607,93 @@ export default function MemoryHelper() {
 
 
 
-  // 검사기록 저장
-  const saveAnalysisRecord = () => {
+  // DB에 음성 상담 기록 저장
+  const saveToDatabase = async () => {
     try {
+      console.log('🔍 saveToDatabase - isLoggedIn:', isLoggedIn);
+      console.log('🔍 saveToDatabase - user:', user);
+      console.log('🔍 saveToDatabase - user?.uid:', user?.uid);
+      console.log('🔍 saveToDatabase - user?.id:', user?.id);
+      
+      if (!isLoggedIn) {
+        throw new Error('로그인 상태가 아닙니다.');
+      }
+      
+      if (!user) {
+        throw new Error('사용자 정보를 찾을 수 없습니다.');
+      }
+      
+      // 백엔드에서 "id"로 보내고 있으므로 임시로 id 사용
+      const userId = user.uid || user.id;
+      if (!userId) {
+        throw new Error('사용자 ID가 없습니다.');
+      }
+
+      // 원본 음성 데이터 (사용자 응답)
+      const rawData = userResponse;
+      
+      // AI 요약 데이터
+      const aiSummary = analysisResult;
+
+      console.log('🔍 DB 저장 요청 데이터:', {
+        rawData: rawData,
+        aiSummary: aiSummary,
+        uid: userId
+      });
+
+      const response = await fetch('http://localhost:8090/api/voice-consultation/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rawData: rawData,
+          aiSummary: aiSummary,
+          uid: userId
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🔍 API 응답 오류:', response.status, errorText);
+        throw new Error(`DB 저장에 실패했습니다. (${response.status})`);
+      }
+
+      const result = await response.json();
+      console.log('🔍 DB 저장 성공:', result);
+      return true;
+    } catch (error: any) {
+      console.error('🔍 DB 저장 오류:', error);
+      throw error;
+    }
+  };
+
+  // 검사기록 저장 (로컬 + DB)
+  const saveAnalysisRecord = async () => {
+    try {
+      console.log('🔍 saveAnalysisRecord - isLoggedIn:', isLoggedIn);
+      console.log('🔍 saveAnalysisRecord - user:', user);
+      console.log('🔍 saveAnalysisRecord - user?.uid:', user?.uid);
+      
+      // 로그인 상태 확인
+      if (!isLoggedIn) {
+        alert('로그인이 필요합니다. 먼저 로그인해주세요.');
+        return;
+      }
+      
+      if (!user) {
+        alert('사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.');
+        return;
+      }
+      
+      if (!user.uid) {
+        alert('사용자 ID가 없습니다. 다시 로그인해주세요.');
+        return;
+      }
+
+      setIsSaving(true);
+      
+      // 1. 로컬 스토리지에 저장
       const dateStr = formatDate(new Date());
       const record = {
         date: dateStr,
@@ -590,10 +707,16 @@ export default function MemoryHelper() {
       const arr = prev ? JSON.parse(prev) : [];
       arr.push(record);
       localStorage.setItem(key, JSON.stringify(arr));
-      alert('검사기록에 저장되었습니다.');
-    } catch (e) {
+
+      // 2. DB에 저장
+      await saveToDatabase();
+      
+      alert('검사기록이 로컬과 DB에 모두 저장되었습니다.');
+    } catch (e: any) {
       console.error('저장 오류:', e);
-      alert('저장 중 문제가 발생했습니다.');
+      alert('저장 중 문제가 발생했습니다: ' + e.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1245,13 +1368,39 @@ export default function MemoryHelper() {
               
               {/* 결과 액션: 검사기록 저장 / PDF 다운로드 / 다시 검사하기 */}
               <div className="flex flex-col gap-3 mb-6">
+                {!isLoggedIn && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-2">
+                    <p className="text-yellow-800 text-sm text-center">
+                      💡 로그인하면 검사 기록을 DB에 저장할 수 있습니다
+                    </p>
+                  </div>
+                )}
                 <Button 
                   onClick={saveAnalysisRecord}
                   className="w-full h-14 rounded-[12px] bg-[#0052CC] hover:bg-[#0A53BE] text-white text-xl font-bold"
-                  disabled={!isResultReady || !analysisResult}
+                  disabled={!isResultReady || !analysisResult || isSaving || !isLoggedIn}
                 >
-                  검사기록에 저장하기
+                  {isSaving ? '저장 중...' : !isLoggedIn ? '로그인 후 저장 가능' : '검사기록에 저장하기'}
                 </Button>
+                
+                {/* 새로운 버튼들: 기록보기 / 메인페이지 돌아가기 */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Button 
+                    onClick={() => navigate('/voice-consultation-history')}
+                    className="h-14 rounded-[12px] bg-[#059669] hover:bg-[#059669] text-white text-lg font-bold"
+                  >
+                    📋 기록보기
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/')}
+                    variant="outline"
+                    className="h-14 rounded-[12px] border-[#059669] text-[#059669] hover:bg-green-50"
+                  >
+                    🏠 메인페이지
+                  </Button>
+                </div>
+                
+                {/* 기존 버튼들: PDF 다운로드 / 다시 검사하기 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Button 
                     onClick={handleDownloadPDF}

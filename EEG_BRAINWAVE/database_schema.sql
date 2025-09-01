@@ -27,7 +27,6 @@ CREATE TABLE voice_consultation_records (
     uid BIGINT NOT NULL,
     raw_data TEXT NOT NULL, -- 사용자가 말한 원본 텍스트
     ai_summary TEXT NOT NULL, -- AI가 요약한 텍스트
-    consultation_type VARCHAR(50) DEFAULT 'memory_helper', -- 상담 유형 (memory_helper, memory_chatbot)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (uid) REFERENCES users(id) ON DELETE CASCADE
 );

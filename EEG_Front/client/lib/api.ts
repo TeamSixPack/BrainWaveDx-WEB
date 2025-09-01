@@ -15,34 +15,35 @@ export interface PasswordResponse {
 }
 
 export interface User {
-  id: string;
+  uid: string;
+  id?: string; // 백엔드 호환성을 위해 id도 지원
   name: string;
   phone: string;
 }
 
 export interface ChangePasswordRequest {
-  id: string;
+  uid: string;
   currentPw: string;
   newPw: string;
 }
 
 export interface LoginRequest {
-  id: string;
+  uid: string;
   pw: string;
 }
 
 export interface SignupRequest {
-  id: string;
+  uid: string;
   pw: string;
   name: string;
   phone: string;
 }
 
 // 아이디 중복 확인
-export const checkIdDuplicate = async (id: string): Promise<boolean> => {
+export const checkIdDuplicate = async (uid: string): Promise<boolean> => {
   try {
     const formData = new FormData();
-    formData.append('id', id);
+    formData.append('uid', uid);
     
     const response = await fetch(`${API_BASE_URL}/checkId`, {
       method: 'POST',
@@ -71,7 +72,7 @@ export const checkIdDuplicate = async (id: string): Promise<boolean> => {
 export const signup = async (data: SignupRequest): Promise<ApiResponse<User>> => {
   try {
     const formData = new FormData();
-    formData.append('id', data.id);
+    formData.append('uid', data.uid);
     formData.append('pw', data.pw);
     formData.append('name', data.name);
     formData.append('phone', data.phone);
@@ -98,7 +99,7 @@ export const signup = async (data: SignupRequest): Promise<ApiResponse<User>> =>
 export const login = async (data: LoginRequest): Promise<ApiResponse<User>> => {
   try {
     const formData = new FormData();
-    formData.append('id', data.id);
+    formData.append('uid', data.uid);
     formData.append('pw', data.pw);
     
     const response = await fetch(`${API_BASE_URL}/api/login`, {
@@ -120,13 +121,13 @@ export const login = async (data: LoginRequest): Promise<ApiResponse<User>> => {
 };
 
 // 비밀번호 찾기
-export const findPassword = async (phoneOrId: string, usePhone: boolean = true): Promise<ApiResponse<PasswordResponse>> => {
+export const findPassword = async (phoneOrUid: string, usePhone: boolean = true): Promise<ApiResponse<PasswordResponse>> => {
   try {
     const formData = new FormData();
     if (usePhone) {
-      formData.append('phone', phoneOrId);
+      formData.append('phone', phoneOrUid);
     } else {
-      formData.append('id', phoneOrId);
+      formData.append('uid', phoneOrUid);
     }
     
     const response = await fetch(`${API_BASE_URL}/api/findPassword`, {
@@ -192,7 +193,7 @@ export const saveCognitiveScore = async (sessionIdx: number, cogType: 'MMSE' | '
 export const changePassword = async (data: ChangePasswordRequest): Promise<ApiResponse<null>> => {
   try {
     const formData = new FormData();
-    formData.append('id', data.id);
+    formData.append('uid', data.uid);
     formData.append('currentPw', data.currentPw);
     formData.append('newPw', data.newPw);
 

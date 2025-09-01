@@ -18,6 +18,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 import MMSE from "./pages/MMSE";
 import AssessmentHistory from "./pages/AssessmentHistory";
+import VoiceConsultationHistory from "./pages/VoiceConsultationHistory";
+import RecordSelection from "./pages/RecordSelection";
 import TestModeSelection from "./pages/TestModeSelection";
 import EegTest from "./pages/EegTest";
 import MemoryHelper from "./pages/MemoryHelper";
@@ -42,6 +44,8 @@ const App = () => (
           <Route path="/memory-helper" element={<MemoryHelper />} />
           <Route path="/results" element={<Results />} />
           <Route path="/assessment-history" element={<AssessmentHistory />} />
+          <Route path="/voice-consultation-history" element={<VoiceConsultationHistory />} />
+          <Route path="/record-selection" element={<RecordSelection />} />
           <Route path="/questionnaire" element={<Questionnaire />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/about" element={<About />} />
