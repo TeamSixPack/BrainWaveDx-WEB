@@ -77,7 +77,10 @@ export default function Index() {
   }, []);
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-[#f8fafc] via-[#dbeafe] to-[#f1f5f9] overflow-hidden">
+    <div
+      className="min-h-screen relative overflow-hidden bg-cover bg-no-repeat bg-fixed"
+      style={{ backgroundImage: "url('/images/mainPage.png')", backgroundPosition: "center -120px" }}
+    >
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-10 left-10 w-32 h-32 bg-[#dbeafe] rounded-full blur-xl"></div>
@@ -136,30 +139,34 @@ export default function Index() {
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] p-4 sm:p-6 lg:p-8">
+      <main className="relative z-10 flex items-end justify-center min-h-[calc(100vh-80px)] p-4 sm:p-6 lg:p-8 pb-16 sm:pb-20 lg:pb-24" style={{ paddingTop: '300px' }}>
         <div className="container mx-auto text-center max-w-5xl">
-          <div className="space-y-8 sm:space-y-10">
+          <div className="space-y-12 sm:space-y-16">
             {/* Hero Section */}
             <div className="space-y-4 sm:space-y-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                <Brain className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-primary" />
+              {/* 상단 텍스트 영역 - 뇌 이미지 위쪽에 배치 */}
+              <div className="absolute top-[200px] left-0 right-0 flex items-start justify-between w-full px-4 sm:px-8 lg:px-16 z-20">
+                <div className="flex-1 text-left" style={{ paddingLeft: '200px' }}>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                    부담은 '<span className="blue-text">싹</span>' 진단은 '<span className="blue-text">딱</span>'
+                  </h1>
+                </div>
+                <div className="flex-1 text-right" style={{ paddingRight: '200px' }}>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                    AI로 챙기는 두뇌건강
+                  </h1>
+                </div>
               </div>
-              <div className="space-y-2 sm:space-y-3">
-                <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-foreground leading-tight px-2">
-                  집에서 간편하게<br></br>나만의 AI 뇌 건강 지킴이
-                </h1>
-                {!isLoggedIn && (
-                  <div className="login-info-text text-sm sm:text-base text-muted-foreground max-w-lg mx-auto px-4">
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center pt-4 sm:pt-7">
+              {!isLoggedIn && (
+                <div className="login-info-text text-sm sm:text-base text-muted-foreground max-w-lg mx-auto px-4">
+                </div>
+              )}
+              <div className="absolute top-[600px] left-1/2 transform -translate-x-1/2 flex flex-col gap-3 sm:gap-4 justify-center items-center z-20">
                 {/* 테스트 시작하기 버튼 */}
                 {isLoggedIn ? (
                   <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center">
                     <Button asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold text-white !text-white w-full sm:w-80">
                       <Link to="/test-mode-selection" className="override-white">
-                        <Brain className="mr-2 h-5 w-5 sm:h-6 sm:w-6 text-white" />
                         테스트 시작하기
                       </Link>
                     </Button>
@@ -181,7 +188,6 @@ export default function Index() {
                   <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center">
                     <Button variant="default" asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80 text-white !text-white">
                       <Link to="/test-mode-selection" className="override-white">
-                        <Brain className="mr-2 h-5 w-5 sm:h-6 sm:w-6 text-white" />
                         비회원으로 검사하기
                       </Link>
                     </Button>
@@ -202,7 +208,7 @@ export default function Index() {
 
 
             {/* Footer Info */}
-            <div className="text-center space-y-2 sm:space-y-3 pt-8 sm:pt-12">
+            <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 text-center space-y-2 sm:space-y-3 z-20">
               <p className="text-sm sm:text-base text-muted-foreground italic">
                 정확한 진단은 전문 의료기관에서 받으시기 바랍니다.
               </p>
