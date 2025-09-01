@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-EegBrainwaveApplication<brainWave>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.smhrd.eegbrain.EegBrainwaveApplication",
+            "projectName": "brainWave",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

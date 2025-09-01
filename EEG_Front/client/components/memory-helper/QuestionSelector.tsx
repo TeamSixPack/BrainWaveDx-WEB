@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RotateCcw, Volume2, Bot, CheckSquare, Square } from "lucide-react";
+import { Bot, CheckSquare, Square, Volume2 } from "lucide-react";
 
 type QuestionItem = { id: string; keyword: string };
 
@@ -24,24 +24,15 @@ export default function QuestionSelector({
   return (
     <Card className="shadow-xl border-0 bg-white relative">
       <CardContent className="p-6 sm:p-12 text-center">
-        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center gap-2">
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center">
           <Button
-            size="icon"
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow"
-            disabled
-            title={isSpeaking ? '음성 안내 중' : '음성 안내 완료'}
-          >
-            <Volume2 className="w-4 h-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            className="border-blue-200 text-blue-600 hover:bg-blue-50"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow px-4 py-2 h-9 "
             disabled={isSpeaking}
             onClick={onReplay}
             title="다시 듣기"
           >
-            <RotateCcw className="w-4 h-4" />
+            <Volume2 className="w-5 h-5 mr-2" />
+            다시 듣기
           </Button>
         </div>
 
@@ -51,16 +42,16 @@ export default function QuestionSelector({
         <div className="w-24 h-24 sm:w-32 sm:h-32 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8">
           <Bot className="w-14 h-14 sm:w-20 sm:h-20 text-purple-600" />
         </div>
-        <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
-          어떤 질문에 대해 이야기 해보고 싶은지 편하게 선택해주세요.
-        </p>
+        <p className="text-lg sm:text-2xl font-semibold text-gray-700 text-center mb-6 sm:mb-8">
+  어떤 질문에 대해 이야기 해보고 싶은지 편하게 선택해주세요.
+</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8 items-stretch">
           {questions.map((q) => (
             <div key={q.id} className="h-full">
               <Button
                 onClick={() => onToggle(q.id)}
-                className={`flex h-[96px] w-full items-start justify-start text-left text-base sm:text-lg gap-3 px-5 sm:px-6 py-4 sm:py-5 rounded-lg border-2 transition-colors ${
+                className={`flex h-[96px] w-full items-center justify-start text-left text-base sm:text-lg gap-3 px-5 sm:px-6 py-4 sm:py-5 rounded-lg border-2 transition-colors ${
                   selected.includes(q.id)
                     ? 'bg-purple-600 text-white border-purple-600'
                     : 'bg-white text-gray-800 border-gray-300 hover:border-purple-600'
@@ -72,7 +63,7 @@ export default function QuestionSelector({
                   <Square className="w-6 h-6 mt-0.5 flex-shrink-0" />
                 )}
                 <span
-                  className="leading-relaxed font-medium whitespace-normal break-words"
+                  className="leading-relaxed font-medium whitespace-pre-line break-words"
                   style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as any}
                 >
                   {q.keyword}

@@ -42,6 +42,8 @@ export default function MemoryHelper() {
   const hasSpokenStartHintRef = useRef<boolean>(false);
   const [micPermission, setMicPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
   const [isResultReady, setIsResultReady] = useState(false);
+  const [micActive, setMicActive] = useState(false);
+  const [hasRequestedMic, setHasRequestedMic] = useState(false);
 
   // 사용자 발화 기반 간단 요약/분석 생성기
   const buildAnalysisFromAnswer = (answerRaw: string) => {
@@ -90,22 +92,22 @@ export default function MemoryHelper() {
   const experienceQuestions = [
     {
       id: 'q1',
-      keyword: '자주 쓰던 물건 이름이 갑자기 생각 안 난 적이 있나요?',
-      question: '자주 쓰던 물건 이름이 갑자기 생각 안 난 적이 있나요?'
+      keyword: '자주 쓰던 물건 이름이 갑자기\n 생각 나지 않은 적 있나요?',
+      question: '자주 쓰던 물건 이름이 갑자기 생각 나지 않은 적 있나요?'
     },
     {
       id: 'q2',
-      keyword: '대화 중에 단어가 잘 떠오르지 않아서 곤란했던 적이 있나요?',
-      question: '대화 중에 단어가 잘 떠오르지 않아서 곤란했던 적이 있나요?'
+      keyword: '대화 중에 단어가 떠오르지 않아서\n 곤란했던 적이 있나요?',
+      question: '대화 중에 단어가 떠오르지 않아서 곤란했던 적이 있나요?'
     },
     {
       id: 'q3',
-      keyword: '가족이나 지인이 평소와 다르다고 한 적이 있나요?',
-      question: '가족이나 지인이 평소와 다르다고 한 적이 있나요?'
+      keyword: '가족이나 지인이 평소와 다르다고 \n 말한 적이 있나요?',
+      question: '가족이나 지인이 평소와 다르다고 말한 적이 있나요?'
     },
     {
       id: 'q4',
-      keyword: '최근에 불편했던 점이나 걱정되는 점이 있나요?',
+      keyword: '최근에 불편했던 점이나 걱정되는 점이 있나요?\n (자유롭게 말씀해 주세요)',
       question: '최근에 불편했던 점이나 걱정되는 점이 있나요?'
     }
   ];
@@ -239,9 +241,38 @@ export default function MemoryHelper() {
         // 음성 합성이 완료된 후 녹음 시작
         setTimeout(() => {
           setCurrentStep('recording');
-          startRecording();
+          // 녹음 단계 진입 시 권한 흐름 처리
+          handleEnterRecordingStep();
         }, 100); // 음성 합성 완료 후 진행
       });
+    }
+  };
+
+  // 녹음 단계 진입 시 권한 요청 → 허용 시 자동 녹음 시작
+  const handleEnterRecordingStep = async () => {
+    try {
+      // 권한 상태가 불명확할 때는 우선 쿼리
+      if (navigator.permissions && (navigator.permissions as any).query) {
+        try {
+          const status = await (navigator.permissions as any).query({ name: 'microphone' as any });
+          setMicPermission(status.state as any);
+        } catch {}
+      }
+      if (micPermission !== 'granted') {
+        // 권한 프롬프트를 띄워 사용자가 허용하도록 유도 (오디오만 요청)
+        setHasRequestedMic(true);
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // 권한이 허용되면 즉시 스트림을 닫고 실제 녹음 시작
+        stream.getTracks().forEach(t => t.stop());
+        setMicPermission('granted');
+        setTimeout(() => { if (!isRecording) startRecording(); }, 120);
+      } else {
+        if (!isRecording) startRecording();
+      }
+    } catch (e) {
+      // 사용자가 거부하면 안내만 표시하고 버튼으로 재요청 가능
+      setMicPermission('denied');
+      setMicActive(false);
     }
   };
 
@@ -284,6 +315,7 @@ export default function MemoryHelper() {
       });
 
       setMicPermission('granted');
+      setMicActive(true);
       
       // STT 초기화 및 시작 (Web Speech API)
       setRecognizedText('');
@@ -385,6 +417,7 @@ export default function MemoryHelper() {
         }
         analyserRef.current = null;
         sourceNodeRef.current = null;
+        setMicActive(false);
       };
       
       mediaRecorder.start();
@@ -396,11 +429,14 @@ export default function MemoryHelper() {
       }
       if (audioContextRef.current) {
         const ctx = audioContextRef.current;
+        // 일부 브라우저에서 AudioContext가 'suspended' 상태로 시작하는 문제 대응
+        try { if (ctx.state === 'suspended') { await ctx.resume(); } } catch {}
         analyserRef.current = ctx.createAnalyser();
         analyserRef.current.fftSize = 1024;
         sourceNodeRef.current = ctx.createMediaStreamSource(stream);
         sourceNodeRef.current.connect(analyserRef.current);
-        drawWaveform();
+        // 캔버스 렌더가 완료되었음을 보장하기 위해 약간 지연 후 그리기 시작
+        setTimeout(() => { drawWaveform(); }, 60);
       }
       
       // 12초 후 자동으로 녹음 중지 (보호 타이머)
@@ -536,6 +572,8 @@ export default function MemoryHelper() {
     }
   };
 
+
+
   // 검사기록 저장
   const saveAnalysisRecord = () => {
     try {
@@ -559,169 +597,41 @@ export default function MemoryHelper() {
     }
   };
 
-  // 분석 즉시 실행 (녹음 단계용)
-  const analyzeNowFromRecording = async () => {
+  // 결과 PDF 다운로드 (브라우저 인쇄-PDF 활용)
+  const handleDownloadPDF = () => {
     try {
-      if (isSpeaking) {
-        // 안내 음성 중에는 분석을 막음
-        return;
-      }
-    if (isRecording) {
-        // 녹음 중이면 먼저 중지 → onstop 에서 STT 처리
-      stopRecording();
-        return;
-      }
-      // 녹음이 이미 중지된 경우, 남아있는 버퍼로 처리 (안전장치)
-      if (audioChunksRef.current && audioChunksRef.current.length > 0) {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await processAudio(audioBlob);
-        audioChunksRef.current = [];
+      const dateStr = formatDate(new Date());
+      const printable = `
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>AI 분석 결과 - ${dateStr}</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', Arial, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; padding: 32px; color: #0f172a; }
+              .title { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+              .meta { color: #334155; margin-bottom: 20px; }
+              .box { border: 2px solid #93c5fd; background:#eff6ff; border-radius: 12px; padding: 16px; white-space: pre-line; line-height: 1.6; }
+            </style>
+          </head>
+          <body>
+            <div class="title">AI 분석 결과</div>
+            <div class="meta">작성일: ${dateStr}</div>
+            <div class="box">${analysisResult || ''}</div>
+            <script>window.onload = () => { setTimeout(() => { window.print(); }, 60); };<\/script>
+          </body>
+        </html>
+      `;
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.open();
+        win.document.write(printable);
+        win.document.close();
       }
     } catch (e) {
-      console.error('즉시 분석 오류:', e);
+      alert('PDF 생성 중 오류가 발생했습니다.');
     }
   };
 
-  // 재인식 (처리 페이지에서 호출)
-  const retryRecognition = async () => {
-    try {
-      // 진행 중 녹음/시각화 정리
-      if (isRecording) {
-        await stopRecording();
-      }
-      if ('speechSynthesis' in window) {
-        speechSynthesis.cancel();
-      }
-    } catch {}
-    // STT 버퍼 초기화
-    setRecognizedText('');
-    recognizedTextRef.current = '';
-    interimTextRef.current = '';
-    fullTextRef.current = '';
-    setUserResponse('');
-    setIsAnalyzing(false);
-    // 현재 질문을 다시 말한 뒤 완료되면 자동 녹음으로 진입
-    startQuestionConversation();
-  };
-
-  // 처음부터 다시 시작
-  const resetToStart = () => {
-    setCurrentStep('start');
-    setUserResponse('');
-    setAnalysisResult('');
-    setIsRecording(false);
-    setRecognizedText('');
-    recognizedTextRef.current = '';
-    interimTextRef.current = '';
-    fullTextRef.current = '';
-    setSelectedQuestions([]);
-    setCurrentQuestionIndex(0);
-    setIsAnalyzing(false); // 분석 상태도 초기화
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-    }
-    if ('speechSynthesis' in window) {
-      speechSynthesis.cancel();
-    }
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
-      recognitionRef.current = null;
-    }
-    if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
-    if (audioContextRef.current) {
-      try { audioContextRef.current.close(); } catch {}
-      audioContextRef.current = null;
-    }
-    analyserRef.current = null;
-    sourceNodeRef.current = null;
-  };
-
-  // 이전 단계로 돌아가기
-  const goToPreviousStep = () => {
-    switch (currentStep) {
-      case 'question':
-        setCurrentStep('start');
-        break;
-      case 'recording':
-        setCurrentStep('question');
-        break;
-      case 'processing':
-        if (currentQuestionIndex > 0) {
-          // 이전 질문으로 돌아가기
-          setCurrentQuestionIndex(prev => prev - 1);
-          setUserResponse('');
-          setCurrentStep('recording');
-          startQuestionConversation();
-        } else {
-          // 질문 선택 단계로 돌아가기
-          setCurrentStep('question');
-          setCurrentQuestionIndex(0);
-          setUserResponse('');
-        }
-        break;
-      case 'result':
-        setCurrentStep('processing');
-        break;
-      default:
-        break;
-    }
-  };
-
-  // 뒤로가기 버튼 렌더링 (시작 페이지 제외)
-  const renderBackButton = () => {
-    if (currentStep === 'start') return null;
-    
-    return (
-      <Button
-        onClick={goToPreviousStep}
-        variant="outline"
-        className="absolute top-6 left-6 text-gray-600 hover:text-gray-800 border-gray-300 hover:border-gray-400 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 z-10"
-        size="sm"
-      >
-        <ArrowRight className="w-4 h-4 mr-2 rotate-180" />
-        뒤로가기
-      </Button>
-    );
-  };
-
-  // 상단 진행 안내 배너/헤더 행 (모든 단계 중앙 정렬 배지)
-  const renderHeaderRow = () => {
-    const stageTextMap: Record<'start' | 'question' | 'recording' | 'processing' | 'result', string> = {
-      start: '지금은 시작 단계입니다',
-      question: '지금은 질문 단계입니다',
-      recording: '지금은 녹음 단계입니다',
-      processing: '지금은 분석 단계입니다',
-      result: '지금은 결과 단계입니다',
-    };
-    const text = stageTextMap[currentStep as 'start' | 'question' | 'recording' | 'processing' | 'result'];
-    return (
-      <div className="w-full mb-4 sm:mb-6">
-        <div className="w-full bg-white/90 border border-[#0052CC] rounded-xl py-3 sm:py-4 px-4 sm:px-6 shadow-sm flex items-center justify-center text-center">
-          <div aria-live="polite" className="text-[#003A8C] font-bold text-base sm:text-xl">
-            {text}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // 메인으로 이동
-  const goToHome = () => {
-    try {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch {}
-        recognitionRef.current = null;
-      }
-      if ('speechSynthesis' in window) {
-        speechSynthesis.cancel();
-      }
-    } finally {
-      window.location.href = '/';
-    }
-  };
-
-  // 도움 요청 기능 제거 (요청에 따라 버튼 비노출)
-  
   // 텍스트만 보이는 진행바
   const renderSpeechProgressBar = () => {
     const steps: Array<{ step: Exclude<Step, 'welcome'>; label: string }> = [
@@ -799,6 +709,200 @@ export default function MemoryHelper() {
     );
   };
 
+  // 상단 진행 안내 배너/헤더 행 (모든 단계 중앙 정렬 배지)
+  const renderHeaderRow = () => {
+    const stageTextMap: Record<'start' | 'question' | 'recording' | 'processing' | 'result', string> = {
+      start: '지금은 시작 단계입니다',
+      question: '지금은 질문 단계입니다',
+      recording: '지금은 녹음 단계입니다',
+      processing: '지금은 분석 단계입니다',
+      result: '지금은 결과 단계입니다',
+    };
+    const text = stageTextMap[currentStep as 'start' | 'question' | 'recording' | 'processing' | 'result'];
+    return (
+      <div className="w-full mb-4 sm:mb-6">
+        <div className="w-full bg-white/90 border border-[#0052CC] rounded-xl py-3 sm:py-4 px-4 sm:px-6 shadow-sm flex items-center justify-center text-center">
+          <div aria-live="polite" className="text-[#003A8C] font-bold text-base sm:text-xl">
+            {text}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 뒤로가기 버튼 렌더링 (시작 페이지 제외)
+  const renderBackButton = () => {
+    if (currentStep === 'start') return null;
+    
+    return (
+      <Button
+        onClick={goToPreviousStep}
+        variant="outline"
+        className="absolute top-6 left-6 text-gray-600 hover:text-gray-800 border-gray-300 hover:border-gray-400 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 z-10"
+        size="sm"
+      >
+        <ArrowRight className="w-4 h-4 mr-2 rotate-180" />
+        뒤로가기
+      </Button>
+    );
+  };
+
+  // 이전 단계로 돌아가기
+  const goToPreviousStep = () => {
+    switch (currentStep) {
+      case 'question':
+        setCurrentStep('start');
+        break;
+      case 'recording':
+        setCurrentStep('question');
+        break;
+      case 'processing':
+        if (currentQuestionIndex > 0) {
+          // 이전 질문으로 돌아가기
+          setCurrentQuestionIndex(prev => prev - 1);
+          setUserResponse('');
+          setCurrentStep('recording');
+          startQuestionConversation();
+        } else {
+          // 질문 선택 단계로 돌아가기
+          setCurrentStep('question');
+          setCurrentQuestionIndex(0);
+          setUserResponse('');
+        }
+        break;
+      case 'result':
+        setCurrentStep('processing');
+        break;
+      default:
+        break;
+    }
+  };
+
+  // 처음부터 다시 시작
+  const resetToStart = () => {
+    setCurrentStep('start');
+    setUserResponse('');
+    setAnalysisResult('');
+    setIsRecording(false);
+    setRecognizedText('');
+    recognizedTextRef.current = '';
+    interimTextRef.current = '';
+    fullTextRef.current = '';
+    setSelectedQuestions([]);
+    setCurrentQuestionIndex(0);
+    setIsAnalyzing(false); // 분석 상태도 초기화
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+    }
+    if ('speechSynthesis' in window) {
+      speechSynthesis.cancel();
+    }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+    if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
+    if (audioContextRef.current) {
+      try { audioContextRef.current.close(); } catch {}
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+    sourceNodeRef.current = null;
+  };
+
+  // 다시 검사하기: 질문 단계로 초기화
+  const handleRetest = () => {
+    setUserResponse('');
+    setAnalysisResult('');
+    setRecognizedText('');
+    recognizedTextRef.current = '';
+    interimTextRef.current = '';
+    fullTextRef.current = '';
+    setSelectedQuestions([]);
+    setCurrentQuestionIndex(0);
+    setIsAnalyzing(false);
+    setIsResultReady(false);
+    setCurrentStep('start');
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // 도움 요청 기능 제거 (요청에 따라 버튼 비노출)
+  
+  // 메인으로 이동
+  const goToHome = () => {
+    try {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+        recognitionRef.current = null;
+      }
+      if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+      }
+    } finally {
+      window.location.href = '/';
+    }
+  };
+
+  // 분석 즉시 실행 (녹음 단계용)
+  const analyzeNowFromRecording = async () => {
+    try {
+      if (isSpeaking) {
+        // 안내 음성 중에는 분석을 막음
+        return;
+      }
+    if (isRecording) {
+        // 녹음 중이면 먼저 중지 → onstop 에서 STT 처리
+      stopRecording();
+        return;
+      }
+      // 녹음이 이미 중지된 경우, 남아있는 버퍼로 처리 (안전장치)
+      if (audioChunksRef.current && audioChunksRef.current.length > 0) {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await processAudio(audioBlob);
+        audioChunksRef.current = [];
+      }
+    } catch (e) {
+      console.error('즉시 분석 오류:', e);
+    }
+  };
+
+  // 재인식 (처리 페이지에서 호출)
+  const retryRecognition = async () => {
+    try {
+      // 진행 중 녹음/시각화 정리
+      if (isRecording) {
+        await stopRecording();
+      }
+      if ('speechSynthesis' in window) {
+        speechSynthesis.cancel();
+      }
+    } catch {}
+    // STT 버퍼 초기화
+    setRecognizedText('');
+    recognizedTextRef.current = '';
+    interimTextRef.current = '';
+    fullTextRef.current = '';
+    setUserResponse('');
+    setIsAnalyzing(false);
+    // 현재 질문을 다시 말한 뒤 완료되면 자동 녹음으로 진입
+    startQuestionConversation();
+  };
+  
+
+
   // 컴포넌트 마운트 시 자동 시작 제거
   useEffect(() => {
     // 사이트 접속 시 자동으로 음성이 나오지 않음
@@ -849,7 +953,11 @@ export default function MemoryHelper() {
 
     const draw = () => {
       animationIdRef.current = requestAnimationFrame(draw);
-      analyser.getByteTimeDomainData(dataArray);
+      try {
+        analyser.getByteTimeDomainData(dataArray);
+      } catch {
+        return;
+      }
       canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       canvasCtx.fillStyle = '#E0E7FF';
       canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
@@ -876,10 +984,10 @@ export default function MemoryHelper() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-[960px] xl:max-w-[1040px] mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {renderBackButton()}
-        {renderHeaderRow()}
-        {renderSpeechProgressBar()}
+              <div className="w-full max-w-[960px] xl:max-w-[1040px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+          {renderBackButton()}
+          {renderHeaderRow()}
+          {renderSpeechProgressBar()}
         
         {/* 시작 페이지 */}
         {currentStep === 'start' && (
@@ -897,7 +1005,8 @@ export default function MemoryHelper() {
                 />
               </div>
               <div className="bg-blue-50 border border-blue-300 text-blue-800 rounded-xl px-4 py-3 mx-auto max-w-xl text-base sm:text-lg font-semibold flex items-center justify-center gap-2">
-                <span>안녕하세요 기억 도우미 상담 로봇입니다. 함께 이야기 나누며 도와드리겠습니다.</span>
+                <span>안녕하세요 기억 도우미 상담 로봇입니다.<br /> 
+                 함께 이야기 나누며 도와드리겠습니다.</span>
               </div>
               <div className="mt-6 flex items-center justify-center gap-3">
                 <Button 
@@ -947,30 +1056,31 @@ export default function MemoryHelper() {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 음성 인식 중...
               </h2>
-              <p className="text-lg text-gray-600 mb-8">
+              <p className="text-lg font-bold text-gray-600 mb-8">
                 편하게 말씀해주세요. 자동으로 인식됩니다.
               </p>
 
-              {/* 마이크 권한 상태 및 활성화 유도 */}
-              {micPermission === 'denied' && (
-                <div className="bg-red-50 border border-red-200 p-4 rounded-lg text-center mb-6">
-                  <p className="text-red-700 mb-3">마이크 권한이 비활성화되어 있어요. 브라우저 설정에서 허용해 주세요.</p>
-                  <Button onClick={startRecording} className="bg-red-600 hover:bg-red-700 text-white">마이크 활성화</Button>
-                </div>
-              )}
-
-              <div className="bg-red-50 p-4 rounded-lg border border-red-200 mb-6">
-                <p className="text-red-700 font-medium">
-                  🎤 마이크가 활성화되어 있습니다
-                </p>
-                <p className="text-red-600 text-sm mt-1">
-                  말씀하시면 자동으로 인식됩니다
-                </p>
-              </div>
-              <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                <p className="text-yellow-700 text-sm">
-                  💡 5초 후 자동으로 녹음이 종료됩니다
-                </p>
+              {/* 마이크 상태 배너 (단일 레이아웃) */}
+              <div
+                className={`${(!(micActive || isRecording)) ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'} p-4 rounded-lg border text-center mb-6`}
+              >
+                {!(micActive || isRecording) ? (
+                  <>
+                    <p className="text-red-700 mb-3">
+                      마이크 권한이 비활성화되어 있어요. 브라우저 설정에서 허용해 주세요.
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <Button onClick={handleEnterRecordingStep} className="bg-red-600 hover:bg-red-700 text-white">
+                        마이크 권한 허용
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-blue-700 font-medium">🎤 마이크가 활성화되어 있습니다</p>
+                    <p className="text-blue-600 text-sm mt-1">말씀하시면 자동으로 인식됩니다</p>
+                  </>
+                )}
               </div>
 
               {/* 웨이브폼 캔버스 */}
@@ -1108,6 +1218,7 @@ export default function MemoryHelper() {
                   </Button>
                  </div>
               )}
+
               
             </CardContent>
           </Card>
@@ -1132,8 +1243,8 @@ export default function MemoryHelper() {
                 </p>
                 </div>
               
-              {/* 결과 저장 및 다시 시작 - 통일화 */}
-              <div className="flex flex-col items-center justify-center gap-3 mb-6">
+              {/* 결과 액션: 검사기록 저장 / PDF 다운로드 / 다시 검사하기 */}
+              <div className="flex flex-col gap-3 mb-6">
                 <Button 
                   onClick={saveAnalysisRecord}
                   className="w-full h-14 rounded-[12px] bg-[#0052CC] hover:bg-[#0A53BE] text-white text-xl font-bold"
@@ -1141,13 +1252,22 @@ export default function MemoryHelper() {
                 >
                   검사기록에 저장하기
                 </Button>
-                <Button 
-                  onClick={goToHome}
-                  variant="outline"
-                  className="w-full h-14 rounded-[12px] border-[#CC3333] text-[#CC3333] hover:bg-red-50"
-                >
-                  그만하기
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Button 
+                    onClick={handleDownloadPDF}
+                    className="h-14 rounded-[12px] bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-lg font-bold"
+                    disabled={!analysisResult}
+                  >
+                    PDF 다운로드
+                  </Button>
+                  <Button 
+                    onClick={handleRetest}
+                    variant="outline"
+                    className="h-14 rounded-[12px] border-[#2563eb] text-[#2563eb] hover:bg-blue-50"
+                  >
+                    다시 검사하기
+                  </Button>
+                </div>
               </div>
 
               

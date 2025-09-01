@@ -1,0 +1,202 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f5f5f5;
+    font-family: 'Malgun Gothic', sans-serif;
+}
+
+.container{
+    padding: 30px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    border-radius: 15px;
+}
+
+.join-box{
+    padding: 30px;
+}
+
+.join-title{
+    margin-bottom: 40px;
+    text-align: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+}
+
+.join-form{
+    margin-bottom: 40px;
+}
+
+.join-form label{
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    margin-bottom: 10px;
+    margin-left: 7px;
+    color: #333;
+}
+
+.join-form input{
+    width: 100%;
+    font-size: 18px;
+    padding: 18px 15px;
+    border-radius: 8px;
+    border: 2px solid #e2e6ee;
+    transition: border-color 0.3s;
+}
+
+.join-form input:focus {
+    outline: none;
+    border-color: #1c7fe2;
+    box-shadow: 0 0 0 3px rgba(28, 127, 226, 0.1);
+}
+
+.form-group{
+    margin-bottom: 30px;
+}
+
+/*Start ---------------- 아이디 중복체크 ----------------*/
+.id-input-group {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.id-input-group input {
+    flex: 1;
+    padding: 18px 15px;
+    border-radius: 8px;
+    border: 2px solid #e2e6ee;
+    font-size: 18px;
+    min-width: 0;
+}
+
+.duplicate-check-btn {
+    flex: 0 0 auto;
+    padding: 18px 20px;
+    background-color: rgb(28, 127, 226);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+}
+
+.duplicate-check-btn:hover {
+    background-color: rgb(32, 143, 255);
+}
+
+/*---------------- 아이디 중복체크 ----------------END*/
+
+/* Start --------------------- 비밀번호 요소 ---------------------*/
+
+/* 비밀번호 입력 컨테이너 스타일 */
+.password-input-container {
+    position: relative;
+    width: 100%;
+}
+
+/* 비밀번호 토글 아이콘 스타일 */
+.password-toggle-icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #777;
+    font-size: 20px;
+}
+
+.password-toggle-icon:hover {
+    color: #0f4f35;
+}
+
+/* Font Awesome 아이콘 사용을 위한 스타일 */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+/*  --------------------- 비밀번호 요소 --------------------- END*/
+
+/* Start ---------------- 전화번호 ---------------- */
+.phone-input-group {
+    position: relative;
+}
+
+.phone-input-group input {
+    width: 100%;
+    padding: 18px 15px;
+    border-radius: 8px;
+    border: 2px solid #e2e6ee;
+    font-size: 18px;
+}
+
+.phone-hint {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+}
+
+/*---------------- 전화번호 ---------------- End*/
+
+.button-group{
+    display: flex;
+    gap: 20px;
+}
+
+.reback-btn, .join-btn{
+    flex: 1;
+    padding: 20px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.reback-btn{
+    background-color: rgb(222, 0, 0);
+    color: white;
+}
+
+.reback-btn:hover{
+    background-color: rgb(255, 0, 0);
+    transform: translateY(-2px);
+}
+
+.join-btn{
+    background-color: green;
+    color: white;
+}
+
+.join-btn:hover{
+    background-color: rgb(3, 197, 3);
+    transform: translateY(-2px);
+}
+
+/* ---------------- 에러 메시지 스타일----------------  */
+.error-message {
+    color: #ff0000;
+    font-size: 16px;
+    margin-top: 8px;
+    padding-left: 5px;
+    font-weight: 500;
+}
+
+/* ---------------- 에러 메시지 스타일---------------- END  */
+
