@@ -79,11 +79,11 @@ export default function Index() {
   return (
     <div
       className="min-h-screen relative overflow-hidden bg-no-repeat bg-fixed"
-      style={{ 
-        backgroundImage: "url('/images/mainPage.png')", 
-        backgroundPosition: "center -120px",
-        backgroundSize: "1920px 1080px"
-      }}
+      // style={{ 
+      //   backgroundImage: "url('/images/mainPage.png')", 
+      //   backgroundPosition: "center -120px",
+      //   backgroundSize: "1920px 1080px"
+      // }}
     >
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
@@ -146,12 +146,12 @@ export default function Index() {
       <main className="relative z-10 min-h-[calc(100vh-80px)]">
         {/* 상단 텍스트 영역 */}
         <div className="fixed top-[300px] left-0 right-0 flex items-start justify-between w-full z-20 px-4">
-          <div className="text-left" style={{ paddingLeft: '500px' }}>
+          <div className="text-left" style={{ paddingLeft: '400px' }}>
             <h1 className="text-2xl font-bold text-foreground">
               부담은 '<span className="blue-text">싹</span>' 진단은 '<span className="blue-text">딱</span>'
             </h1>
           </div>
-          <div className="text-right" style={{ paddingRight: '500px' }}>
+          <div className="text-right" style={{ paddingRight: '400px' }}>
             <h1 className="text-2xl font-bold text-foreground">
               AI로 챙기는 두뇌건강
             </h1>
@@ -200,11 +200,6 @@ export default function Index() {
         </div>
 
         {/* Footer Info */}
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 text-center z-20 px-4">
-          <p className="text-sm text-muted-foreground italic">
-            정확한 진단은 전문 의료기관에서 받으시기 바랍니다.
-          </p>
-        </div>
       </main>
       {/* 커스텀 로그인 모달 */}
       {loginModalOpen && (

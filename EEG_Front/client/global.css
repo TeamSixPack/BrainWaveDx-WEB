@@ -75,6 +75,55 @@ html {
   }
 }
 
+/* 메인 페이지 반응형 스타일 */
+.main-page-responsive {
+  /* 뷰포트 단위를 사용한 반응형 레이아웃 */
+  --header-height: 80px;
+  --content-padding-top: 25vh;
+  --content-padding-bottom: 15vh;
+  --button-gap: 2vh;
+  --button-width: 25vw;
+  --button-min-width: 280px;
+  --button-max-width: 400px;
+  --text-size-large: 2.5vw;
+  --text-size-medium: 1.8vw;
+  --text-size-small: 1vw;
+  --icon-size: 1.5vw;
+  --icon-min-size: 20px;
+}
+
+/* 작은 화면에서의 최소 크기 보장 */
+@media (max-width: 768px) {
+  .main-page-responsive {
+    --text-size-large: 18px;
+    --text-size-medium: 16px;
+    --text-size-small: 12px;
+    --button-width: 90vw;
+    --button-min-width: 280px;
+    --button-max-width: 400px;
+  }
+}
+
+/* 중간 화면에서의 적절한 크기 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .main-page-responsive {
+    --text-size-large: 22px;
+    --text-size-medium: 20px;
+    --text-size-small: 14px;
+    --button-width: 50vw;
+  }
+}
+
+/* 큰 화면에서의 최대 크기 제한 */
+@media (min-width: 1025px) {
+  .main-page-responsive {
+    --text-size-large: 32px;
+    --text-size-medium: 28px;
+    --text-size-small: 16px;
+    --button-width: 400px;
+  }
+}
+
 /* 균형잡힌 기본 스타일 */
 body {
   font-size: 18px;

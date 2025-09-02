@@ -11,8 +11,6 @@ import {
   Clock,
   Trash2,
   FileText,
-  Search,
-  Filter,
   AlertTriangle
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -31,8 +29,6 @@ export default function VoiceConsultationHistory() {
   const [consultations, setConsultations] = useState<VoiceConsultationRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredConsultations, setFilteredConsultations] = useState<VoiceConsultationRecord[]>([]);
   
   const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
@@ -45,19 +41,7 @@ export default function VoiceConsultationHistory() {
     loadConsultations();
   }, [isLoggedIn, navigate]);
 
-  // 검색어나 필터링이 변경될 때마다 결과 업데이트
-  useEffect(() => {
-    if (searchTerm.trim() === "") {
-      setFilteredConsultations(consultations);
-    } else {
-      const filtered = consultations.filter(consultation => 
-        consultation.rawData.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consultation.aiSummary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consultation.username.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredConsultations(filtered);
-    }
-  }, [searchTerm, consultations]);
+
 
   // 음성 상담 기록 로드
   const loadConsultations = async () => {
@@ -86,7 +70,6 @@ export default function VoiceConsultationHistory() {
       );
       
       setConsultations(sortedConsultations);
-      setFilteredConsultations(sortedConsultations);
       
     } catch (error: any) {
       console.error('음성 상담 기록 로드 오류:', error);
@@ -109,8 +92,7 @@ export default function VoiceConsultationHistory() {
 
       if (response.ok) {
         // 삭제 성공 시 목록에서 제거
-        setConsultations(prev => prev.filter(consultation => consultation.id !== id));
-        setFilteredConsultations(prev => prev.filter(consultation => consultation.id !== id));
+              setConsultations(prev => prev.filter(consultation => consultation.id !== id));
         alert('상담 기록이 삭제되었습니다.');
       } else {
         throw new Error('삭제에 실패했습니다.');
@@ -168,19 +150,7 @@ export default function VoiceConsultationHistory() {
           </div>
         </div>
 
-        {/* 검색 및 필터 */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="상담 내용으로 검색..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
+
 
         {/* 로딩 상태 */}
         {loading && (
@@ -206,7 +176,7 @@ export default function VoiceConsultationHistory() {
         {/* 상담 기록 목록 */}
         {!loading && !error && (
           <div className="space-y-6">
-            {filteredConsultations.length === 0 ? (
+            {consultations.length === 0 ? (
               <div className="text-center py-12">
                 <MessageCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-600 mb-2">상담 기록이 없습니다</h3>
@@ -220,7 +190,7 @@ export default function VoiceConsultationHistory() {
                 </Button>
               </div>
             ) : (
-              filteredConsultations.map((consultation) => (
+              consultations.map((consultation) => (
                 <Card key={consultation.id} className="shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -299,26 +269,26 @@ export default function VoiceConsultationHistory() {
         )}
 
         {/* 통계 정보 */}
-        {!loading && !error && filteredConsultations.length > 0 && (
+        {!loading && !error && consultations.length > 0 && (
           <div className="mt-8 p-6 bg-white rounded-lg shadow-md">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">상담 통계</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{filteredConsultations.length}</div>
+                <div className="text-2xl font-bold text-blue-600">{consultations.length}</div>
                 <div className="text-sm text-gray-600">총 상담 횟수</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {filteredConsultations.length > 0 ? 
-                    formatDate(filteredConsultations[0].createdAt).split(' ')[0] : '없음'
+                  {consultations.length > 0 ? 
+                    formatDate(consultations[0].createdAt).split(' ')[0] : '없음'
                   }
                 </div>
                 <div className="text-sm text-gray-600">최근 상담일</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">
-                  {filteredConsultations.length > 0 ? 
-                    formatDate(filteredConsultations[filteredConsultations.length - 1].createdAt).split(' ')[0] : '없음'
+                  {consultations.length > 0 ? 
+                    formatDate(consultations[consultations.length - 1].createdAt).split(' ')[0] : '없음'
                   }
                 </div>
                 <div className="text-sm text-gray-600">첫 상담일</div>

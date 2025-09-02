@@ -1278,6 +1278,24 @@ export default function MemoryHelper() {
         {currentStep === 'recording' && (
           <Card className="shadow-xl border-0 bg-white relative">
             <CardContent className="p-12 text-center">
+              {/* 질문 다시 듣기 버튼 - 오른쪽 상단에 배치 */}
+              <div className="absolute top-4 right-4">
+                <Button 
+                  onClick={() => {
+                    const selectedQuestion = experienceQuestions.find(q => q.id === selectedQuestions[currentQuestionIndex]);
+                    if (selectedQuestion) {
+                      speakMessage(selectedQuestion.question);
+                    }
+                  }}
+                  variant="outline"
+                  className="bg-red-50 hover:bg-red-100 text-red-700 border-red-300 hover:border-red-400"
+                  disabled={isSpeaking}
+                >
+                  <Volume2 className="w-4 h-4 mr-2" />
+                  질문 다시 듣기
+                </Button>
+              </div>
+              
               <div className="w-32 h-32 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
                 <Mic className="w-20 h-20 text-white" />
               </div>
@@ -1315,22 +1333,6 @@ export default function MemoryHelper() {
               <div className="mt-6">
                 <canvas ref={canvasRef} width={800} height={180} className="w-full rounded-lg border-2 border-indigo-300 bg-indigo-50" />
               </div>
-              
-              {/* 다시 듣기 버튼 */}
-              <Button 
-                onClick={() => {
-                  const selectedQuestion = experienceQuestions.find(q => q.id === selectedQuestions[currentQuestionIndex]);
-                  if (selectedQuestion) {
-                    speakMessage(selectedQuestion.question);
-                  }
-                }}
-                variant="outline"
-                className="bg-red-50 hover:bg-red-100 text-red-700 border-red-300 hover:border-red-400 mt-6"
-                disabled={isSpeaking}
-              >
-                <Volume2 className="w-4 h-4 mr-2" />
-                질문 다시 듣기
-              </Button>
 
               {/* 액션 버튼 - 통일화 */}
               <div className="mt-6 flex flex-col gap-3">
