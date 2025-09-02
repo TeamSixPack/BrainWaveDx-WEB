@@ -78,8 +78,12 @@ export default function Index() {
 
   return (
     <div
-      className="min-h-screen relative overflow-hidden bg-cover bg-no-repeat bg-fixed"
-      style={{ backgroundImage: "url('/images/mainPage.png')", backgroundPosition: "center -120px" }}
+      className="min-h-screen relative overflow-hidden bg-no-repeat bg-fixed"
+      style={{ 
+        backgroundImage: "url('/images/mainPage.png')", 
+        backgroundPosition: "center -120px",
+        backgroundSize: "1920px 1080px"
+      }}
     >
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
@@ -91,11 +95,11 @@ export default function Index() {
       {/* Header */}
       <header className="relative z-10 border-b border-border bg-background/95 backdrop-blur-sm shadow-md">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2 sm:space-x-6">
+          <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-2">
               <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer">
-                <Brain className="h-8 w-8 sm:h-9 sm:w-9 text-primary" />
-                <span className="text-xl sm:text-2xl font-bold text-foreground">NeuroScan</span>
+                <Brain className="h-9 w-9 text-primary" />
+                <span className="text-2xl font-bold text-foreground">NeuroScan</span>
               </Link>
             </div>
           </div>
@@ -115,7 +119,7 @@ export default function Index() {
             ) : (
               // 로그인되지 않은 상태: 로그인/회원가입 버튼
               <>
-                <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                   <UserCheck className="h-4 w-4" />
                   <span>비회원 모드</span>
                 </div>
@@ -127,10 +131,10 @@ export default function Index() {
                   로그인
                 </Button>
                 <Button variant="outline" size="default" asChild>
-                                      <Link to="/signup">
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      회원가입
-                    </Link>
+                  <Link to="/signup">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    회원가입
+                  </Link>
                 </Button>
               </>
             )}
@@ -139,81 +143,67 @@ export default function Index() {
       </header>
 
       {/* Main Content */}
-      <main className="relative z-10 flex items-end justify-center min-h-[calc(100vh-80px)] p-4 sm:p-6 lg:p-8 pb-16 sm:pb-20 lg:pb-24" style={{ paddingTop: '300px' }}>
-        <div className="container mx-auto text-center max-w-5xl">
-          <div className="space-y-12 sm:space-y-16">
-            {/* Hero Section */}
-            <div className="space-y-4 sm:space-y-6">
-              {/* 상단 텍스트 영역 - 뇌 이미지 위쪽에 배치 */}
-              <div className="absolute top-[200px] left-0 right-0 flex items-start justify-between w-full px-4 sm:px-8 lg:px-16 z-20">
-                <div className="flex-1 text-left" style={{ paddingLeft: '200px' }}>
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                    부담은 '<span className="blue-text">싹</span>' 진단은 '<span className="blue-text">딱</span>'
-                  </h1>
-                </div>
-                <div className="flex-1 text-right" style={{ paddingRight: '200px' }}>
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                    AI로 챙기는 두뇌건강
-                  </h1>
-                </div>
-              </div>
-              {!isLoggedIn && (
-                <div className="login-info-text text-sm sm:text-base text-muted-foreground max-w-lg mx-auto px-4">
-                </div>
-              )}
-              <div className="absolute top-[600px] left-1/2 transform -translate-x-1/2 flex flex-col gap-3 sm:gap-4 justify-center items-center z-20">
-                {/* 테스트 시작하기 버튼 */}
-                {isLoggedIn ? (
-                  <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center">
-                    <Button asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold text-white !text-white w-full sm:w-80">
-                      <Link to="/test-mode-selection" className="override-white">
-                        테스트 시작하기
-                      </Link>
-                    </Button>
-                    {/* 뇌파 분석 테스트 버튼 제거됨 */}
-                    <Button asChild size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
-                      <Link to="/memory-helper">
-                        <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                        AI 음성챗봇
-                      </Link>
-                    </Button>
-                    <Button variant="outline" size="lg" asChild className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80">
-                      <Link to="/record-selection">
-                        <FileText className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                        검사기록 보기
-                      </Link>
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center">
-                    <Button variant="default" asChild size="lg" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80 text-white !text-white">
-                      <Link to="/test-mode-selection" className="override-white">
-                        비회원으로 검사하기
-                      </Link>
-                    </Button>
-                    {/* 뇌파 분석 검사 버튼 제거됨 */}
-                    <Button size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80 opacity-50 cursor-not-allowed" disabled>
-                      <MessageCircle className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                      AI 음성챗봇 (로그인 필요)
-                    </Button>
-                    <Button size="lg" variant="outline" className="px-6 sm:px-8 py-4 sm:py-6 text-lg sm:text-xl font-semibold w-full sm:w-80 opacity-50 cursor-not-allowed" disabled>
-                      <FileText className="mr-2 h-5 w-5 sm:h-6 sm:w-6" />
-                      검사기록 보기 (로그인 필요)
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-
-
-            {/* Footer Info */}
-            <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 text-center space-y-2 sm:space-y-3 z-20">
-              <p className="text-sm sm:text-base text-muted-foreground italic">
-                정확한 진단은 전문 의료기관에서 받으시기 바랍니다.
-              </p>
-            </div>
+      <main className="relative z-10 min-h-[calc(100vh-80px)]">
+        {/* 상단 텍스트 영역 */}
+        <div className="fixed top-[300px] left-0 right-0 flex items-start justify-between w-full z-20 px-4">
+          <div className="text-left" style={{ paddingLeft: '500px' }}>
+            <h1 className="text-2xl font-bold text-foreground">
+              부담은 '<span className="blue-text">싹</span>' 진단은 '<span className="blue-text">딱</span>'
+            </h1>
           </div>
+          <div className="text-right" style={{ paddingRight: '500px' }}>
+            <h1 className="text-2xl font-bold text-foreground">
+              AI로 챙기는 두뇌건강
+            </h1>
+          </div>
+        </div>
+
+        {/* 버튼 영역 */}
+        <div className="absolute top-[650px] left-1/2 transform -translate-x-1/2 flex flex-col gap-4 justify-center items-center z-20 px-4">
+          {isLoggedIn ? (
+            <div className="flex flex-col gap-4 justify-center items-center">
+              <Button asChild size="lg" className="px-8 py-6 text-xl font-semibold text-white !text-white w-80">
+                <Link to="/test-mode-selection" className="override-white">
+                  테스트 시작하기
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="px-8 py-6 text-xl font-semibold w-80">
+                <Link to="/memory-helper">
+                  <MessageCircle className="mr-2 h-6 w-6" />
+                  AI 음성 기억 도우미
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild className="px-8 py-6 text-xl font-semibold w-80">
+                <Link to="/record-selection">
+                  <FileText className="mr-2 h-6 w-6" />
+                  검사기록 보기
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 justify-center items-center">
+              <Button variant="default" asChild size="lg" className="px-8 py-6 text-xl font-semibold w-80 text-white !text-white">
+                <Link to="/test-mode-selection" className="override-white">
+                  비회원으로 검사하기
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="px-8 py-6 text-xl font-semibold w-80 opacity-50 cursor-not-allowed" disabled>
+                <MessageCircle className="mr-2 h-6 w-6" />
+                AI 음성챗봇 (로그인 필요)
+              </Button>
+              <Button size="lg" variant="outline" className="px-8 py-6 text-xl font-semibold w-80 opacity-50 cursor-not-allowed" disabled>
+                <FileText className="mr-2 h-6 w-6" />
+                검사기록 보기 (로그인 필요)
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Info */}
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 text-center z-20 px-4">
+          <p className="text-sm text-muted-foreground italic">
+            정확한 진단은 전문 의료기관에서 받으시기 바랍니다.
+          </p>
         </div>
       </main>
       {/* 커스텀 로그인 모달 */}

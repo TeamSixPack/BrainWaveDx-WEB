@@ -69,6 +69,8 @@ export default function Assessment() {
     resetEegSession();
   }, []); // 페이지 로드 시 한 번만 실행
 
+
+
   // TTS 기능 함수들
   const speakText = (text: string, autoPlay = true) => {
     // 일반 모드일 때는 TTS 완전 비활성화
@@ -126,7 +128,7 @@ export default function Assessment() {
 
   // 체크리스트 음성 안내 함수 추가
   const speakChecklist = () => {
-    const checklistText = "시작하기 전에 확인해야 할 사항들입니다. 조용하고 편안한 환경에서 진행해주세요. 안정적인 인터넷 연결을 확인해주세요. 머리 근처의 금속 장신구를 제거해주세요. 안내에 따라 뇌파 헤드셋을 준비해주세요.";
+    const checklistText = "시작하기 전에 확인해야 할 사항들입니다. 장비 전원을 키고 불이 잘 들어오는지 확인하세요. 장비를 머리에 편안하게 착용하세요. 장비를 이마에 닿게 잘 착용하세요. 편안히 앉아서 움직이지 마세요";
     speakText(checklistText);
   };
 

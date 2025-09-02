@@ -23,6 +23,8 @@ import RecordSelection from "./pages/RecordSelection";
 import TestModeSelection from "./pages/TestModeSelection";
 import EegTest from "./pages/EegTest";
 import MemoryHelper from "./pages/MemoryHelper";
+import MemoryHelperEnhanced from "./components/MemoryHelperEnhanced";
+import MemoryHelperFixed from "./components/MemoryHelperFixed";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +44,8 @@ const App = () => (
           <Route path="/assessment" element={<Assessment />} />
           <Route path="/mmse" element={<MMSE />} />
           <Route path="/memory-helper" element={<MemoryHelper />} />
+          <Route path="/memory-helper-enhanced" element={<MemoryHelperEnhanced />} />
+          <Route path="/memory-helper-fixed" element={<MemoryHelperFixed />} />
           <Route path="/results" element={<Results />} />
           <Route path="/assessment-history" element={<AssessmentHistory />} />
           <Route path="/voice-consultation-history" element={<VoiceConsultationHistory />} />

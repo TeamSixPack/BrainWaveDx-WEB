@@ -52,3 +52,4 @@ public class PasswordServiceTest {
         assertFalse(passwordService.matches("wrongPassword", plainPassword));
     }
 }
+

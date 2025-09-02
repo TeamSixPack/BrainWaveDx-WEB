@@ -398,6 +398,8 @@ export default function MMSE() {
   const testMode = sessionStorage.getItem('testMode') || 'voice';
   const isVoiceMode = testMode === 'voice';
 
+
+
   // TTS 기능 함수들
   const speakText = (text: string, autoPlay = true) => {
     // 일반 모드일 때는 TTS 완전 비활성화

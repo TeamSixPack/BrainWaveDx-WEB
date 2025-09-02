@@ -78,9 +78,89 @@ export default function MemoryHelper() {
   const [micActive, setMicActive] = useState(false);
   const [hasRequestedMic, setHasRequestedMic] = useState(false);
 
-  // 사용자 발화 기반 간단 요약/분석 생성기
-  const buildAnalysisFromAnswer = (answerRaw: string) => {
+  // 사용자 발화 기반 간단 요약/분석 생성기 (FastAPI 연동)
+  const buildAnalysisFromAnswer = async (answerRaw: string, questionText: string) => {
     const answer = (answerRaw || '').trim();
+    
+    // FastAPI 호출 시도
+    try {
+      const response = await fetch('http://localhost:8001/voice-chatbot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_response: answer,
+          question_context: questionText,
+          session_id: `memory-helper-${Date.now()}`,
+          user_id: user?.uid || 'anonymous'
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // off_topic 처리 추가
+        if (result.status === 'off_topic') {
+          console.log('🚫 FastAPI: off_topic 감지됨');
+          return {
+            summary: result.message || '치매와 관련없는 내용입니다.',
+            analysis: '해당 챗봇은 치매와 인지장애 관련 상담만 가능합니다.',
+            guidance: '치매 관련 증상이나 우려사항에 대해 말씀해 주세요.'
+          };
+        }
+        
+        if (result.status === 'success' && result.analysis) {
+          const { summary, psychological_state, cautions } = result.analysis;
+          
+          // 요약
+          let summaryText = '';
+          if (summary && !summary.error) {
+            if (summary.main_points && Array.isArray(summary.main_points)) {
+              summaryText = summary.main_points.join(', ');
+            } else {
+              summaryText = answer;
+            }
+          } else {
+            summaryText = answer;
+          }
+
+          // 분석
+          let analysisText = '';
+          if (psychological_state && !psychological_state.error) {
+            if (psychological_state.key_concerns && Array.isArray(psychological_state.key_concerns)) {
+              analysisText = `주요 우려사항: ${psychological_state.key_concerns.join(', ')}`;
+            } else if (psychological_state.emotional_state) {
+              analysisText = `감정 상태: ${psychological_state.emotional_state}`;
+            } else {
+              analysisText = '심리상태 분석이 완료되었습니다.';
+            }
+          } else {
+            analysisText = '최근 반복되는 건망증 신호가 관찰됩니다';
+          }
+
+          // 안내
+          let guidanceText = '';
+          if (cautions && !cautions.error) {
+            if (cautions.immediate_actions && Array.isArray(cautions.immediate_actions)) {
+              guidanceText = `즉시 조치: ${cautions.immediate_actions.join(', ')}`;
+            } else if (cautions.when_to_seek_help) {
+              guidanceText = `전문가 상담: ${cautions.when_to_seek_help}`;
+            } else {
+              guidanceText = '경험이 반복되면 가까운 병원/보건소에서 상담을 받아보시는 것을 권장합니다.';
+            }
+          } else {
+            guidanceText = '경험이 반복되면 가까운 병원/보건소에서 상담을 받아보시는 것을 권장합니다.';
+          }
+
+          return { summary: summaryText, analysis: analysisText, guidance: guidanceText };
+        }
+      }
+    } catch (error) {
+      console.error('FastAPI 분석 요청 실패:', error);
+    }
+    
+    // FastAPI 실패 시 기존 로직 사용
     // 요약: 첫 문장 또는 80~120자 범위로 축약
     let summary = '';
     const sentSplit = answer.split(/[\.!?\n]/).map(s => s.trim()).filter(Boolean);
@@ -583,7 +663,7 @@ export default function MemoryHelper() {
       // 안내 음성 끝난 뒤 결과 생성
       speakMessage('분석을 시작합니다. 잠시만 기다려주세요.', () => {
         // TTS 완료 후 실제 분석 로직 (시뮬레이션)
-        setTimeout(() => {
+        setTimeout(async () => {
           const dateStr = formatDate(new Date());
           const lastQuestionId = selectedQuestions[Math.min(currentQuestionIndex, selectedQuestions.length - 1)];
           const lastQuestion = experienceQuestions.find(q => q.id === lastQuestionId);
@@ -593,13 +673,22 @@ export default function MemoryHelper() {
             return idx !== -1 ? userResponse.slice(idx + 3).replace(':', '').trim() : userResponse;
           })();
 
-          const ai = buildAnalysisFromAnswer(answerText);
-          const report = `📝 인지건강 상담 기록 (${dateStr})\n\n[사용자 발화 기록]\n\n- 질문: ${questionText}\n- 답변: ${answerText}\n\n[AI 요약]\n\n- 요약: ${ai.summary}\n- 분석: ${ai.analysis}\n- 안내: ${ai.guidance}`;
+          try {
+            setIsAnalyzing(true);
+            const ai = await buildAnalysisFromAnswer(answerText, questionText);
+            const report = `📝 인지건강 상담 기록 (${dateStr})\n\n[사용자 발화 기록]\n\n- 질문: ${questionText}\n- 답변: ${answerText}\n\n[AI 요약]\n\n- 요약: ${ai.summary}\n- 심리상태: ${ai.analysis}\n- 주의사항: ${ai.guidance}`;
 
-          setAnalysisResult(report);
-          setIsAnalyzing(false);
-          setIsResultReady(true);
-          setCurrentStep('result');
+            setAnalysisResult(report);
+            setIsAnalyzing(false);
+            setIsResultReady(true);
+            setCurrentStep('result');
+          } catch (error) {
+            console.error('AI 분석 오류:', error);
+            setIsAnalyzing(false);
+            setIsResultReady(true);
+            setCurrentStep('result');
+            setAnalysisResult('AI 분석에 실패했습니다. 다시 시도해주세요.');
+          }
         }, 1200);
       });
     }

@@ -1111,6 +1111,19 @@ button svg,
   display: inline !important;
 }
 
+/* 모바일에서 배경 이미지 위치 조정 */
+@media (max-width: 768px) {
+  .bg-cover {
+    background-position: center -100px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .bg-cover {
+    background-position: center -50px !important;
+  }
+}
+
 /* 로그인 안내 문구 스타일 */
 .login-info-text {
   line-height: 1.8 !important;
