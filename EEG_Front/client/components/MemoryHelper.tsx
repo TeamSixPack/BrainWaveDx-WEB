@@ -1194,6 +1194,22 @@ export default function MemoryHelper() {
     draw();
   };
 
+  // 돌아온 상태 처리 (기록보기에서 뒤로가기)
+  useEffect(() => {
+    const savedAnalysisResult = sessionStorage.getItem('memoryHelperAnalysisResult');
+    const savedCurrentStep = sessionStorage.getItem('memoryHelperCurrentStep');
+    
+    if (savedAnalysisResult && savedCurrentStep === 'result') {
+      console.log('🔍 돌아온 분석결과 감지:', savedAnalysisResult);
+      setAnalysisResult(savedAnalysisResult);
+      setCurrentStep('result');
+      setIsResultReady(true);
+      // 사용한 데이터 삭제
+      sessionStorage.removeItem('memoryHelperAnalysisResult');
+      sessionStorage.removeItem('memoryHelperCurrentStep');
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
               <div className="w-full max-w-[960px] xl:max-w-[1040px] mx-auto px-4 sm:px-6 py-6 space-y-6">
@@ -1475,7 +1491,12 @@ export default function MemoryHelper() {
                 {/* 새로운 버튼들: 기록보기 / 메인페이지 돌아가기 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Button 
-                    onClick={() => navigate('/voice-consultation-history')}
+                    onClick={() => {
+                      // 현재 분석결과 상태를 sessionStorage에 저장
+                      sessionStorage.setItem('memoryHelperAnalysisResult', analysisResult);
+                      sessionStorage.setItem('memoryHelperCurrentStep', 'result');
+                      navigate('/voice-consultation-history');
+                    }}
                     className="h-14 rounded-[12px] bg-[#059669] hover:bg-[#059669] text-white text-lg font-bold"
                   >
                     📋 기록보기
