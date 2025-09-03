@@ -1095,7 +1095,7 @@ export default function MMSE() {
       <header className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2 lg:space-x-4">
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="border-blue-force">
               <Link to="/cognitive-test">
                 <ArrowLeft className="h-4 w-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">뒤로</span>
@@ -1181,7 +1181,7 @@ export default function MMSE() {
                         variant="outline"
                         size="sm"
                         onClick={repeatQuestion}
-                        className="h-8 px-2"
+                        className="h-8 px-2 border-blue-force"
                         title="문제 다시 듣기"
                         disabled={isSpeaking}
                       >
@@ -1193,7 +1193,7 @@ export default function MMSE() {
                           variant="outline"
                           size="sm"
                           onClick={stopSpeaking}
-                          className="h-8 px-2"
+                          className="h-8 px-2 border-blue-force"
                           title="음성 정지"
                         >
                           <VolumeX className="h-4 w-4" />
@@ -1266,11 +1266,11 @@ export default function MMSE() {
                         <span className="text-blue-600 font-bold text-base sm:text-lg mb-2 sm:mb-3 block">선택된 단어들:</span>
                         <div className="flex justify-center space-x-2">
                           {answers[8] ? answers[8].split(',').map((word, index) => (
-                            <div key={index} className="w-16 h-8 sm:w-20 sm:h-10 bg-white border-2 border-blue-300 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold text-blue-700">
+                            <div key={index} className="w-16 h-8 sm:w-20 sm:h-10 bg-white border-2 border-blue-300 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold text-blue-700 border-blue-force">
                               {word.trim()}
                             </div>
                           )) : (
-                            <div className="w-16 h-8 sm:w-20 sm:h-10 bg-white border-2 border-blue-300 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold text-blue-700">
+                            <div className="w-16 h-8 sm:w-20 sm:h-10 bg-white border-2 border-blue-300 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold text-blue-700 border-blue-force">
                               단어 선택
                             </div>
                           )}
@@ -1299,7 +1299,7 @@ export default function MMSE() {
                                handleAnswerChange(newWords.join(', '));
                              }
                            }}
-                           className={`h-16 text-lg font-bold ${
+                           className={`h-16 text-lg font-bold border-blue-force ${
                              answers[8] && answers[8].split(',').map(w => w.trim()).includes(word)
                                ? 'bg-blue-100 border-blue-400 text-blue-800'
                                : 'bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
@@ -1320,7 +1320,7 @@ export default function MMSE() {
                        variant="outline"
                        size="lg"
                        onClick={() => handleAnswerChange('')}
-                       className="px-4 sm:px-6 w-full sm:w-auto"
+                       className="px-4 sm:px-6 w-full sm:w-auto border-blue-force"
                      >
                        모두 지우기
                      </Button>
@@ -1374,7 +1374,7 @@ export default function MMSE() {
                              handleAnswerChange(newNames.join(', '));
                            }
                          }}
-                        className={`h-12 sm:h-16 text-sm sm:text-lg font-bold ${
+                        className={`h-12 sm:h-16 text-sm sm:text-lg font-bold border-blue-force ${
                           answers[11] && answers[11].split(',').map(n => n.trim()).includes(name)
                             ? 'bg-blue-100 border-blue-400 text-blue-800'
                             : 'bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
@@ -1425,7 +1425,7 @@ export default function MMSE() {
                           variant="outline"
                           size="lg"
                           onClick={() => handleAnswerChange(year.toString())}
-                          className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400"
+                          className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
                         >
                           {year}
                         </Button>
@@ -1472,7 +1472,7 @@ export default function MMSE() {
                             variant="outline"
                             size="lg"
                             onClick={() => handleAnswerChange(month.toString())}
-                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400"
+                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
                           >
                             {month}월
                           </Button>
@@ -1534,7 +1534,7 @@ export default function MMSE() {
                             variant="outline"
                             size="lg"
                             onClick={() => handleAnswerChange(day.toString())}
-                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400"
+                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
                           >
                             {day}일
                           </Button>
@@ -1586,7 +1586,7 @@ export default function MMSE() {
                             variant="outline"
                             size="lg"
                             onClick={() => handleAnswerChange(koreanDays[dayIndex])}
-                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400"
+                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
                           >
                             {koreanDays[dayIndex]}
                           </Button>
@@ -1620,7 +1620,7 @@ export default function MMSE() {
                           variant="outline"
                           size="lg"
                           onClick={() => handleAnswerChange(season)}
-                          className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400"
+                          className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
                         >
                           {season}
                         </Button>
@@ -1690,7 +1690,7 @@ export default function MMSE() {
                                   handleAnswerChange(newNumbers.join(', '));
                                 }
                               }}
-                              className={`h-12 sm:h-16 text-sm sm:text-lg font-bold ${
+                              className={`h-12 sm:h-16 text-sm sm:text-lg font-bold border-blue-force ${
                                 answers[9] && answers[9].split(',').map(n => n.trim()).includes(number.toString())
                                   ? 'bg-blue-100 border-blue-400 text-blue-800'
                                   : 'bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
@@ -1712,7 +1712,7 @@ export default function MMSE() {
                             variant="outline"
                             size="lg"
                             onClick={() => handleAnswerChange('')}
-                            className="px-4 sm:px-6 w-full sm:w-auto"
+                            className="px-4 sm:px-6 w-full sm:w-auto border-blue-force"
                           >
                             모두 지우기
                           </Button>
@@ -1730,11 +1730,11 @@ export default function MMSE() {
                              <span className="text-blue-600 font-bold text-base sm:text-lg mb-3 block">기억한 단어들:</span>
                              <div className="flex justify-center space-x-1 sm:space-x-2 flex-wrap">
                                {answers[10] ? answers[10].split(',').map((word, index) => (
-                                 <div key={index} className="w-16 h-8 sm:w-20 sm:h-10 bg-white border-2 border-blue-300 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold text-blue-700 mb-1">
+                                 <div key={index} className="w-16 h-8 sm:w-20 sm:h-10 bg-white border-2 border-blue-300 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold text-blue-700 mb-1 border-blue-force">
                                    {word.trim()}
                                  </div>
                                )) : (
-                                 <div className="w-16 h-8 sm:w-20 sm:h-10 bg-white border-2 border-blue-300 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold text-blue-700">
+                                 <div className="w-16 h-8 sm:w-20 sm:h-10 bg-white border-2 border-blue-300 rounded-lg flex items-center justify-center text-xs sm:text-sm font-bold text-blue-700 border-blue-force">
                                    단어 선택
                                  </div>
                                )}
@@ -1763,7 +1763,7 @@ export default function MMSE() {
                                    handleAnswerChange(newWords.join(', '));
                                  }
                                }}
-                               className={`h-12 sm:h-16 text-sm sm:text-lg font-bold ${
+                               className={`h-12 sm:h-16 text-sm sm:text-lg font-bold border-blue-force ${
                                  answers[10] && answers[10].split(',').map(w => w.trim()).includes(word)
                                    ? 'bg-blue-100 border-blue-400 text-blue-800'
                                    : 'bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
@@ -1784,7 +1784,7 @@ export default function MMSE() {
                            variant="outline"
                            size="lg"
                            onClick={() => handleAnswerChange('')}
-                           className="px-4 sm:px-6 w-full sm:w-auto"
+                           className="px-4 sm:px-6 w-full sm:w-auto border-blue-force"
                          >
                            모두 지우기
                          </Button>
@@ -1829,7 +1829,7 @@ export default function MMSE() {
                               alert('장소를 먼저 입력해주세요!');
                             }
                           }}
-                          className="text-green-600 border-green-300 hover:bg-green-50"
+                          className="text-green-600 border-green-300 hover:bg-green-50 border-green-force"
                         >
                           AI 판별
                         </Button>
@@ -1852,7 +1852,7 @@ export default function MMSE() {
             {/* Navigation Button (Next only) */}
             <div className="hidden md:flex justify-end pt-4">
               <div className="flex items-center space-x-3">
-                <Button onClick={handleNext} className="flex items-center space-x-2">
+                <Button onClick={handleNext} className="flex items-center space-x-2 border-blue-force">
                   <span>{currentQuestion === mmseQuestions.length - 1 ? "완료" : "다음"}</span>
                   {currentQuestion !== mmseQuestions.length - 1 && <ArrowRight className="h-4 w-4" />}
                 </Button>
@@ -1864,7 +1864,7 @@ export default function MMSE() {
                  {/* 모바일 스티키 내비게이션 (다음만 표시) */}
          <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t p-4">
            <div className="flex gap-2">
-             <Button onClick={handleNext} className="flex-1 shrink-0 h-12 text-base font-medium">
+             <Button onClick={handleNext} className="flex-1 shrink-0 h-12 text-base font-medium border-blue-force">
                {currentQuestion === mmseQuestions.length - 1 ? "완료" : "다음"}
              </Button>
            </div>

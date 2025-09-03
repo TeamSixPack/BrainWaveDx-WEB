@@ -482,7 +482,7 @@ export default function Assessment() {
       <header className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2 lg:space-x-4">
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="border-blue-force">
               <Link to="/">
                 <ArrowLeft className="h-4 w-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">뒤로</span>
@@ -588,7 +588,7 @@ export default function Assessment() {
                           variant="outline"
                           size="sm"
                           onClick={repeatInstructions}
-                          className="h-8 px-2"
+                          className="h-8 px-2 border-blue-force"
                           title="안내 다시 듣기"
                           disabled={isSpeaking}
                         >
@@ -600,7 +600,7 @@ export default function Assessment() {
                             variant="outline"
                             size="sm"
                             onClick={stopSpeaking}
-                            className="h-8 px-2"
+                            className="h-8 px-2 border-blue-force"
                             title="음성 정지"
                           >
                             <VolumeX className="h-4 w-4" />
@@ -638,7 +638,7 @@ export default function Assessment() {
                     variant="outline" 
                     size="sm" 
                     onClick={() => setErrorMessage('')}
-                    className="mt-2 text-xs"
+                    className="mt-2 text-xs border-red-force"
                   >
                     확인
                   </Button>
@@ -672,7 +672,7 @@ export default function Assessment() {
                         variant="ghost"
                         size="sm"
                         onClick={speakSerialGuide}
-                        className="h-8 px-2 text-blue-600 hover:text-blue-700"
+                        className="h-8 px-2 text-blue-600 hover:text-blue-700 border-blue-force"
                         title="시리얼 넘버 음성 안내"
                         disabled={isSpeaking}
                       >
@@ -683,7 +683,7 @@ export default function Assessment() {
                       variant="outline"
                       size="sm"
                       onClick={() => setShowSerialGuide(!showSerialGuide)}
-                      className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                      className="text-blue-600 border-blue-300 hover:bg-blue-100 border-blue-force"
                     >
                       {showSerialGuide ? '가이드 숨기기' : '가이드 보기'}
                     </Button>
@@ -768,14 +768,14 @@ export default function Assessment() {
                   <h3 className="font-semibold text-foreground text-sm sm:text-base">시작하기 전에:</h3>
                   {/* 체크리스트 음성 안내 버튼 */}
                   {isVoiceMode && isTTSEnabled && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={speakChecklist}
-                      className="h-8 px-2 text-blue-600 hover:text-blue-700"
-                      title="체크리스트 음성 안내"
-                      disabled={isSpeaking}
-                    >
+                                          <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={speakChecklist}
+                        className="h-8 px-2 text-blue-600 hover:text-blue-700 border-blue-force"
+                        title="체크리스트 음성 안내"
+                        disabled={isSpeaking}
+                      >
                       <Volume2 className="h-4 w-4" />
                     </Button>
                   )}
@@ -853,7 +853,7 @@ export default function Assessment() {
                           variant="outline"
                           size="sm"
                           onClick={repeatInstructions}
-                          className="h-8 px-2"
+                          className="h-8 px-2 border-blue-force"
                           title="안내 다시 듣기"
                           disabled={isSpeaking}
                         >
@@ -865,7 +865,7 @@ export default function Assessment() {
                             variant="outline"
                             size="sm"
                             onClick={stopSpeaking}
-                            className="h-8 px-2"
+                            className="h-8 px-2 border-blue-force"
                             title="음성 정지"
                           >
                             <VolumeX className="h-4 w-4" />
@@ -900,7 +900,7 @@ export default function Assessment() {
                         variant="ghost"
                         size="sm"
                         onClick={speakElectrodePlacement}
-                        className="h-8 px-2 text-blue-600 hover:text-blue-700"
+                        className="h-8 px-2 text-blue-600 hover:text-blue-700 border-blue-force"
                         title="전극 배치 음성 안내"
                         disabled={isSpeaking}
                       >
@@ -935,7 +935,7 @@ export default function Assessment() {
                       disabled={deviceConnectionStatus === 'connecting'}
                       size="sm"
                       variant={deviceConnectionStatus === 'connected' ? 'default' : deviceConnectionStatus === 'failed' ? 'destructive' : 'outline'}
-                      className="text-xs"
+                      className="text-xs border-blue-force"
                     >
                       {deviceConnectionStatus === 'connecting' ? (
                         <>
@@ -1068,7 +1068,7 @@ export default function Assessment() {
                           variant="ghost"
                           size="sm"
                           onClick={speakRecordingInstructions}
-                          className="h-6 px-2 text-blue-600 hover:text-blue-700"
+                          className="h-6 px-2 text-blue-600 hover:text-blue-700 border-blue-force"
                           title="측정 진행 상황 음성 안내"
                           disabled={isSpeaking}
                         >

@@ -882,7 +882,7 @@ export default function MemoryHelper() {
                           : 'bg-white border-[#C9D7F5] text-gray-400'
                     }`}
                   >
-                    <span className={isPast ? 'text-white' : ''}>{idx + 1}</span>
+                    <span className={isPast || isCurrent ? 'process-step-number-white' : 'process-step-number-dark'}>{idx + 1}</span>
                   </div>
                 </div>
                 {idx < steps.length - 1 && (
@@ -1506,7 +1506,7 @@ export default function MemoryHelper() {
                   <Button 
                     onClick={() => navigate('/')}
                     variant="outline"
-                    className="h-14 rounded-[12px] border-[#059669] text-[#059669] hover:bg-green-50"
+                    className="h-14 rounded-[12px] border-[#059669] text-[#059669] hover:bg-green-50 border-green-force"
                   >
                     🏠 메인페이지
                   </Button>
@@ -1524,7 +1524,7 @@ export default function MemoryHelper() {
                   <Button 
                     onClick={handleRetest}
                     variant="outline"
-                    className="h-14 rounded-[12px] border-[#2563eb] text-[#2563eb] hover:bg-blue-50"
+                    className="h-14 rounded-[12px] border-[#2563eb] text-[#2563eb] hover:bg-blue-50 border-blue-force"
                   >
                     다시 검사하기
                   </Button>

@@ -715,7 +715,7 @@ export default function CognitiveTest() {
                     handleAnswer({ ...currentAnswers, [nextBlank]: num.toString() });
                   }
                 }}
-                className="w-10 h-10 sm:w-12 sm:h-12 text-sm sm:text-lg font-bold border-2 border-blue-300 hover:border-blue-500 hover:bg-blue-50"
+                className="w-10 h-10 sm:w-12 sm:h-12 text-sm sm:text-lg font-bold border-2 border-blue-300 hover:border-blue-500 hover:bg-blue-50 border-blue-force"
                 disabled={!getNextBlank(answers[currentQuestion] || {})}
               >
                 {num}
@@ -733,7 +733,7 @@ export default function CognitiveTest() {
                     handleAnswer({ ...currentAnswers, [nextBlank]: letter });
                   }
                 }}
-                className="w-10 h-10 sm:w-12 sm:h-12 text-sm sm:text-lg font-bold border-2 border-blue-300 hover:border-blue-500 hover:bg-blue-50"
+                className="w-10 h-10 sm:w-12 sm:h-12 text-sm sm:text-lg font-bold border-2 border-blue-300 hover:border-blue-500 hover:bg-blue-50 border-blue-force"
                 disabled={!getNextBlank(answers[currentQuestion] || {})}
               >
                 {letter}
@@ -750,7 +750,7 @@ export default function CognitiveTest() {
             onClick={() => {
               handleAnswer({});
             }}
-            className="text-blue-600 border-blue-300 hover:bg-blue-50"
+            className="text-blue-600 border-blue-300 hover:bg-blue-50 border-blue-force"
           >
             답변 초기화
           </Button>
@@ -839,7 +839,7 @@ export default function CognitiveTest() {
                       onClick={() => {
                         handleAnswer({ ...answers[currentQuestion], [currentAnimal.id]: name });
                       }}
-                      className={`h-10 text-sm font-medium transition-all duration-200 ${
+                      className={`h-10 text-sm font-medium transition-all duration-200 border-blue-force ${
                         answers[currentQuestion]?.[currentAnimal.id] === name
                           ? 'bg-blue-600 text-white border-blue-600 shadow-md'
                           : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
@@ -860,7 +860,7 @@ export default function CognitiveTest() {
               size="sm"
               onClick={() => setCurrentAnimalIndex(Math.max(0, currentAnimalIndex - 1))}
               disabled={currentAnimalIndex === 0}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-blue-force"
             >
               <ArrowLeft className="h-4 w-4" />
               이전
@@ -882,7 +882,7 @@ export default function CognitiveTest() {
               size="sm"
               onClick={() => setCurrentAnimalIndex(Math.min(animals.length - 1, currentAnimalIndex + 1))}
               disabled={currentAnimalIndex === animals.length - 1}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-blue-force"
             >
               다음
               <ArrowRight className="h-4 w-4" />
@@ -1035,7 +1035,7 @@ export default function CognitiveTest() {
                           }
                         }
                       }}
-                      className="h-16 text-base font-medium transition-all duration-200 bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400"
+                      className="h-16 text-base font-medium transition-all duration-200 bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
 
                     >
                       {word}
@@ -1052,7 +1052,7 @@ export default function CognitiveTest() {
                   onClick={() => {
                     handleAnswer({ ...answers[currentQuestion], words: '' });
                   }}
-                  className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                  className="text-blue-600 border-blue-300 hover:bg-blue-50 border-blue-force"
                 >
                   답변 초기화
                 </Button>
@@ -1229,7 +1229,7 @@ export default function CognitiveTest() {
                               handleAnswer({ ...currentAnswers, sequence: newSequence });
                             }
                           }}
-                          className="w-16 h-16 text-xl font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400"
+                          className="w-16 h-16 text-xl font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
                           disabled={answers[currentQuestion]?.sequence?.length >= 5}
                         >
                           {num}
@@ -1244,7 +1244,7 @@ export default function CognitiveTest() {
                       onClick={() => {
                         handleAnswer({ ...answers[currentQuestion], sequence: '' });
                       }}
-                      className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                      className="text-blue-600 border-blue-300 hover:bg-blue-50 border-blue-force"
                     >
                       답변 초기화
                     </Button>
@@ -1276,7 +1276,7 @@ export default function CognitiveTest() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => setAttentionPhase('sequence')} variant="outline" className="flex-1">이전 단계로</Button>
+            <Button onClick={() => setAttentionPhase('sequence')} variant="outline" className="flex-1 border-blue-force">이전 단계로</Button>
             <Button onClick={() => { 
               console.log('주의력 테스트 "다음 단계로" 버튼 클릭');
               console.log('현재 답변:', answers[currentQuestion]);
@@ -1539,7 +1539,7 @@ export default function CognitiveTest() {
                     // 하나만 선택하도록 수정
                     handleAnswer({ ...currentAnswers, bicycle: word });
                   }}
-                  className={`h-12 text-sm font-medium transition-all duration-200 ${
+                  className={`h-12 text-sm font-medium transition-all duration-200 border-blue-force ${
                     answers[currentQuestion]?.bicycle === word
                       ? 'bg-blue-600 text-white border-blue-600 shadow-md'
                       : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
@@ -1586,7 +1586,7 @@ export default function CognitiveTest() {
                     // 하나만 선택하도록 수정
                     handleAnswer({ ...currentAnswers, apple: word });
                   }}
-                  className={`h-12 text-sm font-medium transition-all duration-200 ${
+                  className={`h-12 text-sm font-medium transition-all duration-200 border-blue-force ${
                     answers[currentQuestion]?.apple === word
                       ? 'bg-blue-600 text-white border-blue-600 shadow-md'
                       : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
@@ -1607,7 +1607,7 @@ export default function CognitiveTest() {
             onClick={() => {
               handleAnswer({ ...answers[currentQuestion], bicycle: '', apple: '' });
             }}
-            className="text-blue-600 border-blue-300 hover:bg-blue-50"
+            className="text-blue-600 border-blue-300 hover:bg-blue-50 border-blue-force"
           >
             답변 초기화
           </Button>
@@ -1888,7 +1888,7 @@ export default function CognitiveTest() {
       <header className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2 lg:space-x-4">
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="border-blue-force">
               <Link to="/demo">
                 <ArrowLeft className="h-4 w-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">뒤로</span>

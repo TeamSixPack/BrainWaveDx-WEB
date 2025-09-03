@@ -144,7 +144,7 @@ export default function VoiceConsultationHistory() {
                 // 항상 memory-helper로 이동
                 navigate('/memory-helper');
               }}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 border-blue-force"
             >
               <ArrowLeft className="h-4 w-4" />
               뒤로가기
@@ -173,7 +173,7 @@ export default function VoiceConsultationHistory() {
               <AlertTriangle className="h-12 w-12 mx-auto" />
             </div>
             <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={loadConsultations} variant="outline">
+            <Button onClick={loadConsultations} variant="outline" className="border-blue-force">
               다시 시도
             </Button>
           </div>
@@ -233,7 +233,7 @@ export default function VoiceConsultationHistory() {
                             e.stopPropagation();
                             deleteConsultation(consultation.id);
                           }}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-force"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -254,7 +254,7 @@ export default function VoiceConsultationHistory() {
                          </p>
                        </div>
                        <div className="text-center">
-                         <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                         <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 border-blue-force">
                            클릭하여 전체 내용 보기
                          </Button>
                        </div>
@@ -291,7 +291,7 @@ export default function VoiceConsultationHistory() {
                       </div>
                       
                       <div className="text-center pt-2">
-                        <Button variant="ghost" size="sm" className="text-gray-600">
+                        <Button variant="ghost" size="sm" className="text-gray-600 border-blue-force">
                           클릭하여 축소하기
                         </Button>
                       </div>

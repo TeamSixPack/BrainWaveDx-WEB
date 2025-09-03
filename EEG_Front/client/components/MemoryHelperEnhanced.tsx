@@ -553,7 +553,7 @@ const MemoryHelperEnhanced: React.FC = () => {
                   <Button 
                     onClick={() => navigate('/')}
                     variant="outline"
-                    className="h-14 rounded-[12px] border-[#059669] text-[#059669] hover:bg-green-50"
+                    className="h-14 rounded-[12px] border-[#059669] text-[#059669] hover:bg-green-50 border-green-force"
                   >
                     🏠 메인페이지
                   </Button>
@@ -572,7 +572,7 @@ const MemoryHelperEnhanced: React.FC = () => {
                   <Button 
                     onClick={handleRetest}
                     variant="outline"
-                    className="h-14 rounded-[12px] border-[#2563eb] text-[#2563eb] hover:bg-blue-50"
+                    className="h-14 rounded-[12px] border-[#2563eb] text-[#2563eb] hover:bg-blue-50 border-blue-force"
                   >
                     <RotateCcw className="w-5 h-5 mr-2" />
                     다시 검사하기
