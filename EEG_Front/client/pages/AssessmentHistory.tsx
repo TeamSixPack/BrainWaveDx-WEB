@@ -532,16 +532,6 @@ export default function AssessmentHistory() {
             </div>
           </div>
         </div>
-
-        {/* Action Buttons */}
-        <div className="mt-8 flex justify-center">
-          <Button asChild className={styles.primaryCta}>
-            <Link to="/assessment" className={`${styles.textWhiteForce} !no-underline`}>
-              <Activity className="h-6 w-6 mr-2" />
-              <span className={styles.textWhiteForce}>새로운 검사 시작</span>
-            </Link>
-          </Button>
-        </div>
       </div>
     </div>
   );

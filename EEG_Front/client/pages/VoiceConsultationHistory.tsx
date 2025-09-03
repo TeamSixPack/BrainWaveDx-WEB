@@ -29,6 +29,7 @@ export default function VoiceConsultationHistory() {
   const [consultations, setConsultations] = useState<VoiceConsultationRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedConsultation, setExpandedConsultation] = useState<number | null>(null);
   
   const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
@@ -115,6 +116,11 @@ export default function VoiceConsultationHistory() {
     });
   };
 
+  // 상담 기록 확장/축소 토글
+  const toggleConsultation = (id: number) => {
+    setExpandedConsultation(expandedConsultation === id ? null : id);
+  };
+
   // 텍스트 길이 제한
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
@@ -191,7 +197,13 @@ export default function VoiceConsultationHistory() {
               </div>
             ) : (
               consultations.map((consultation) => (
-                <Card key={consultation.id} className="shadow-lg hover:shadow-xl transition-shadow">
+                <Card 
+                  key={consultation.id} 
+                  className={`shadow-lg hover:shadow-xl transition-all cursor-pointer ${
+                    expandedConsultation === consultation.id ? 'ring-2 ring-blue-500' : ''
+                  }`}
+                  onClick={() => toggleConsultation(consultation.id)}
+                >
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -217,7 +229,10 @@ export default function VoiceConsultationHistory() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => deleteConsultation(consultation.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteConsultation(consultation.id);
+                          }}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -225,43 +240,63 @@ export default function VoiceConsultationHistory() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* 원본 음성 데이터 */}
-                    <div>
-                      <h4 className="font-semibold text-gray-700 mb-2 flex items-center space-x-2">
-                        <FileText className="h-4 w-4" />
-                        <span>원본 음성 내용</span>
-                      </h4>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-gray-800 whitespace-pre-wrap">
-                          {truncateText(consultation.rawData, 200)}
-                        </p>
-                        {consultation.rawData.length > 200 && (
-                          <Button variant="link" className="p-0 h-auto text-blue-600 mt-2">
-                            전체 보기
-                          </Button>
-                        )}
+                  
+                                     {/* 축소된 상태 - 원본만 간단하게 표시 */}
+                   {expandedConsultation !== consultation.id && (
+                     <CardContent className="space-y-3">
+                       <div className="bg-gray-50 p-3 rounded-lg">
+                         <div className="flex items-center space-x-2 mb-2">
+                           <FileText className="h-4 w-4 text-gray-500" />
+                           <span className="text-sm font-medium text-gray-600">원본 음성 내용</span>
+                         </div>
+                         <p className="text-gray-800 text-sm leading-relaxed">
+                           {truncateText(consultation.rawData, 100)}
+                         </p>
+                       </div>
+                       <div className="text-center">
+                         <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                           클릭하여 전체 내용 보기
+                         </Button>
+                       </div>
+                     </CardContent>
+                   )}
+                  
+                  {/* 확장된 상태 - 전체 내용 표시 */}
+                  {expandedConsultation === consultation.id && (
+                    <CardContent className="space-y-4">
+                      {/* 원본 음성 데이터 */}
+                      <div>
+                        <h4 className="font-semibold text-gray-700 mb-2 flex items-center space-x-2">
+                          <FileText className="h-4 w-4" />
+                          <span>원본 음성 내용</span>
+                        </h4>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <p className="text-gray-800 whitespace-pre-wrap">
+                            {consultation.rawData}
+                          </p>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* AI 요약 */}
-                    <div>
-                      <h4 className="font-semibold text-gray-700 mb-2 flex items-center space-x-2">
-                        <MessageCircle className="h-4 w-4" />
-                        <span>AI 분석 요약</span>
-                      </h4>
-                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                        <p className="text-blue-900 whitespace-pre-wrap">
-                          {truncateText(consultation.aiSummary, 300)}
-                        </p>
-                        {consultation.aiSummary.length > 300 && (
-                          <Button variant="link" className="p-0 h-auto text-blue-600 mt-2">
-                            전체 보기
-                          </Button>
-                        )}
+                      {/* AI 요약 */}
+                      <div>
+                        <h4 className="font-semibold text-gray-700 mb-2 flex items-center space-x-2">
+                          <MessageCircle className="h-4 w-4" />
+                          <span>AI 분석 요약</span>
+                        </h4>
+                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                          <p className="text-blue-900 whitespace-pre-wrap">
+                            {consultation.aiSummary}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
+                      
+                      <div className="text-center pt-2">
+                        <Button variant="ghost" size="sm" className="text-gray-600">
+                          클릭하여 축소하기
+                        </Button>
+                      </div>
+                    </CardContent>
+                  )}
                 </Card>
               ))
             )}
