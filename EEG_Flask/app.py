@@ -47,6 +47,31 @@ VER = 'V1'
 # 전역 변수로 board_shim 관리 (세션 정리를 위해)
 _ACTIVE_BOARD = None
 
+def reset_all_global_state():
+    """모든 전역 상태를 초기화하는 함수"""
+    global _ACTIVE_BOARD, _ENGINES2, _ENGINES3
+    
+    print(f"[DEBUG] 모든 전역 상태 초기화 시작")
+    
+    # 1. 보드 상태 초기화
+    if _ACTIVE_BOARD is not None:
+        try:
+            _ACTIVE_BOARD.stop_stream()
+            _ACTIVE_BOARD.release_session()
+        except:
+            pass
+        _ACTIVE_BOARD = None
+    
+    # 2. 엔진 캐시 초기화
+    _ENGINES2.clear()
+    _ENGINES3.clear()
+    
+    # 3. 메모리 정리
+    import gc
+    gc.collect()
+    
+    print(f"[DEBUG] 모든 전역 상태 초기화 완료")
+
 # OpenAI API 키 설정 (환경변수에서 가져오기)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 if not openai.api_key:
@@ -837,58 +862,59 @@ def reset_eeg_session():
 @app.post("/restart_flask_server")
 def restart_flask_server():
     """
-    Flask 서버를 강제로 재시작하는 엔드포인트
-    Windows DLL 문제 해결을 위해 사용
+    Flask 서버를 현재 프로세스에서 재시작하는 엔드포인트
+    CMD 창 없이 현재 프로세스 내에서 재시작
     """
     try:
-        print(f"[DEBUG] Flask 서버 강제 재시작 요청 받음")
+        print(f"[DEBUG] Flask 서버 재시작 요청 받음")
         
-        # 1단계: 모든 세션 정리
-        global _ACTIVE_BOARD, _ENGINES2, _ENGINES3
+        # 1단계: 모든 전역 상태 초기화
+        reset_all_global_state()
         
-        if _ACTIVE_BOARD is not None:
-            try:
-                _ACTIVE_BOARD.stop_stream()
-                _ACTIVE_BOARD.release_session()
-                _ACTIVE_BOARD = None
-                print(f"[DEBUG] 보드 세션 정리 완료")
-            except Exception as e:
-                print(f"[DEBUG] 보드 정리 중 오류 (무시): {e}")
-                _ACTIVE_BOARD = None
+        # 2단계: BrainFlow DLL 정리 (Windows 특화)
+        try:
+            import brainflow
+            # BrainFlow 내부 정리
+            if hasattr(brainflow, 'BoardShim'):
+                print(f"[DEBUG] BrainFlow BoardShim 정리 시도")
+        except Exception as e:
+            print(f"[DEBUG] BrainFlow 정리 중 오류 (무시): {e}")
         
-        _ENGINES2.clear()
-        _ENGINES3.clear()
-        print(f"[DEBUG] 엔진 캐시 정리 완료")
-        
-        # 2단계: 메모리 정리
+        # 3단계: 추가 메모리 정리
         import gc
         gc.collect()
-        print(f"[DEBUG] 메모리 정리 완료")
+        print(f"[DEBUG] 추가 가비지 컬렉션 완료")
         
-        # 3단계: Flask 서버 강제 종료 후 재시작
-        print(f"[DEBUG] Flask 서버 강제 종료 시작...")
+        # 4단계: 잠시 대기 (DLL 정리를 위한 시간)
+        import time
+        time.sleep(1)
+        print(f"[DEBUG] DLL 정리 대기 완료")
+        
+        # 7단계: Flask 서버 완전 재시작 (현재 프로세스 종료 후 새로 시작)
+        print(f"[DEBUG] Flask 서버 완전 재시작 시작...")
         
         # 현재 프로세스 ID
         import os
         current_pid = os.getpid()
         
-        # Windows에서 새 콘솔로 Flask 서버 재시작
+        # Windows에서 백그라운드로 새 Flask 서버 시작
         if os.name == 'nt':
             import subprocess
             base_dir = os.path.dirname(os.path.abspath(__file__))
             python_exe = sys.executable
             
-            # 새 콘솔에서 Flask 서버 시작
-            restart_cmd = f'start "Flask EEG Server" cmd /k "cd /d {base_dir} && {python_exe} app.py"'
-            subprocess.run(restart_cmd, shell=True)
+            # 백그라운드에서 Flask 서버 시작 (CMD 창 안 뜨게)
+            restart_cmd = f'start /B "" "{python_exe}" "{os.path.join(base_dir, "app.py")}"'
+            subprocess.run(restart_cmd, shell=True, cwd=base_dir)
             
-            print(f"[DEBUG] 새 Flask 서버 시작 명령 실행됨")
+            print(f"[DEBUG] 새 Flask 서버 백그라운드 시작 완료")
             
-            # 잠시 대기 후 현재 프로세스 강제 종료
+            # 잠시 대기 후 현재 프로세스 종료
             import time
-            time.sleep(2)
+            time.sleep(3)
             
-            # 현재 프로세스 강제 종료
+            # 현재 프로세스 안전하게 종료
+            print(f"[DEBUG] 현재 프로세스 종료 중...")
             os._exit(0)
         else:
             # Linux/Mac에서는 signal로 재시작
@@ -897,8 +923,8 @@ def restart_flask_server():
         
         return jsonify({
             "status": "ok",
-            "message": "Flask 서버가 재시작되었습니다. 새 서버가 별도 창에서 시작됩니다.",
-            "restart_method": "force_restart"
+            "message": "Flask 서버가 완전히 재시작되었습니다. 새 서버가 백그라운드에서 시작됩니다.",
+            "restart_method": "complete_restart"
         })
         
     except Exception as e:

@@ -813,17 +813,6 @@ export default function Assessment() {
                     ⚠️ Muse2 헤드밴드의 맨 뒷자리 4자리 숫자를 입력해야 검사를 진행할 수 있습니다
                   </p>
                 )}
-
-                <div className="flex flex-col items-center">
-                  <Button variant="outline" size="lg" asChild className="w-full sm:w-auto">
-                    <Link to="/cognitive-test">
-                      뇌파 검사 건너뛰기
-                    </Link>
-                  </Button>
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
-                    인지 기능 검사로 바로 이동합니다
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -1034,17 +1023,6 @@ export default function Assessment() {
                     ⚠️ 뇌파 측정 시작 버튼을 눌러 뇌파 측정을 시작해주세요
                   </p>
                 )}
-
-                <div className="flex flex-col items-center">
-                  <Button variant="outline" size="lg" asChild>
-                    <Link to="/cognitive-test">
-                      뇌파 검사 건너뛰기
-                    </Link>
-                  </Button>
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
-                    인지 기능 검사로 바로 이동합니다
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -1118,21 +1096,6 @@ export default function Assessment() {
               </div>
 
               {/* Skip Button */}
-              <div className="pt-4 flex flex-col items-center">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  asChild
-                  className="px-8"
-                >
-                  <Link to="/cognitive-test">
-                    뇌파 검사 건너뛰기
-                  </Link>
-                </Button>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  인지 기능 검사로 바로 이동합니다
-                </p>
-              </div>
             </CardContent>
           </Card>
         )}
