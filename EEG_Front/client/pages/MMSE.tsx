@@ -1299,11 +1299,24 @@ export default function MMSE() {
                                handleAnswerChange(newWords.join(', '));
                              }
                            }}
-                           className={`h-16 text-lg font-bold border-blue-force ${
+                           className={`h-16 text-lg font-bold border-blue-force mmse-word-button ${
                              answers[8] && answers[8].split(',').map(w => w.trim()).includes(word)
-                               ? 'bg-blue-100 border-blue-400 text-blue-800'
+                               ? 'bg-blue-100 border-blue-400 text-blue-800 selected'
                                : 'bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
                            }`}
+                           style={{
+                             border: answers[8] && answers[8].split(',').map(w => w.trim()).includes(word)
+                               ? '1px solid #2563eb !important'
+                               : '1px solid #1d4ed8 !important',
+                             borderColor: answers[8] && answers[8].split(',').map(w => w.trim()).includes(word)
+                               ? '#2563eb !important'
+                               : '#1d4ed8 !important',
+                             borderWidth: '1px !important',
+                             borderStyle: 'solid !important',
+                             boxShadow: answers[8] && answers[8].split(',').map(w => w.trim()).includes(word)
+                               ? 'inset 0 0 0 1px #2563eb !important'
+                               : 'inset 0 0 0 1px #1d4ed8 !important'
+                           } as React.CSSProperties}
                          >
                            {word}
                          </Button>
@@ -1374,11 +1387,24 @@ export default function MMSE() {
                              handleAnswerChange(newNames.join(', '));
                            }
                          }}
-                        className={`h-12 sm:h-16 text-sm sm:text-lg font-bold border-blue-force ${
+                        className={`h-12 sm:h-16 text-sm sm:text-lg font-bold border-blue-force mmse-word-button ${
                           answers[11] && answers[11].split(',').map(n => n.trim()).includes(name)
-                            ? 'bg-blue-100 border-blue-400 text-blue-800'
+                            ? 'bg-blue-100 border-blue-400 text-blue-800 selected'
                             : 'bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
                         }`}
+                        style={{
+                          border: answers[11] && answers[11].split(',').map(n => n.trim()).includes(name)
+                            ? '1px solid #2563eb !important'
+                            : '1px solid #1d4ed8 !important',
+                          borderColor: answers[11] && answers[11].split(',').map(n => n.trim()).includes(name)
+                            ? '#2563eb !important'
+                            : '#1d4ed8 !important',
+                          borderWidth: '1px !important',
+                          borderStyle: 'solid !important',
+                          boxShadow: answers[11] && answers[11].split(',').map(n => n.trim()).includes(name)
+                            ? 'inset 0 0 0 1px #2563eb !important'
+                            : 'inset 0 0 0 1px #1d4ed8 !important'
+                        } as React.CSSProperties}
                       >
                         {name}
                       </Button>
@@ -1425,7 +1451,20 @@ export default function MMSE() {
                           variant="outline"
                           size="lg"
                           onClick={() => handleAnswerChange(year.toString())}
-                          className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
+                          className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force mmse-word-button"
+                          style={{
+                            border: answers[0] === year.toString()
+                              ? '1px solid #2563eb !important'
+                              : '1px solid #1d4ed8 !important',
+                            borderColor: answers[0] === year.toString()
+                              ? '#2563eb !important'
+                              : '#1d4ed8 !important',
+                            borderWidth: '1px !important',
+                            borderStyle: 'solid !important',
+                            boxShadow: answers[0] === year.toString()
+                              ? 'inset 0 0 0 1px #2563eb !important'
+                              : 'inset 0 0 0 1px #1d4ed8 !important'
+                          } as React.CSSProperties}
                         >
                           {year}
                         </Button>
@@ -1472,7 +1511,20 @@ export default function MMSE() {
                             variant="outline"
                             size="lg"
                             onClick={() => handleAnswerChange(month.toString())}
-                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
+                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force mmse-word-button"
+                            style={{
+                              border: answers[1] === month.toString()
+                                ? '1px solid #2563eb !important'
+                                : '1px solid #1d4ed8 !important',
+                              borderColor: answers[1] === month.toString()
+                                ? '#2563eb !important'
+                                : '#1d4ed8 !important',
+                              borderWidth: '1px !important',
+                              borderStyle: 'solid !important',
+                              boxShadow: answers[1] === month.toString()
+                                ? 'inset 0 0 0 1px #2563eb !important'
+                                : 'inset 0 0 0 1px #1d4ed8 !important'
+                            } as React.CSSProperties}
                           >
                             {month}월
                           </Button>
@@ -1534,7 +1586,20 @@ export default function MMSE() {
                             variant="outline"
                             size="lg"
                             onClick={() => handleAnswerChange(day.toString())}
-                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
+                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force mmse-word-button"
+                            style={{
+                              border: answers[2] === day.toString()
+                                ? '1px solid #2563eb !important'
+                                : '1px solid #1d4ed8 !important',
+                              borderColor: answers[2] === day.toString()
+                                ? '#2563eb !important'
+                                : '#1d4ed8 !important',
+                              borderWidth: '1px !important',
+                              borderStyle: 'solid !important',
+                              boxShadow: answers[2] === day.toString()
+                                ? 'inset 0 0 0 1px #2563eb !important'
+                                : 'inset 0 0 0 1px #1d4ed8 !important'
+                            } as React.CSSProperties}
                           >
                             {day}일
                           </Button>
@@ -1586,7 +1651,20 @@ export default function MMSE() {
                             variant="outline"
                             size="lg"
                             onClick={() => handleAnswerChange(koreanDays[dayIndex])}
-                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
+                            className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force mmse-word-button"
+                            style={{
+                              border: answers[3] === koreanDays[dayIndex]
+                                ? '1px solid #2563eb !important'
+                                : '1px solid #1d4ed8 !important',
+                              borderColor: answers[3] === koreanDays[dayIndex]
+                                ? '#2563eb !important'
+                                : '#1d4ed8 !important',
+                              borderWidth: '1px !important',
+                              borderStyle: 'solid !important',
+                              boxShadow: answers[3] === koreanDays[dayIndex]
+                                ? 'inset 0 0 0 1px #2563eb !important'
+                                : 'inset 0 0 0 1px #1d4ed8 !important'
+                            } as React.CSSProperties}
                           >
                             {koreanDays[dayIndex]}
                           </Button>
@@ -1620,7 +1698,20 @@ export default function MMSE() {
                           variant="outline"
                           size="lg"
                           onClick={() => handleAnswerChange(season)}
-                          className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
+                          className="h-12 sm:h-16 text-sm sm:text-lg font-bold bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force mmse-word-button"
+                          style={{
+                            border: answers[4] === season
+                              ? '1px solid #2563eb !important'
+                              : '1px solid #1d4ed8 !important',
+                            borderColor: answers[4] === season
+                              ? '#2563eb !important'
+                              : '#1d4ed8 !important',
+                            borderWidth: '1px !important',
+                            borderStyle: 'solid !important',
+                            boxShadow: answers[4] === season
+                              ? 'inset 0 0 0 1px #2563eb !important'
+                              : 'inset 0 0 0 1px #1d4ed8 !important'
+                          } as React.CSSProperties}
                         >
                           {season}
                         </Button>
@@ -1690,11 +1781,24 @@ export default function MMSE() {
                                   handleAnswerChange(newNumbers.join(', '));
                                 }
                               }}
-                              className={`h-12 sm:h-16 text-sm sm:text-lg font-bold border-blue-force ${
+                              className={`h-12 sm:h-16 text-sm sm:text-lg font-bold border-blue-force mmse-word-button ${
                                 answers[9] && answers[9].split(',').map(n => n.trim()).includes(number.toString())
-                                  ? 'bg-blue-100 border-blue-400 text-blue-800'
+                                  ? 'bg-blue-100 border-blue-400 text-blue-800 selected'
                                   : 'bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
                               }`}
+                              style={{
+                                border: answers[9] && answers[9].split(',').map(n => n.trim()).includes(number.toString())
+                                  ? '1px solid #2563eb !important'
+                                  : '1px solid #1d4ed8 !important',
+                                borderColor: answers[9] && answers[9].split(',').map(n => n.trim()).includes(number.toString())
+                                  ? '#2563eb !important'
+                                  : '#1d4ed8 !important',
+                                borderWidth: '1px !important',
+                                borderStyle: 'solid !important',
+                                boxShadow: answers[9] && answers[9].split(',').map(n => n.trim()).includes(number.toString())
+                                  ? 'inset 0 0 0 1px #2563eb !important'
+                                  : 'inset 0 0 0 1px #1d4ed8 !important'
+                              } as React.CSSProperties}
                             >
                               {number}
                             </Button>
@@ -1763,11 +1867,24 @@ export default function MMSE() {
                                    handleAnswerChange(newWords.join(', '));
                                  }
                                }}
-                               className={`h-12 sm:h-16 text-sm sm:text-lg font-bold border-blue-force ${
+                               className={`h-12 sm:h-16 text-sm sm:text-lg font-bold border-2 border-blue-force mmse-word-button ${
                                  answers[10] && answers[10].split(',').map(w => w.trim()).includes(word)
-                                   ? 'bg-blue-100 border-blue-400 text-blue-800'
-                                   : 'bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
+                                   ? 'bg-blue-100 border-blue-400 text-blue-800 selected'
+                                   : 'bg-white text-blue-700 hover:bg-blue-50'
                                }`}
+                               style={{
+                                 border: answers[10] && answers[10].split(',').map(w => w.trim()).includes(word)
+                                   ? '1px solid #2563eb !important'
+                                   : '1px solid #1d4ed8 !important',
+                                 borderColor: answers[10] && answers[10].split(',').map(w => w.trim()).includes(word)
+                                   ? '#2563eb !important'
+                                   : '#1d4ed8 !important',
+                                 borderWidth: '1px !important',
+                                 borderStyle: 'solid !important',
+                                 boxShadow: answers[10] && answers[10].split(',').map(w => w.trim()).includes(word)
+                                   ? 'inset 0 0 0 1px #2563eb !important'
+                                   : 'inset 0 0 0 1px #1d4ed8 !important'
+                               } as React.CSSProperties}
                              >
                                {word}
                              </Button>

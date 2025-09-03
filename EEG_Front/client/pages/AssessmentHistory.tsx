@@ -17,6 +17,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useAuth } from "@/lib/auth-context";
 
 // 백엔드 API에서 가져올 검사 기록 타입
 interface AssessmentRecord {
@@ -36,19 +37,20 @@ export default function AssessmentHistory() {
   const [assessments, setAssessments] = useState<AssessmentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   
-  // 테스트용 userId (실제로는 로그인된 사용자 ID를 사용해야 함)
-  const userId = "test";
+  const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
   
-  console.log('🔍 AssessmentHistory - userId 설정됨:', userId);
-  console.log('🔍 AssessmentHistory - userId 타입:', typeof userId);
-  console.log('🔍 AssessmentHistory - userId 길이:', userId.length);
+  console.log('🔍 AssessmentHistory - user 정보:', user);
+  console.log('🔍 AssessmentHistory - isLoggedIn:', isLoggedIn);
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/');
+      return;
+    }
     loadAssessments();
-  }, []);
+  }, [isLoggedIn, navigate]);
 
   // assessments 배열이 변경될 때마다 순서 확인
   useEffect(() => {
@@ -67,7 +69,11 @@ export default function AssessmentHistory() {
       setError(null);
       console.log('🔍 검사 기록 로드 시작...');
       
-      const response = await fetch(`http://localhost:8090/api/assessments/user/${userId}`);
+      if (!user?.uid) {
+        throw new Error("사용자 정보를 찾을 수 없습니다.");
+      }
+      
+      const response = await fetch(`http://localhost:8090/api/assessments/user/${user.uid}`);
       console.log('🔍 API 응답 상태:', response.status);
       
       if (!response.ok) {
@@ -216,9 +222,6 @@ export default function AssessmentHistory() {
         
         switch (assessment.eegResult?.toLowerCase()) {
           case "정상":
-            resultValue = 3;
-            break;
-          case "전측두엽장애":
             resultValue = 2;
             break;
           case "치매":
@@ -411,14 +414,13 @@ export default function AssessmentHistory() {
                           tick={{ fontSize: 12 }}
                           tickFormatter={(value) => {
                             switch (value) {
-                              case 3: return "정상";
-                              case 2: return "전측두엽장애";
+                              case 2: return "정상";
                               case 1: return "치매";
                               default: return "";
                             }
                           }}
-                          domain={[0, 3]}
-                          ticks={[1, 2, 3]}
+                          domain={[0, 2]}
+                          ticks={[1, 2]}
                         />
                         <Tooltip 
                           formatter={(value, name) => {
@@ -432,6 +434,7 @@ export default function AssessmentHistory() {
                         <Line 
                           type="monotone" 
                           dataKey="result" 
+                          name="측정결과"
                           stroke="#2563eb" 
                           strokeWidth={3}
                           dot={{ fill: "#2563eb", strokeWidth: 2, r: 6 }}

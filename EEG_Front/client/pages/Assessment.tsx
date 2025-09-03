@@ -34,7 +34,7 @@ export default function Assessment() {
   const [sessionIdx, setSessionIdx] = useState<number | null>(null);
 
   // 테스트 모드 확인
-  const testMode = sessionStorage.getItem('testMode') || 'voice';
+  const testMode = sessionStorage.getItem('testMode') || 'normal';
   const isVoiceMode = testMode === 'voice';
 
   // 세션 스토리지에서 시리얼 넘버 불러오기
@@ -177,6 +177,8 @@ export default function Assessment() {
           
           // 분석이 성공적으로 완료되면 complete 단계로 자동 이동
           if (result.analysis_result.status === 'success') {
+            console.log('뇌파 분석 성공, complete 단계로 이동');
+            setIsRecording(false); // 녹화 상태 정지
             setCurrentStep('complete');
             // 완료 음성 안내
             if (isVoiceMode && isTTSEnabled) {
@@ -188,6 +190,7 @@ export default function Assessment() {
           // 분석이 실패했으면 complete 단계로 이동 (실패 결과도 표시)
           if (result.analysis_result.status === 'failed') {
             console.log('뇌파 분석 실패, complete 단계로 이동');
+            setIsRecording(false); // 녹화 상태 정지
             setCurrentStep('complete');
             // 실패 음성 안내
             if (isVoiceMode && isTTSEnabled) {
@@ -339,8 +342,10 @@ export default function Assessment() {
         progressText = "측정이 1분 진행되었습니다. 눈을 감고 편안하게 앉아있어주세요.";
       } else if (recordingTime === 120) {
         progressText = "측정이 2분 진행되었습니다. 움직이지 말고 편안한 상태를 유지해주세요.";
-      } else if (recordingTime === 160) {
+      } else if (recordingTime === 150) {
         progressText = "측정이 거의 완료되었습니다. 조금만 더 기다려주세요.";
+      } else if (recordingTime === 180) {
+        progressText = "측정이 곧 완료됩니다. 마지막까지 편안한 상태를 유지해주세요.";
       } else if (recordingTime === 190) {
         progressText = "뇌파 측정이 완료되었습니다! 데이터를 분석하고 있습니다.";
       }
@@ -373,31 +378,34 @@ export default function Assessment() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isRecording && recordingTime < 190) { // 실제 측정 시간: 3분 10초 = 190 seconds
+    if (isRecording && recordingTime < 190 && currentStep !== 'complete') { // complete 단계에서는 타이머 정지
       interval = setInterval(() => {
         setRecordingTime(prev => {
           if (prev >= 189) {
             // 정확히 190초(3분 10초)에서 측정 완료
             setIsRecording(false);
-            setCurrentStep("processing");
-            // 뇌파 측정 완료 시 음성 안내
-            if (isVoiceMode) {
-              speakText("뇌파 측정이 완료되었습니다! 데이터를 분석하고 있습니다.");
+            // complete 단계가 아닐 때만 processing 단계로 이동
+            if (currentStep !== 'complete') {
+              setCurrentStep("processing");
+              // 뇌파 측정 완료 시 음성 안내
+              if (isVoiceMode) {
+                speakText("뇌파 측정이 완료되었습니다! 데이터를 분석하고 있습니다.");
+              }
             }
             return 190;
           }
           return prev + 1;
         });
       }, 1000);
-    } else if (recordingTime >= 190) {
-      // 190초에 도달했는데도 아직 recording 상태라면 강제로 중단
+    } else if (recordingTime >= 190 && currentStep !== 'complete') {
+      // 190초에 도달했는데도 아직 recording 상태라면 강제로 중단 (complete 단계가 아닐 때만)
       setIsRecording(false);
       setCurrentStep("processing");
       // recordingTime이 190을 넘어가지 않도록 강제 제한
       setRecordingTime(190);
     }
     return () => clearInterval(interval);
-  }, [isRecording, recordingTime, isVoiceMode]);
+  }, [isRecording, recordingTime, isVoiceMode, currentStep]);
 
 
 
@@ -1086,9 +1094,11 @@ export default function Assessment() {
                       <p className="text-xs text-muted-foreground">
                         {recordingTime < 30 && "측정 초기 단계입니다. 눈을 감고 편안하게 앉아있어주세요."}
                         {recordingTime >= 30 && recordingTime < 60 && "측정이 진행 중입니다. 움직이지 말고 편안한 상태를 유지해주세요."}
-                        {recordingTime >= 60 && recordingTime < 90 && "측정이 절반 이상 진행되었습니다. 조금만 더 기다려주세요."}
-                        {recordingTime >= 90 && recordingTime < 120 && "측정이 거의 완료되었습니다. 마지막까지 편안하게 기다려주세요."}
-                        {recordingTime >= 120 && "측정이 완료되었습니다!"}
+                        {recordingTime >= 60 && recordingTime < 90 && "측정이 진행되고 있습니다. 편안한 자세를 유지해주세요."}
+                        {recordingTime >= 90 && recordingTime < 120 && "측정이 절반 이상 진행되었습니다. 조금만 더 기다려주세요."}
+                        {recordingTime >= 120 && recordingTime < 150 && "측정이 거의 완료되었습니다. 마지막까지 편안하게 기다려주세요."}
+                        {recordingTime >= 150 && recordingTime < 180 && "측정이 곧 완료됩니다. 마지막까지 편안한 상태를 유지해주세요."}
+                        {recordingTime >= 180 && "측정이 완료되었습니다!"}
                       </p>
                     </div>
                   )}
@@ -1186,8 +1196,27 @@ export default function Assessment() {
               </div>
 
               <div className="flex justify-center">
-                <Button size="lg" asChild className="text-white next-step-button" style={{ color: '#ffffff !important' }}>
-                  <Link to="/demo" className="text-white next-step-button" style={{ color: '#ffffff !important' }}>다음 단계 계속하기</Link>
+                <Button 
+                  size="lg" 
+                  asChild 
+                  className="bg-blue-600 hover:bg-blue-700 text-white assessment-next-button"
+                  style={{ 
+                    color: '#ffffff !important',
+                    '--tw-text-opacity': '1',
+                    '--tw-text-color': '#ffffff'
+                  } as React.CSSProperties}
+                >
+                  <Link 
+                    to="/demo" 
+                    className="text-white hover:text-white assessment-next-button"
+                    style={{ 
+                      color: '#ffffff !important',
+                      '--tw-text-opacity': '1',
+                      '--tw-text-color': '#ffffff'
+                    } as React.CSSProperties}
+                  >
+                    다음 단계 계속하기
+                  </Link>
                 </Button>
               </div>
             </CardContent>

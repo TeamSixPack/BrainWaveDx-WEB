@@ -1035,8 +1035,20 @@ export default function CognitiveTest() {
                           }
                         }
                       }}
-                      className="h-16 text-base font-medium transition-all duration-200 bg-white text-blue-700 border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 border-blue-force"
-
+                      className="h-16 text-base font-medium transition-all duration-200 bg-white text-blue-700 border-2 border-blue-force mmse-word-button hover:bg-blue-50"
+                      style={{
+                        border: answers[currentQuestion]?.words && answers[currentQuestion].words.split(',').map(w => w.trim()).includes(word)
+                          ? '1px solid #2563eb !important'
+                          : '1px solid #1d4ed8 !important',
+                        borderColor: answers[currentQuestion]?.words && answers[currentQuestion].words.split(',').map(w => w.trim()).includes(word)
+                          ? '#2563eb !important'
+                          : '#1d4ed8 !important',
+                        borderWidth: '1px !important',
+                        borderStyle: 'solid !important',
+                        boxShadow: answers[currentQuestion]?.words && answers[currentQuestion].words.split(',').map(w => w.trim()).includes(word)
+                          ? 'inset 0 0 0 1px #2563eb !important'
+                          : 'inset 0 0 0 1px #1d4ed8 !important'
+                      } as React.CSSProperties}
                     >
                       {word}
                     </Button>
@@ -1539,11 +1551,24 @@ export default function CognitiveTest() {
                     // 하나만 선택하도록 수정
                     handleAnswer({ ...currentAnswers, bicycle: word });
                   }}
-                  className={`h-12 text-sm font-medium transition-all duration-200 border-blue-force ${
+                  className={`h-12 text-sm font-medium transition-all duration-200 border-2 border-blue-force cognitive-test-button ${
                     answers[currentQuestion]?.bicycle === word
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                      : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-md selected'
+                      : 'bg-white text-blue-700 hover:bg-blue-50'
                   }`}
+                  style={{
+                    border: answers[currentQuestion]?.bicycle === word
+                      ? '1px solid #2563eb !important'
+                      : '1px solid #1d4ed8 !important',
+                    borderColor: answers[currentQuestion]?.bicycle === word
+                      ? '#2563eb !important'
+                      : '#1d4ed8 !important',
+                    borderWidth: '1px !important',
+                    borderStyle: 'solid !important',
+                    boxShadow: answers[currentQuestion]?.bicycle === word
+                      ? 'inset 0 0 0 1px #2563eb !important'
+                      : 'inset 0 0 0 1px #1d4ed8 !important'
+                  } as React.CSSProperties}
                 >
                   {word}
                 </Button>
@@ -1586,11 +1611,24 @@ export default function CognitiveTest() {
                     // 하나만 선택하도록 수정
                     handleAnswer({ ...currentAnswers, apple: word });
                   }}
-                  className={`h-12 text-sm font-medium transition-all duration-200 border-blue-force ${
+                  className={`h-12 text-sm font-medium transition-all duration-200 border-2 border-blue-force cognitive-test-button ${
                     answers[currentQuestion]?.apple === word
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-md'
-                      : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50 hover:border-blue-400'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-md selected'
+                      : 'bg-white text-blue-700 hover:bg-blue-50'
                   }`}
+                  style={{
+                    border: answers[currentQuestion]?.apple === word
+                      ? '1px solid #2563eb !important'
+                      : '1px solid #1d4ed8 !important',
+                    borderColor: answers[currentQuestion]?.apple === word
+                      ? '#2563eb !important'
+                      : '#1d4ed8 !important',
+                    borderWidth: '1px !important',
+                    borderStyle: 'solid !important',
+                    boxShadow: answers[currentQuestion]?.apple === word
+                      ? 'inset 0 0 0 1px #2563eb !important'
+                      : 'inset 0 0 0 1px #1d4ed8 !important'
+                  } as React.CSSProperties}
                 >
                   {word}
                 </Button>

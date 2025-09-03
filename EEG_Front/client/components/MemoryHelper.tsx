@@ -942,13 +942,11 @@ export default function MemoryHelper() {
     );
   };
 
-  // 뒤로가기 버튼 렌더링 (시작 페이지 제외)
+  // 뒤로가기 버튼 렌더링
   const renderBackButton = () => {
-    if (currentStep === 'start') return null;
-    
     return (
       <Button
-        onClick={goToPreviousStep}
+        onClick={currentStep === 'start' ? goToHome : goToPreviousStep}
         variant="outline"
         className="absolute top-6 left-6 text-gray-600 hover:text-gray-800 border-gray-300 hover:border-gray-400 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 z-10"
         size="sm"
