@@ -1006,7 +1006,7 @@ export default function Assessment() {
               </div>
               
               <div className="text-center space-y-4">
-                <Button 
+                {/* <Button 
                   onClick={startRecording} 
                   size="lg" 
                   className="px-8"
@@ -1016,7 +1016,7 @@ export default function Assessment() {
                    deviceConnectionStatus === 'connecting' ? "뇌파 측정 시작 중..." : 
                    deviceConnectionStatus === 'failed' ? "뇌파 측정 시작 실패" : 
                    "뇌파 측정 시작 필요"}
-                </Button>
+                </Button> */}
                 
                 {deviceConnectionStatus !== 'connected' && (
                   <p className="text-sm text-orange-600">

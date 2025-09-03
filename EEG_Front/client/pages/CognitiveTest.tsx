@@ -888,6 +888,26 @@ export default function CognitiveTest() {
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* 진행 안내 메시지 */}
+          <div className="mt-4 text-center">
+            {!isNamingComplete(answers[currentQuestion]) ? (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-700">
+                  ⚠️ 모든 동물의 이름을 선택해야 다음 문제로 진행할 수 있습니다.
+                </p>
+                <p className="text-xs text-yellow-600 mt-1">
+                  현재 선택된 동물: {Object.keys(answers[currentQuestion] || {}).filter(key => answers[currentQuestion]?.[key]).length}/3
+                </p>
+              </div>
+            ) : (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-700">
+                  ✅ 모든 동물의 이름을 선택했습니다. 이제 다음 문제로 진행할 수 있습니다.
+                </p>
+              </div>
+            )}
+          </div>
           
 
         </div>
@@ -918,6 +938,12 @@ export default function CognitiveTest() {
     console.log('최종 점수:', score);
     
     return score;
+  };
+
+  // 동물 이름 맞추기 문제에서 모든 동물을 선택했는지 확인
+  const isNamingComplete = (answer: any) => {
+    if (!answer) return false;
+    return answer.tiger && answer.bat && answer.camel;
   };
 
   const renderMemoryTest = () => {
@@ -1068,11 +1094,13 @@ export default function CognitiveTest() {
                               <p className="text-sm text-blue-700 mb-2">숫자를 하나씩 보여드릴게요. 기억하세요</p>
                 <p className="text-base md:text-lg font-medium text-blue-800 mb-3">잠시 후 숫자가 나타납니다</p>
               <Button onClick={() => { 
-                setIsShowingSequence(true); 
-                setSequenceNumbers(['2', '1', '8', '4', '5']); 
+                // 랜덤 5자리 숫자 생성 (각 자리는 0-9)
+                const randomNumbers = Array.from({length: 5}, () => Math.floor(Math.random() * 10));
+                setSequenceNumbers(randomNumbers.map(String)); 
                 setCurrentSequenceIndex(0); 
                 setCountdownTimer(1);
                 setIsCountdownRunning(false);
+                setIsShowingSequence(true); // 이 줄을 빼먹었습니다!
               }} className="w-full">
                 시작하기
               </Button>
@@ -1276,23 +1304,30 @@ export default function CognitiveTest() {
     console.log('주의력 테스트 답변:', answer);
     console.log('answer.sequence 존재 여부:', !!answer.sequence);
     
-    if (answer.sequence) {
+    if (answer.sequence && answer.sequence.length === 5) {
       const userSequence = String(answer.sequence).replace(/[,_\s]/g, '');
-      const correctSequence = '21845';
+      const correctSequence = sequenceNumbers.join(''); // 현재 생성된 랜덤 숫자 사용
       const sequenceCorrect = userSequence === correctSequence;
+      
       console.log(`숫자 순서: 사용자답변="${userSequence}", 정답="${correctSequence}", 정답여부=${sequenceCorrect}`);
       console.log(`사용자답변 길이: ${userSequence.length}, 정답 길이: ${correctSequence.length}`);
+      
       if (sequenceCorrect) {
         score += 5; // 숫자 순서만으로 만점 5점
         console.log('숫자 순서 정답! +5점');
-      } else if (userSequence.length > 0) {
-        score += 2; // 부분 점수
-        console.log('숫자 순서 부분 점수! +2점');
       } else {
-        console.log('숫자 순서 0점');
+        // 부분 점수 계산: 맞은 자리 수에 따라 점수 부여
+        let correctDigits = 0;
+        for (let i = 0; i < Math.min(userSequence.length, correctSequence.length); i++) {
+          if (userSequence[i] === correctSequence[i]) {
+            correctDigits++;
+          }
+        }
+        score += correctDigits; // 맞은 자리 수만큼 점수
+        console.log(`부분 점수: ${correctDigits}개 자리 맞음, +${correctDigits}점`);
       }
     } else {
-      console.log('sequence 답변 없음');
+      console.log('sequence 답변이 없거나 5자리가 아님');
     }
     
     console.log('최종 점수:', score);
@@ -1793,8 +1828,8 @@ export default function CognitiveTest() {
     }
   };
 
-  const getTotalScore = () => Object.values(scores).reduce((sum, score) => sum + (score || 0), 0) + 6; // 기본점수 6점 추가
-  const getMaxScore = () => 30; // MOCA 표준 만점
+  const getTotalScore = () => Object.values(scores).reduce((sum, score) => sum + (score || 0), 0); // 기본점수 제거
+  const getMaxScore = () => 24; // 기본점수 제거로 24점 만점
 
   if (showResults) {
     const totalScore = getTotalScore();
@@ -1820,7 +1855,7 @@ export default function CognitiveTest() {
               <div className="space-y-4">
                 <div className="text-center">
                                   <div className="text-3xl font-bold text-primary mb-2">{totalScore}</div>
-                <p className="text-blue-600">점수 (기본점수 6점 포함)</p>
+                <p className="text-blue-600">점수</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {questions.map((q, index) => (
@@ -1832,13 +1867,7 @@ export default function CognitiveTest() {
                     <Progress value={((scores[index] || 0) / q.maxPoints) * 100} className="h-2" />
                   </div>
                 ))}
-                <div className="p-4 border rounded-lg bg-white">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">기본점수 (구현 예정 기능)</span>
-                    <span className="text-sm text-blue-600">6 / 6</span>
-                  </div>
-                  <Progress value={100} className="h-2" />
-                </div>
+
               </div>
               </div>
             </CardContent>
@@ -1860,7 +1889,7 @@ export default function CognitiveTest() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2 lg:space-x-4">
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/test-mode-selection">
+              <Link to="/demo">
                 <ArrowLeft className="h-4 w-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">뒤로</span>
               </Link>
@@ -1996,7 +2025,10 @@ export default function CognitiveTest() {
             <div className="flex justify-center items-center gap-2">
             <Button 
               onClick={handleNext} 
-              disabled={questions[currentQuestion]?.type === 'fluency' && !showFluencyResults} 
+              disabled={
+                (questions[currentQuestion]?.type === 'fluency' && !showFluencyResults) ||
+                (questions[currentQuestion]?.type === 'naming' && !isNamingComplete(answers[currentQuestion]))
+              } 
               className="md:w-auto shrink-0" 
               style={{ width: 'auto' }}
             >

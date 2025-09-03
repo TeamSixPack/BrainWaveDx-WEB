@@ -465,8 +465,7 @@ export default function MMSE() {
       const calculateFinalScore = async () => {
         let totalScore = 0;
         
-        // 기본점수 7점 추가 (지남력 5문제 + 기억등록 안내 0점 + 이름말하기 2점)
-        totalScore += 7;
+        // 기본점수 제거
         
         for (const question of mmseQuestions) {
           // 안내 문제(id: 7)는 점수 계산에서 제외
@@ -692,8 +691,7 @@ export default function MMSE() {
     const calculateScore = async () => {
       let totalScore = 0;
       
-      // 기본점수 7점 추가 (지남력 5문제 + 기억등록 안내 0점 + 이름말하기 2점)
-      totalScore += 7;
+      // 기본점수 제거
       
       for (const question of mmseQuestions) {
         // 안내 문제(id: 7)는 점수 계산에서 제외
@@ -808,7 +806,7 @@ export default function MMSE() {
     // MMSE 결과를 처리하고 결과 페이지로 이동 (MOCA 점수와 MMSE 점수 전달)
     const mmseScore = await calculateScore();
     setFinalScore(mmseScore);
-    const mmseMaxScore = 30; // MMSE 표준 만점
+    const mmseMaxScore = 23; // 기본점수 제거로 23점 만점
     const mmsePercentage = Math.round((mmseScore / mmseMaxScore) * 100);
 
     // 로그인한 사용자만 점수 저장 (게스트 모드 사용자는 저장하지 않음)
@@ -822,8 +820,8 @@ export default function MMSE() {
     }
     
     const resultsUrl = mocaScore && mocaMaxScore && mocaPercentage
-      ? `/results?mocaScore=${mocaScore}&mocaMaxScore=30&mocaPercentage=${mocaPercentage}&mmseScore=${mmseScore}&mmseMaxScore=30&mmsePercentage=${mmsePercentage}`
-      : `/results?mmseScore=${mmseScore}&mmseMaxScore=30&mmsePercentage=${mmsePercentage}`;
+      ? `/results?mocaScore=${mocaScore}&mocaMaxScore=24&mocaPercentage=${mocaPercentage}&mmseScore=${mmseScore}&mmseMaxScore=23&mmsePercentage=${mmsePercentage}`
+      : `/results?mmseScore=${mmseScore}&mmseMaxScore=23&mmsePercentage=${mmsePercentage}`;
     navigate(resultsUrl);
   };
 
@@ -832,7 +830,7 @@ export default function MMSE() {
 
     if (isComplete && finalScore !== null) {
     const mmseScore = finalScore;
-    const mmseMaxScore = 30;
+    const mmseMaxScore = 23;
     const mmsePercentage = Math.round((mmseScore / mmseMaxScore) * 100);
     
     // MMSE 점수에 따른 판정 기준
@@ -840,11 +838,11 @@ export default function MMSE() {
     let diagnosisColor = '';
     let diagnosisBgColor = '';
     
-    if (mmseScore >= 24) {
+    if (mmseScore >= 17) {
       diagnosis = '정상';
       diagnosisColor = 'text-green-600';
       diagnosisBgColor = 'bg-green-50';
-    } else if (mmseScore >= 19) {
+    } else if (mmseScore >= 12) {
       diagnosis = '경도인지장애';
       diagnosisColor = 'text-yellow-600';
       diagnosisBgColor = 'bg-yellow-50';
@@ -872,7 +870,7 @@ export default function MMSE() {
               <div className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-primary mb-2">{mmseScore}</div>
-                  <p className="text-blue-600">점수 (기본점수 7점 포함)</p>
+                  <p className="text-blue-600">점수</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {(() => {
@@ -885,7 +883,7 @@ export default function MMSE() {
                       naming: 0,         // 이름말하기 (2점)
                       comprehension: 0,  // 이해 (3점)
                       judgment: 0,       // 판단 (1점)
-                      basic: 7           // 기본점수 (7점)
+
                     };
 
                     // 각 문제별 점수 계산
@@ -908,14 +906,8 @@ export default function MMSE() {
                           earnedPoints = (allCorrectWordsFound && answerWords.length === correctWords.length) ? question.points : 0;
                         } else if (question.id === 12 || question.id === 13) {
                           // 이해, 판단 문제 - AI 채점 결과를 확인
-                          // finalScore에서 이미 계산된 점수를 사용
-                          if (question.id === 12) {
-                            // 12번 문제: 이해 문제 (3점)
-                            earnedPoints = 0; // 결과창에서는 별도 계산하지 않음
-                          } else if (question.id === 13) {
-                            // 13번 문제: 판단 문제 (1점)
-                            earnedPoints = 0; // 결과창에서는 별도 계산하지 않음
-                          }
+                          // finalScore에서 이미 계산된 점수를 사용하므로 0으로 설정
+                          earnedPoints = 0; // AI 채점 문제는 별도로 계산됨
                         } else if (question.id === 11) {
                           // 이름말하기 문제
                           const names = answer.split(',').map(n => n.trim());
@@ -971,7 +963,7 @@ export default function MMSE() {
 
                      // AI 채점 문제 점수 계산 - finalScore에서 다른 영역 점수를 빼서 AI 점수 역산
                      // finalScore는 이미 AI 채점 결과가 반영된 최종 점수
-                     const otherScores = scores.orientation + scores.memory + scores.calculation + scores.recall + scores.naming + scores.basic;
+                     const otherScores = scores.orientation + scores.memory + scores.calculation + scores.recall + scores.naming;
                      const aiTotalScore = mmseScore - otherScores;
                      
                      console.log('🔍 결과창 AI 점수 역산:', {
@@ -984,15 +976,21 @@ export default function MMSE() {
                      
                      // AI 총점을 이해(3점)와 판단(1점)으로 분배
                      // aiTotalScore는 실제 AI 채점에서 얻은 점수의 합
-                     if (aiTotalScore === 4) {
+                     console.log('🔍 AI 점수 분배 전:', {
+                       aiTotalScore: aiTotalScore,
+                       mmseScore: mmseScore,
+                       otherScores: otherScores
+                     });
+                     
+                     if (aiTotalScore >= 4) {
                        // 둘 다 맞음: 이해 3점 + 판단 1점
                        scores.comprehension = 3;
                        scores.judgment = 1;
-                     } else if (aiTotalScore === 3) {
+                     } else if (aiTotalScore >= 3) {
                        // 이해만 맞음: 이해 3점 + 판단 0점
                        scores.comprehension = 3;
                        scores.judgment = 0;
-                     } else if (aiTotalScore === 1) {
+                     } else if (aiTotalScore >= 1) {
                        // 판단만 맞음: 이해 0점 + 판단 1점
                        scores.comprehension = 0;
                        scores.judgment = 1;
@@ -1076,14 +1074,7 @@ export default function MMSE() {
                         </div>
                         <Progress value={(scores.judgment / 1) * 100} className="h-2" />
                       </div>,
-                      // 기본점수
-                      <div key="basic" className="p-4 border rounded-lg bg-white">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium">기본점수</span>
-                          <span className="text-sm text-blue-600">{scores.basic} / 7</span>
-                        </div>
-                        <Progress value={100} className="h-2" />
-                      </div>
+
                     ];
                   })()}
                 </div>
@@ -1647,7 +1638,7 @@ export default function MMSE() {
                         <div className="space-y-2">
                           <Label>현재 장소</Label>
                           <Input
-                            placeholder="예: 집, 병원, 회사"
+                            
                             value={answers[currentQ.id] || ''}
                             onChange={(e) => handleAnswerChange(e.target.value)}
                             className="flex-1"

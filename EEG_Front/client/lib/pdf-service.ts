@@ -145,16 +145,16 @@ export class PDFService {
               ${typeof data.confidenceLevel === 'number' ? `
               <div class="card">
                 <div class="score-value">${data.confidenceLevel}%</div>
-                <div class="score-label">신뢰도</div>
+                <div class="score-label">AI 분석 결과</div>
               </div>` : ''}
               ${typeof data.mocaScore === 'number' ? `
               <div class="card">
-                <div class="score-value">${data.mocaScore}/30</div>
+                <div class="score-value">${data.mocaScore}/24</div>
                 <div class="score-label">MOCA-K(종합 인지 검사)</div>
               </div>` : ''}
               ${typeof data.mmseScore === 'number' ? `
               <div class="card">
-                <div class="score-value">${data.mmseScore}/30</div>
+                <div class="score-value">${data.mmseScore}/23</div>
                 <div class="score-label">MMSE-K(간이 인지 검사)</div>
               </div>` : ''}
             </div>

@@ -448,11 +448,11 @@ export default function Results() {
     cognitiveTest: {
       mocaScore: mocaScore,
       mmseScore: mmseScore,
-      mocaResult: mocaScore >= 21 ? "정상" : "경도인지장애",
-      mmseResult: mmseScore >= 24 ? "정상" : mmseScore >= 18 ? "경도인지장애" : "인지기능장애",
+      mocaResult: mocaScore >= 15 ? "정상" : "경도인지장애",
+      mmseResult: mmseScore >= 17 ? "정상" : mmseScore >= 12 ? "경도인지장애" : "인지기능장애",
       details: [
-        { test: "종합 인지 평가", score: mocaScore, maxScore: 30, result: mocaScore >= 21 ? "정상" : "경도인지장애", description: mocaScore >= 21 ? "21점 이상으로 정상 범위" : "20점 이하로 경도인지장애" },
-        { test: "간이 인지 검사", score: mmseScore, maxScore: 30, result: mmseScore >= 24 ? "정상" : mmseScore >= 18 ? "경도인지장애" : "인지기능장애", description: mmseScore >= 24 ? "24점 이상으로 인지적 손상 없음" : mmseScore >= 18 ? "23~18점으로 경도인지장애" : "17점 이하로 인지기능장애" }
+        { test: "종합 인지 평가", score: mocaScore, maxScore: 24, result: mocaScore >= 15 ? "정상" : "경도인지장애", description: mocaScore >= 15 ? "15점 이상으로 정상 범위" : "14점 이하로 경도인지장애" },
+        { test: "간이 인지 검사", score: mmseScore, maxScore: 23, result: mmseScore >= 17 ? "정상" : mmseScore >= 12 ? "경도인지장애" : "인지기능장애", description: mmseScore >= 17 ? "17점 이상으로 인지적 손상 없음" : mmseScore >= 12 ? "16~12점으로 경도인지장애" : "11점 이하로 인지기능장애" }
       ]
     }
   }), [finalEegResult, actualConfidenceLevel, mocaScore, mmseScore]);
@@ -723,7 +723,7 @@ export default function Results() {
                 {diagnosisInfo.title}
               </CardTitle>
               <CardDescription className="text-lg">
-                신뢰도: {results.confidenceLevel}%
+                AI 분석 결과: {results.confidenceLevel}%
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -782,7 +782,7 @@ export default function Results() {
                             </div>
                             
                             <div className="flex justify-between items-center">
-                              <span className="font-medium">신뢰도</span>
+                              <span className="font-medium">AI 분석 결과</span>
                               <span className="text-lg font-bold text-blue-600">
                                 {Math.round(autoEegResult.confidence * 100)}%
                               </span>
@@ -902,9 +902,9 @@ export default function Results() {
                       <h4 className="font-semibold text-foreground mb-2">종합 인지 평가 총점</h4>
                       {results.cognitiveTest.mocaScore && results.cognitiveTest.mocaScore > 0 ? (
                         <>
-                          <div className="text-3xl font-bold text-primary mb-2">{results.cognitiveTest.mocaScore}/30</div>
+                          <div className="text-3xl font-bold text-primary mb-2">{results.cognitiveTest.mocaScore}/24</div>
                           <p className="text-sm text-muted-foreground">
-                            {results.cognitiveTest.mocaScore >= 21 ? '21점 이상으로 정상 범위입니다' : '20점 이하로 경도인지장애입니다'}
+                            {results.cognitiveTest.mocaScore >= 15 ? '15점 이상으로 정상 범위입니다' : '14점 이하로 경도인지장애입니다'}
                           </p>
                         </>
                       ) : (
@@ -917,17 +917,17 @@ export default function Results() {
                       <div className="w-full bg-gray-200 rounded-full h-3 relative mb-8">
                         <div 
                           className={`h-3 rounded-full transition-all duration-300 ${
-                            results.cognitiveTest.mocaScore && results.cognitiveTest.mocaScore >= 21 ? 'bg-green-500' : 
-                            results.cognitiveTest.mocaScore && results.cognitiveTest.mocaScore >= 18 ? 'bg-yellow-500' : 'bg-red-500'
+                            results.cognitiveTest.mocaScore && results.cognitiveTest.mocaScore >= 15 ? 'bg-green-500' : 
+                            results.cognitiveTest.mocaScore && results.cognitiveTest.mocaScore >= 12 ? 'bg-yellow-500' : 'bg-red-500'
                           }`}
                           style={{ 
-                            width: results.cognitiveTest.mocaScore && results.cognitiveTest.mocaScore > 0 ? `${(results.cognitiveTest.mocaScore / 30) * 100}%` : '0%' 
+                            width: results.cognitiveTest.mocaScore && results.cognitiveTest.mocaScore > 0 ? `${(results.cognitiveTest.mocaScore / 24) * 100}%` : '0%' 
                           }}
                         ></div>
                         {/* 바 밑에 숫자 표시 */}
                         <div className="absolute -bottom-6 left-0 text-xs text-gray-600">0</div>
-                        <div className="absolute -bottom-6 left-[70%] transform -translate-x-1/2 text-xs text-gray-600">21</div>
-                        <div className="absolute -bottom-6 right-0 text-xs text-gray-600">30</div>
+                        <div className="absolute -bottom-6 left-[62.5%] transform -translate-x-1/2 text-xs text-gray-600">15</div>
+                        <div className="absolute -bottom-6 right-0 text-xs text-gray-600">24</div>
                       </div>
                     </div>
 
@@ -936,7 +936,7 @@ export default function Results() {
                       <div className="space-y-2 text-sm text-blue-700">
                         <div className="flex justify-between">
                           <span className="font-semibold group relative cursor-help">
-                            21점 이상:
+                            15점 이상:
                             {/* 툴팁 */}
                             <div className="absolute bottom-full left-0 mb-3 px-4 py-3 bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-800 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-lg border border-blue-200 w-52 z-50 leading-relaxed backdrop-blur-sm">
                               <div className="flex items-start space-x-2">
@@ -956,7 +956,7 @@ export default function Results() {
                         </div>
                         <div className="flex justify-between">
                           <span className="font-semibold group relative cursor-help">
-                            20점 이하:
+                            14점 이하:
                             {/* 툴팁 */}
                             <div className="absolute bottom-full left-0 mb-3 px-4 py-3 bg-gradient-to-br from-orange-50 to-amber-100 text-gray-800 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-lg border border-orange-200 w-52 z-50 leading-relaxed backdrop-blur-sm">
                               <div className="flex items-start space-x-2">
@@ -985,11 +985,11 @@ export default function Results() {
                       <h4 className="font-semibold text-green-800 mb-2">간이 인지 검사 총점</h4>
                       {results.cognitiveTest.mmseScore && results.cognitiveTest.mmseScore > 0 ? (
                         <>
-                          <div className="text-3xl font-bold text-green-600 mb-2">{results.cognitiveTest.mmseScore}/30</div>
+                          <div className="text-3xl font-bold text-green-600 mb-2">{results.cognitiveTest.mmseScore}/23</div>
                           <p className="text-sm text-green-700">
-                            {results.cognitiveTest.mmseScore >= 24 ? '24점 이상으로 정상입니다' : 
-                             results.cognitiveTest.mmseScore >= 18 ? '23~18점으로 경도인지장애입니다' : 
-                             '17점 이하로 인지기능장애입니다'}
+                            {results.cognitiveTest.mmseScore >= 17 ? '17점 이상으로 정상입니다' : 
+                             results.cognitiveTest.mmseScore >= 12 ? '16~12점으로 경도인지장애입니다' : 
+                             '11점 이하로 인지기능장애입니다'}
                           </p>
                         </>
                       ) : (
@@ -1002,18 +1002,18 @@ export default function Results() {
                       <div className="w-full bg-gray-200 rounded-full h-3 relative mb-8">
                         <div 
                           className={`h-3 rounded-full transition-all duration-300 ${
-                            results.cognitiveTest.mmseScore && results.cognitiveTest.mmseScore >= 24 ? 'bg-green-500' : 
-                            results.cognitiveTest.mmseScore && results.cognitiveTest.mmseScore >= 18 ? 'bg-yellow-500' : 'bg-red-500'
+                            results.cognitiveTest.mmseScore && results.cognitiveTest.mmseScore >= 17 ? 'bg-green-500' : 
+                            results.cognitiveTest.mmseScore && results.cognitiveTest.mmseScore >= 12 ? 'bg-yellow-500' : 'bg-red-500'
                           }`}
                           style={{ 
-                            width: results.cognitiveTest.mmseScore && results.cognitiveTest.mmseScore > 0 ? `${(results.cognitiveTest.mmseScore / 30) * 100}%` : '0%' 
+                            width: results.cognitiveTest.mmseScore && results.cognitiveTest.mmseScore > 0 ? `${(results.cognitiveTest.mmseScore / 23) * 100}%` : '0%' 
                           }}
                         ></div>
                         {/* 바 밑에 숫자 표시 */}
                         <div className="absolute -bottom-6 left-0 text-xs text-gray-600">0</div>
-                        <div className="absolute -bottom-6 left-[60%] transform -translate-x-1/2 text-xs text-gray-600">18</div>
-                        <div className="absolute -bottom-6 left-[80%] transform -translate-x-1/2 text-xs text-gray-600">24</div>
-                        <div className="absolute -bottom-6 right-0 text-xs text-gray-600">30</div>
+                        <div className="absolute -bottom-6 left-[52%] transform -translate-x-1/2 text-xs text-gray-600">12</div>
+                        <div className="absolute -bottom-6 left-[74%] transform -translate-x-1/2 text-xs text-gray-600">17</div>
+                        <div className="absolute -bottom-6 right-0 text-xs text-gray-600">23</div>
                       </div>
                     </div>
 
@@ -1022,7 +1022,7 @@ export default function Results() {
                       <div className="space-y-2 text-sm text-green-700">
                         <div className="flex justify-between">
                           <span className="font-semibold group relative cursor-help">
-                            24~30점:
+                            17~23점:
                             {/* 툴팁 */}
                             <div className="absolute bottom-full left-0 mb-3 px-4 py-3 bg-gradient-to-br from-green-50 to-emerald-100 text-gray-800 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-lg border border-green-200 w-52 z-50 leading-relaxed backdrop-blur-sm">
                               <div className="flex items-start space-x-2">
@@ -1042,7 +1042,7 @@ export default function Results() {
                         </div>
                         <div className="flex justify-between">
                           <span className="font-semibold group relative cursor-help">
-                            23~18점:
+                            16~12점:
                             {/* 툴팁 */}
                             <div className="absolute bottom-full left-0 mb-3 px-4 py-3 bg-gradient-to-br from-orange-50 to-amber-100 text-gray-800 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-lg border border-orange-200 w-52 z-50 leading-relaxed backdrop-blur-sm">
                               <div className="flex items-start space-x-2">
@@ -1062,7 +1062,7 @@ export default function Results() {
                         </div>
                         <div className="flex justify-between">
                           <span className="font-semibold group relative cursor-help">
-                            0~17점:
+                            0~11점:
                             {/* 툴팁 */}
                             <div className="absolute bottom-full left-0 mb-3 px-4 py-3 bg-gradient-to-br from-red-50 to-rose-100 text-gray-800 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none shadow-lg border border-red-200 w-52 z-50 leading-relaxed backdrop-blur-sm">
                               <div className="flex items-start space-x-2">
