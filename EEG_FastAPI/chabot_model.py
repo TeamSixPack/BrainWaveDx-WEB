@@ -200,10 +200,11 @@ def _build_clients(
 # -------------------------------
 CLASSIFY_PROMPT = ChatPromptTemplate.from_messages([
     ("system",
-     "너는 입력이 ‘치매/인지장애 상담’인지 판단하는 분류기다. "
-     "판단 기준: (a) 기억력 저하/단어 회상 곤란/언어 유창성 저하/방향감각 문제/일상생활 곤란/정서반응 등 구체적 서술, "
-     "(b) 보호자 관찰/검사/평가/안전 문제/가족 교육. "
-     "메타 대화(너는 누구냐, 상담 되냐 등), 일반 잡담, 비치매 일반 건강/일상은 off_topic. "
+     "너는 입력이 '치매/인지장애 상담'인지 판단하는 분류기다. "
+     "치매/인지장애 관련 키워드: 기억력, 기억, 까먹다, 잊다, 단어, 말이 막히다, 길을 잃다, "
+     "방향감각, 일상생활, 물건 위치, 약속, 일정, 이름, 친구, 가족, 불안, 걱정, 두려움, 당황, 수치심 등. "
+     "이런 키워드가 하나라도 있으면 on_topic으로 판단하라. "
+     "메타 대화(너는 누구냐, 상담 되냐 등), 일반 잡담, 음식/쇼핑/날씨 등은 off_topic. "
      "오직 JSON만 출력: "
      "{{\"on_topic\": true|false, \"score\": 0.0~1.0, "
      "\"evidence_spans\": [\"...\", \"...\"], \"reason\": \"...\"}}. "
@@ -991,6 +992,49 @@ def summarise_from_file(
 def analyze_voice_response(
     user_response: str,
     question_context: str = "",
+    session_id: str = "voice-session-1",
+    user_id: str = "",
+    chat_model: str = None,
+    temperature: float = None,
+    max_tokens: int = None,
+    **kwargs,
+) -> dict:
+    """
+    사용자의 음성 답변 텍스트를 분석하고 상담 결과를 반환하는 함수
+    - 온토픽 여부 판단
+    - 감정 및 키워드 추출
+    - 요약 또는 상담 메시지 생성
+    """
+    # 1) 온토픽 여부 판별
+    topic = detect_topic(user_response, llm_judge)
+
+    # 2) 감정 + 키워드 추출
+    emotions = extract_emotions_with_keywords(user_response, llm_emo)
+
+    # 3) 답변 요약 (간단 버전: 기존 summarisation 파이프라인 재활용)
+    summary = run_summarisation_pipeline(
+        transcript=user_response,
+        guide_question_index=0,
+        session_id=session_id,
+        chat_model=chat_model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+    )
+
+    # 최종 결과 패키징
+    return {
+        "session_id": session_id,
+        "user_id": user_id,
+        "question_context": question_context,
+        "user_response": user_response,
+        "topic": topic,
+        "emotions": emotions,
+        "summary": summary,
+    }
+    
+def analyze_voice_response(
+    user_response: str,
+    question_context: str = "",
     session_id: Optional[str] = None,
     user_id: str = "",
     chat_model: Optional[str] = None,
@@ -1035,90 +1079,55 @@ def analyze_voice_response(
             }
         }
     
-    # 심리상태 분석 프롬프트
-    PSYCH_ANALYSIS_PROMPT = ChatPromptTemplate.from_messages([
-        ("system", 
-         "당신은 치매 관련 상담을 전문으로 하는 심리상담사입니다. "
-         "사용자의 답변을 분석하여 심리상태를 파악하고 상담을 제공하세요.\n\n"
-         "출력 형식:\n"
-         "{{\n"
-         "  \"emotional_state\": \"주요 감정 상태 (예: 걱정, 두려움, 당황, 수치심 등)\",\n"
-         "  \"symptom_severity\": \"증상 심각도 (경미/보통/심각)\",\n"
-         "  \"key_concerns\": [\"주요 우려사항 1\", \"주요 우려사항 2\"],\n"
-         "  \"coping_strategies\": [\"대처 방법 1\", \"대처 방법 2\"],\n"
-         "  \"professional_advice\": \"전문가 상담 권장 여부 (예: 즉시/1주일 내/1개월 내/상담 불필요)\"\n"
-         "}}"),
-        ("human", 
-         f"질문: {question_context}\n"
-         f"사용자 답변: {user_response}\n\n"
-         "위 답변을 분석하여 JSON 형태로 응답해주세요.")
-    ])
-    
-    # 요약 프롬프트
-    SUMMARY_PROMPT = ChatPromptTemplate.from_messages([
+    # 통합 분석 프롬프트 (원하는 형식에 맞게)
+    INTEGRATED_ANALYSIS_PROMPT = ChatPromptTemplate.from_messages([
         ("system",
          "당신은 치매 관련 상담을 전문으로 하는 의료진입니다. "
-         "사용자의 답변을 간결하게 요약하고 핵심 내용을 추출하세요.\n\n"
-         "출력 형식:\n"
+         "사용자의 답변을 분석하여 다음 형식으로 응답해주세요.\n\n"
+         "특히 심리상태 분석 시 주의사항:\n"
+         "- '부끄러웠어요', '걱정돼요', '무서워요', '당황스러워요' 등 감정 표현을 반드시 감지하세요\n"
+         "- 이런 감정이 있으면 구체적으로 분석하고, 전혀 없을 때만 '(정보없음)'으로 표시하세요\n\n"
+         "출력 형식 (정확히 이 형식을 따라주세요):\n"
          "{{\n"
-         "  \"main_points\": [\"핵심 내용 1\", \"핵심 내용 2\"],\n"
-         "  \"symptom_description\": \"증상에 대한 구체적 설명\",\n"
-         "  \"impact_on_daily_life\": \"일상생활에 미치는 영향\",\n"
-         "  \"frequency\": \"증상 발생 빈도 (예: 가끔/자주/매일)\"\n"
-         "}}"),
+         "  \"primary_symptoms\": [\"구체적인 증상 1\", \"구체적인 증상 2\"],\n"
+         "  \"counselling_content\": [\"구체적인 상담 사례 1\", \"구체적인 상담 사례 2\"],\n"
+         "  \"psychological_state\": \"(정보없음)\" 또는 \"구체적인 심리상태 분석\",\n"
+         "  \"ai_interpretation\": [\"가능성 시사 1\", \"가능성 시사 2\"],\n"
+         "  \"cautions\": [\"권장사항 1\", \"권장사항 2\", \"권장사항 3\"]\n"
+         "}}\n\n"
+         "주의사항:\n"
+         "- primary_symptoms: 사용자가 언급한 구체적인 증상들을 불릿 포인트로\n"
+         "- counselling_content: 사용자가 말한 구체적인 사례들을 불릿 포인트로\n"
+         "- psychological_state: 사용자가 표현한 감정(부끄러움, 걱정, 불안, 두려움, 당황 등)이 있으면 구체적으로 분석하고, 전혀 없으면 \"(정보없음)\"으로\n"
+         "- ai_interpretation: 의학적 가능성이나 시사점을 불릿 포인트로\n"
+         "- cautions: 실용적인 권장사항들을 불릿 포인트로"),
         ("human",
          f"질문: {question_context}\n"
          f"사용자 답변: {user_response}\n\n"
-         "위 답변을 요약하여 JSON 형태로 응답해주세요.")
-    ])
-    
-    # 주의사항 프롬프트
-    CAUTION_PROMPT = ChatPromptTemplate.from_messages([
-        ("system",
-         "당신은 치매 관련 상담을 전문으로 하는 의료진입니다. "
-         "사용자의 답변을 바탕으로 주의사항과 권장사항을 제공하세요.\n\n"
-         "출력 형식:\n"
-         "{{\n"
-         "  \"immediate_actions\": [\"즉시 취해야 할 행동 1\", \"즉시 취해야 할 행동 2\"],\n"
-         "  \"safety_measures\": [\"안전 조치 1\", \"안전 조치 2\"],\n"
-         "  \"monitoring_points\": [\"관찰해야 할 점 1\", \"관찰해야 할 점 2\"],\n"
-         "  \"when_to_seek_help\": \"언제 전문가 도움을 받아야 하는지\",\n"
-         "  \"family_guidance\": \"가족이 취해야 할 조치\"\n"
-         "}}"),
-        ("human",
-         f"질문: {question_context}\n"
-         f"사용자 답변: {user_response}\n\n"
-         "위 답변을 바탕으로 주의사항을 JSON 형태로 응답해주세요.")
+         "위 답변을 분석하여 정확히 지정된 JSON 형식으로 응답해주세요.")
     ])
     
     try:
-        # 각 분석 실행
-        psych_chain = PSYCH_ANALYSIS_PROMPT | clients.llm_emo | StrOutputParser()
-        summary_chain = SUMMARY_PROMPT | clients.llm_summary | StrOutputParser()
-        caution_chain = CAUTION_PROMPT | clients.llm_summary | StrOutputParser()
+        # 통합 분석 실행
+        analysis_chain = INTEGRATED_ANALYSIS_PROMPT | clients.llm_summary | StrOutputParser()
         
-        # 병렬로 분석 실행 (실제로는 순차 실행)
-        psych_result = psych_chain.invoke({})
-        summary_result = summary_chain.invoke({})
-        caution_result = caution_chain.invoke({})
+        # 분석 실행
+        analysis_result = analysis_chain.invoke({})
         
         # JSON 파싱
         try:
-            psych_data = _json_loose_loads(psych_result)
-        except:
-            psych_data = {"error": "심리상태 분석 파싱 실패"}
-            
-        try:
-            summary_data = _json_loose_loads(summary_result)
-        except:
-            summary_data = {"error": "요약 분석 파싱 실패"}
-            
-        try:
-            caution_data = _json_loose_loads(caution_result)
-        except:
-            caution_data = {"error": "주의사항 분석 파싱 실패"}
+            analysis_data = _json_loose_loads(analysis_result)
+        except Exception as e:
+            print(f"JSON 파싱 오류: {e}")
+            analysis_data = {
+                "primary_symptoms": ["분석 실패"],
+                "counselling_content": ["분석 실패"],
+                "psychological_state": "(정보없음)",
+                "ai_interpretation": ["분석 실패"],
+                "cautions": ["분석 실패"]
+            }
         
-        # 결과 구성
+        # 결과 구성 (원하는 형식에 맞게)
         result = {
             "status": "success",
             "session_id": session_id,
@@ -1128,9 +1137,13 @@ def analyze_voice_response(
             "user_response": user_response,
             "topic_detection": topic_result,
             "analysis": {
-                "summary": summary_data,
-                "psychological_state": psych_data,
-                "cautions": caution_data
+                "summary": {
+                    "primary_symptoms": analysis_data.get("primary_symptoms", []),
+                    "counselling_content": analysis_data.get("counselling_content", []),
+                    "psychological_state": analysis_data.get("psychological_state", "(정보없음)"),
+                    "ai_interpretation": analysis_data.get("ai_interpretation", []),
+                    "cautions": analysis_data.get("cautions", [])
+                }
             },
             "model_info": {
                 "chat_model": clients.model_ids["summary"],

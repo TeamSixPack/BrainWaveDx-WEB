@@ -111,49 +111,58 @@ export default function MemoryHelper() {
         }
         
         if (result.status === 'success' && result.analysis) {
-          const { summary, psychological_state, cautions } = result.analysis;
+          const { summary } = result.analysis;
           
-          // 요약
-          let summaryText = '';
+          // 새로운 형식에 맞게 처리
           if (summary && !summary.error) {
-            if (summary.main_points && Array.isArray(summary.main_points)) {
-              summaryText = summary.main_points.join(', ');
-            } else {
-              summaryText = answer;
+            // 원하는 형식으로 결과 구성
+            let reportText = '';
+            
+            // 주 증상
+            if (summary.primary_symptoms && Array.isArray(summary.primary_symptoms) && summary.primary_symptoms.length > 0) {
+              reportText += '**주 증상**\n';
+              summary.primary_symptoms.forEach(symptom => {
+                reportText += `- ${symptom}\n`;
+              });
+              reportText += '\n';
             }
-          } else {
-            summaryText = answer;
-          }
-
-          // 분석
-          let analysisText = '';
-          if (psychological_state && !psychological_state.error) {
-            if (psychological_state.key_concerns && Array.isArray(psychological_state.key_concerns)) {
-              analysisText = `주요 우려사항: ${psychological_state.key_concerns.join(', ')}`;
-            } else if (psychological_state.emotional_state) {
-              analysisText = `감정 상태: ${psychological_state.emotional_state}`;
-            } else {
-              analysisText = '심리상태 분석이 완료되었습니다.';
+            
+            // 상담내용
+            if (summary.counselling_content && Array.isArray(summary.counselling_content) && summary.counselling_content.length > 0) {
+              reportText += '**상담내용**\n';
+              summary.counselling_content.forEach(content => {
+                reportText += `- ${content}\n`;
+              });
+              reportText += '\n';
             }
-          } else {
-            analysisText = '최근 반복되는 건망증 신호가 관찰됩니다';
-          }
-
-          // 안내
-          let guidanceText = '';
-          if (cautions && !cautions.error) {
-            if (cautions.immediate_actions && Array.isArray(cautions.immediate_actions)) {
-              guidanceText = `즉시 조치: ${cautions.immediate_actions.join(', ')}`;
-            } else if (cautions.when_to_seek_help) {
-              guidanceText = `전문가 상담: ${cautions.when_to_seek_help}`;
-            } else {
-              guidanceText = '경험이 반복되면 가까운 병원/보건소에서 상담을 받아보시는 것을 권장합니다.';
+            
+            // 심리상태
+            reportText += '**심리상태**\n';
+            reportText += `${summary.psychological_state || '(정보없음)'}\n\n`;
+            
+            // AI 해석
+            if (summary.ai_interpretation && Array.isArray(summary.ai_interpretation) && summary.ai_interpretation.length > 0) {
+              reportText += '**AI 해석**\n';
+              summary.ai_interpretation.forEach(interpretation => {
+                reportText += `- ${interpretation}\n`;
+              });
+              reportText += '\n';
             }
-          } else {
-            guidanceText = '경험이 반복되면 가까운 병원/보건소에서 상담을 받아보시는 것을 권장합니다.';
+            
+            // 주의사항
+            if (summary.cautions && Array.isArray(summary.cautions) && summary.cautions.length > 0) {
+              reportText += '**주의사항**\n';
+              summary.cautions.forEach(caution => {
+                reportText += `- ${caution}\n`;
+              });
+            }
+            
+            return { 
+              summary: reportText.trim(), 
+              analysis: 'AI 분석 완료', 
+              guidance: '전문가 상담 권장' 
+            };
           }
-
-          return { summary: summaryText, analysis: analysisText, guidance: guidanceText };
         }
       }
     } catch (error) {
@@ -676,7 +685,7 @@ export default function MemoryHelper() {
           try {
             setIsAnalyzing(true);
             const ai = await buildAnalysisFromAnswer(answerText, questionText);
-            const report = `📝 인지건강 상담 기록 (${dateStr})\n\n[사용자 발화 기록]\n\n- 질문: ${questionText}\n- 답변: ${answerText}\n\n[AI 요약]\n\n- 요약: ${ai.summary}\n- 심리상태: ${ai.analysis}\n- 주의사항: ${ai.guidance}`;
+            const report = `📝 인지건강 상담 기록 (${dateStr})\n\n[사용자 발화 기록]\n\n- 질문: ${questionText}\n- 답변: ${answerText}\n\n<요약>\n\n${ai.summary}`;
 
             setAnalysisResult(report);
             setIsAnalyzing(false);
