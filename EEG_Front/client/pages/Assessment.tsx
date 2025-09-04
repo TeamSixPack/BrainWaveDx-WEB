@@ -746,22 +746,45 @@ export default function Assessment() {
                     size="sm" 
                     onClick={async () => {
                       try {
-                        await fetch('http://localhost:8000/restart_flask_server', {
+                        console.log('[CONFIRM] 장비 착용 확인 - 강제 재시작 시작...');
+                        
+                        // 1. 먼저 강제 정리 실행
+                        await fetch('http://localhost:8000/force_cleanup', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' }
                         });
+                        
+                        // 2. Flask 서버 강제 재시작 (Ctrl+C + python app.py)
+                        const restartResponse = await fetch('http://localhost:8000/force_restart_server', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' }
+                        });
+                        
+                        if (restartResponse.ok) {
+                          console.log('[CONFIRM] Flask 서버 강제 재시작 성공');
+                        } else {
+                          console.warn('[CONFIRM] Flask 서버 강제 재시작 실패, 세션 정리로 대체');
+                          // 재시작 실패 시 세션 정리
+                          await fetch('http://localhost:8000/reset_eeg_session', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                          });
+                        }
                       } catch (error) {
+                        console.error('[CONFIRM] 서버 재시작 중 오류:', error);
                         try {
+                          // 오류 발생 시 세션 정리로 대체
                           await fetch('http://localhost:8000/reset_eeg_session', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' }
                           });
                         } catch (resetError) {
-                          // 무시
+                          console.error('[CONFIRM] 세션 정리도 실패:', resetError);
                         }
                       }
                       
                       // 프론트엔드 스토리지 정리
+                      console.log('[CONFIRM] 프론트엔드 스토리지 정리 중...');
                       sessionStorage.removeItem('eeg_analysis_result');
                       sessionStorage.removeItem('muse2_serial_number');
                       localStorage.removeItem('assessment_saved');
@@ -769,6 +792,12 @@ export default function Assessment() {
                       
                       // 에러 메시지 제거
                       setErrorMessage('');
+                      
+                      // 3초 대기 후 페이지 새로고침 (서버 재시작 시간 확보)
+                      setTimeout(() => {
+                        console.log('[CONFIRM] 페이지 새로고침');
+                        window.location.reload();
+                      }, 3000);
                     }}
                     className="mt-2 text-xs border-red-force"
                   >
