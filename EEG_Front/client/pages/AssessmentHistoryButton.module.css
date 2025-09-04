@@ -1,0 +1,43 @@
+.primaryCta {
+  background-color: #2563eb !important; /* blue-600 */
+  color: #ffffff !important;
+  height: 4.5rem !important;
+  padding-left: 2.75rem !important; /* px-11 */
+  padding-right: 2.75rem !important;
+  font-size: 1.75rem !important; /* 약 text-3xl */
+  font-weight: 700 !important; /* bold */
+  border-radius: 0.5rem !important; /* md */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.6rem !important;
+}
+
+.primaryCta:hover {
+  background-color: #1d4ed8 !important; /* blue-700 */
+  color: #ffffff !important;
+}
+
+/* 내부 a, svg 등도 흰색 유지 */
+.primaryCta *,
+.primaryCta a {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* asChild로 a가 루트가 되는 경우 대비 - 더 높은 특이도 */
+a.primaryCtaLink {
+  color: #ffffff !important;
+}
+
+a.primaryCtaLink *,
+a.primaryCtaLink svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.textWhiteForce {
+  color: #ffffff !important;
+}
+
+

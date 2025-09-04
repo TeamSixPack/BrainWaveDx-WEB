@@ -1,0 +1,15 @@
+flask
+flask-cors
+python-dotenv
+langchain-openai
+langchain-core
+ddgs
+
+# FastAPI 관련 패키지 추가
+fastapi
+uvicorn[standard]
+pydantic
+anyio
+
+# 음성 챗봇 관련 패키지
+requests

@@ -1,0 +1,280 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container{
+    padding: 30px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0px 15px 5px 10px rgb(0, 0, 0,0.3);
+}
+
+.join-box{
+    padding: 20px;
+}
+
+.join-title{
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.join-form{
+    margin-bottom: 40px;
+}
+
+.join-form label{
+    font-size: 17px;
+    font-weight: bold;
+    display: flex;
+    margin-bottom: 5px;
+    margin-left: 7px;
+}
+.join-form input{
+    width: 100%;
+    font-size: 17px;
+    padding: 15px 0 15px 10px;
+    border-radius: 5px;
+    border: 1px solid #e2e6ee;
+}
+
+
+
+.form-group{
+    margin-bottom: 20px;
+}
+
+/*Start ---------------- 아이디 중복체크 ----------------*/
+.id-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.id-input-group input {
+    flex: 1;
+    padding: 15px 10px;
+    border-radius: 5px;
+    border: 1px solid #e2e6ee;
+    font-size: 17px;
+    min-width: 0;
+}
+
+.duplicate-check-btn {
+    flex: 0 0 auto;
+    padding: 15px 12px;
+    background-color: rgb(28, 127, 226);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+}
+
+.duplicate-check-btn:hover {
+    background-color: rgb(32, 143, 255);
+}
+
+/*---------------- 아이디 중복체크 ----------------END*/
+
+
+/* Start --------------------- 비밀번호 요소 ---------------------*/
+
+/* 비밀번호 입력 컨테이너 스타일 */
+.password-input-container {
+    position: relative;
+    width: 100%;
+}
+
+/* 비밀번호 토글 아이콘 스타일 */
+.password-toggle-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #777;
+    font-size: 18px;
+}
+
+.password-toggle-icon:hover {
+    color: #0f4f35;
+}
+
+/* Font Awesome 아이콘 사용을 위한 스타일 */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+/*  --------------------- 비밀번호 요소 --------------------- END*/
+
+
+
+/*Start ---------------- 이메일 ----------------*/
+
+.email-group {
+    margin-bottom: 20px;
+}
+
+.email-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.email-input-group input {
+    flex: 1;
+    padding: 15px 10px;
+    border-radius: 5px;
+    border: 1px solid #e2e6ee;
+}
+
+.email-input-group select {
+    flex: 1;
+    padding: 13px 10px;
+    border-radius: 5px;
+    border: 1px solid #e2e6ee;
+    font-size: 16px;
+}
+
+.email-input-group span {
+    font-size: 17px;
+    font-weight: bold;
+}
+
+/*---------------- 이메일 ---------------- End*/
+
+
+
+
+/* Start ---------------- 전화번호 ---------------- */
+
+.tel-group {
+    margin-bottom: 20px;
+}
+
+.tel-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tel-input-group select {
+    flex: 0.5;
+    padding: 13px 10px;
+    border-radius: 5px;
+    border: 1px solid #e2e6ee;
+    font-size: 16px;
+}
+
+.tel-input-group input {
+    flex: 0.5;
+    padding: 13px 10px;
+    border-radius: 5px;
+    border: 1px solid #e2e6ee;
+    font-size: 16px;
+    min-width: 0;
+}
+
+.tel-input-group span {
+    font-size: 17px;
+    font-weight: bold;
+    flex: 0;
+}
+
+/*---------------- 전화번호 ---------------- End*/
+
+
+
+/*Start ---------------- 회원가입 ----------------*/
+.birth-group {
+    margin-bottom: 20px;
+}
+
+.birth-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.birth-input-group input,
+.birth-input-group select {
+    flex: 1;
+    padding: 15px 10px;
+    border-radius: 5px;
+    border: 1px solid #e2e6ee;
+    font-size: 16px;
+    height: 48px; /* 높이 맞추기 */
+    box-sizing: border-box;
+}
+
+.birth-input-group input {
+    flex: 0.8;
+}
+
+.birth-input-group select {
+    flex: 0.6;
+}
+
+
+
+/*---------------- 회원가입 ---------------- End*/
+
+.button-group{
+    display: flex;
+    gap: 20px;
+}
+
+.reback-btn, .join-btn{
+    flex: 1;
+    padding: 17px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s, transform 0.2s;
+
+}
+
+
+.reback-btn{
+    background-color: rgb(222, 0, 0);
+    color: white;
+}
+.reback-btn:hover{
+    background-color: rgb(255, 0, 0);
+    transform: translateY(-2px);
+}
+
+.join-btn{
+    background-color: green;
+    color: white;
+}
+
+.join-btn:hover{
+    background-color: rgb(3, 197, 3);
+    transform: translateY(-2px);
+}
+
+
+
+/* ---------------- 에러 메시지 스타일----------------  */
+.error-message {
+    color: #ff0000;
+    font-size: 12px;
+    margin-top: 5px;
+    padding-left: 5px;
+}
+
+/* ---------------- 에러 메시지 스타일---------------- END  */
+
