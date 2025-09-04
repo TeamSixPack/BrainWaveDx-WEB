@@ -645,7 +645,32 @@ export default function Assessment() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setErrorMessage('')}
+                    onClick={async () => {
+                      try {
+                        await fetch('http://localhost:8000/restart_flask_server', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' }
+                        });
+                      } catch (error) {
+                        try {
+                          await fetch('http://localhost:8000/reset_eeg_session', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                          });
+                        } catch (resetError) {
+                          // 무시
+                        }
+                      }
+                      
+                      // 프론트엔드 스토리지 정리
+                      sessionStorage.removeItem('eeg_analysis_result');
+                      sessionStorage.removeItem('muse2_serial_number');
+                      localStorage.removeItem('assessment_saved');
+                      localStorage.removeItem('last_saved_hash');
+                      
+                      // 에러 메시지 제거
+                      setErrorMessage('');
+                    }}
                     className="mt-2 text-xs border-red-force"
                   >
                     확인

@@ -1300,51 +1300,26 @@ export default function Results() {
                 className={`${styles.btnLarge} ${styles.btnOutlineBlue}`}
                 onClick={async () => {
                   try {
-                    // Flask 서버 자동 재시작 (Windows DLL 문제 해결)
-                    console.log('[DEBUG] Flask 서버 재시작 시작...');
-                    
-                    const response = await fetch('http://localhost:8000/restart_flask_server', {
+                    await fetch('http://localhost:8000/restart_flask_server', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' }
                     });
-                    
-                    if (response.ok) {
-                      const result = await response.json();
-                      console.log('[DEBUG] Flask 서버 재시작 요청 성공:', result.message);
-                      
-                      // 사용자에게 세션 정리 완료 안내
-                      alert(`Flask 서버 세션이 정리되었습니다!\n\n이제 새 검사를 시작할 수 있습니다.\n\nAssessment 페이지로 이동합니다.`);
-                      
-                    } else {
-                      console.warn('[DEBUG] Flask 서버 재시작 실패, 세션 정리로 대체');
-                      
-                      // 재시작 실패 시 기존 세션 정리 방식 사용
-                      await fetch('http://localhost:8000/reset_eeg_session', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                      });
-                    }
-                    
                   } catch (error) {
-                    console.warn('[DEBUG] Flask 서버 재시작 중 오류, 세션 정리로 대체:', error);
-                    
-                    // 오류 발생 시 기존 세션 정리 방식 사용
                     try {
                       await fetch('http://localhost:8000/reset_eeg_session', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' }
                       });
                     } catch (resetError) {
-                      console.warn('[DEBUG] 세션 정리도 실패:', resetError);
+                      // 무시
                     }
                   }
                   
                   // 프론트엔드 스토리지 정리
                   sessionStorage.removeItem('eeg_analysis_result');
                   sessionStorage.removeItem('muse2_serial_number');
-                  localStorage.removeItem('assessment_saved'); // localStorage에서도 제거
-                  localStorage.removeItem('last_saved_hash'); // 해시도 제거
-                  console.log('[DEBUG] 프론트엔드 스토리지 정리 완료');
+                  localStorage.removeItem('assessment_saved');
+                  localStorage.removeItem('last_saved_hash');
                   
                   // 페이지 이동
                   navigate('/assessment');

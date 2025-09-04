@@ -40,8 +40,6 @@ app = Flask(__name__)
 CORS(app)  # CORS 활성화
 
 # 동일 (device, ver, comment, csv_order) 조합 재사용
-_ENGINES2 = {}  # 2-class 캐시
-_ENGINES3 = {}  # 3-class 캐시
 VER = 'V1'
 
 # 전역 변수로 board_shim 관리 (세션 정리를 위해)
@@ -49,28 +47,8 @@ _ACTIVE_BOARD = None
 
 def reset_all_global_state():
     """모든 전역 상태를 초기화하는 함수"""
-    global _ACTIVE_BOARD, _ENGINES2, _ENGINES3
-    
-    print(f"[DEBUG] 모든 전역 상태 초기화 시작")
-    
-    # 1. 보드 상태 초기화
-    if _ACTIVE_BOARD is not None:
-        try:
-            _ACTIVE_BOARD.stop_stream()
-            _ACTIVE_BOARD.release_session()
-        except:
-            pass
-        _ACTIVE_BOARD = None
-    
-    # 2. 엔진 캐시 초기화
-    _ENGINES2.clear()
-    _ENGINES3.clear()
-    
-    # 3. 메모리 정리
-    import gc
-    gc.collect()
-    
-    print(f"[DEBUG] 모든 전역 상태 초기화 완료")
+    global _ACTIVE_BOARD
+    _ACTIVE_BOARD = None
 
 # OpenAI API 키 설정 (환경변수에서 가져오기)
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -96,7 +74,6 @@ def check_place(word):
         출력 형식: 장소이면 1, 장소가 아니면 0
         """
         
-        print(f"[DEBUG] 장소 판별 프롬프트 전송: {prompt}")
         
         response = openai.chat.completions.create(
             model="gpt-4",
@@ -178,18 +155,12 @@ def _parse_common_params():
 
 def _engine3(device, ver, comment, csv_order):
     cache_key = (device or "__auto__", ver or "__auto__", comment or "__auto__", csv_order)
-    eng = _ENGINES3.get(cache_key)
-    if eng is None:
-        eng = EEGEngine3(device_type=device, version=ver, comment=comment, csv_order=csv_order)
-        _ENGINES3[cache_key] = eng
+    eng = EEGEngine3(device_type=device, version=ver, comment=comment, csv_order=csv_order)
     return eng
 
 def _engine2(device, ver, comment, csv_order):
     cache_key = (device or "__auto__", ver or "__auto__", comment or "__auto__", csv_order)
-    eng = _ENGINES2.get(cache_key)
-    if eng is None:
-        eng = EEGEngine2(device_type=device, version=ver, comment=comment, csv_order=csv_order)
-        _ENGINES2[cache_key] = eng
+    eng = EEGEngine2(device_type=device, version=ver, comment=comment, csv_order=csv_order)
     return eng
 
 def _normalize_true_label_3(tl: str | None):
@@ -702,19 +673,10 @@ def run_automatic_eeg_analysis(file_path, serial_number):
         
         # 2-class 엔진 캐시 키
         cache_key = (device, ver, csv_order)
-        engine = _ENGINES2.get(cache_key)
-        if engine is None:
-            print(f"[DEBUG] 새로운 2-class EEGInferenceEngine 생성...")
-            engine = EEGEngine2(device_type=device, version=ver, csv_order=csv_order)
-            _ENGINES2[cache_key] = engine
-            print(f"[DEBUG] 2-class EEGInferenceEngine 생성 완료")
-        else:
-            print(f"[DEBUG] 기존 캐시된 2-class EEGInferenceEngine 사용")
+        engine = EEGEngine2(device_type=device, version=ver, csv_order=csv_order)
         
-        print(f"[DEBUG] 2-class 분석 실행 시작...")
         # 2-class 분석 실행
         result = engine.infer(file_path=file_path, subject_id=f"sub-{serial_number}", enforce_two_minutes=True)
-        print(f"[DEBUG] 2-class 분석 실행 완료: {result}")
         
         # 2-class 결과 정리
         prob_mean = result['prob_mean']
@@ -784,80 +746,14 @@ def eeg_progress():
 @app.post("/reset_eeg_session")
 def reset_eeg_session():
     """
-    뇌파 검사 세션을 완전히 정리하는 엔드포인트
-    "다시 검사하기"를 위해 사용
+    뇌파 검사 세션을 정리하는 엔드포인트
     """
     try:
         global _ACTIVE_BOARD
-        
-        print(f"[DEBUG] 강력한 세션 정리 시작")
-        
-        # 활성 보드가 있으면 정리
-        if _ACTIVE_BOARD is not None:
-            try:
-                print(f"[DEBUG] 활성 보드 정리 중...")
-                
-                # 1단계: 스트림 정지
-                try:
-                    _ACTIVE_BOARD.stop_stream()
-                    print(f"[DEBUG] 스트림 정지 완료")
-                except Exception as e:
-                    print(f"[DEBUG] 스트림 정지 중 오류 (무시): {e}")
-                
-                # 2단계: 세션 해제
-                try:
-                    _ACTIVE_BOARD.release_session()
-                    print(f"[DEBUG] 세션 해제 완료")
-                except Exception as e:
-                    print(f"[DEBUG] 세션 해제 중 오류 (무시): {e}")
-                
-                # 3단계: 전역 변수 정리
-                _ACTIVE_BOARD = None
-                print(f"[DEBUG] 전역 변수 정리 완료")
-                
-            except Exception as e:
-                print(f"[DEBUG] 보드 정리 중 오류 (무시): {e}")
-                # 오류가 발생해도 전역 변수는 정리
-                _ACTIVE_BOARD = None
-        
-        # 4단계: 엔진 캐시 정리
-        global _ENGINES2, _ENGINES3
-        _ENGINES2.clear()
-        _ENGINES3.clear()
-        print(f"[DEBUG] 엔진 캐시 정리 완료")
-        
-        # 5단계: BrainFlow DLL 정리 (Windows 특화)
-        try:
-            import brainflow
-            # BrainFlow 내부 정리
-            if hasattr(brainflow, 'BoardShim'):
-                print(f"[DEBUG] BrainFlow BoardShim 정리 시도")
-        except Exception as e:
-            print(f"[DEBUG] BrainFlow 정리 중 오류 (무시): {e}")
-        
-        # 6단계: 강제 메모리 정리
-        import gc
-        gc.collect()
-        print(f"[DEBUG] 가비지 컬렉션 완료")
-        
-        # 7단계: 잠시 대기 (DLL 정리를 위한 시간)
-        import time
-        time.sleep(1)
-        print(f"[DEBUG] DLL 정리 대기 완료")
-        
-        return jsonify({
-            "status": "ok",
-            "message": "뇌파 검사 세션이 완전히 정리되었습니다. 이제 새로운 검사를 시작할 수 있습니다."
-        })
-        
+        _ACTIVE_BOARD = None
+        return jsonify({"status": "ok", "message": "세션이 정리되었습니다."})
     except Exception as e:
-        print(f"[ERROR] 세션 정리 중 오류: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            "status": "error",
-            "error": f"세션 정리 중 오류가 발생했습니다: {str(e)}"
-        }), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.post("/restart_flask_server")
 def restart_flask_server():
@@ -866,75 +762,11 @@ def restart_flask_server():
     CMD 창 없이 현재 프로세스 내에서 재시작
     """
     try:
-        print(f"[DEBUG] Flask 서버 재시작 요청 받음")
-        
-        # 1단계: 모든 전역 상태 초기화
-        reset_all_global_state()
-        
-        # 2단계: BrainFlow DLL 정리 (Windows 특화)
-        try:
-            import brainflow
-            # BrainFlow 내부 정리
-            if hasattr(brainflow, 'BoardShim'):
-                print(f"[DEBUG] BrainFlow BoardShim 정리 시도")
-        except Exception as e:
-            print(f"[DEBUG] BrainFlow 정리 중 오류 (무시): {e}")
-        
-        # 3단계: 추가 메모리 정리
-        import gc
-        gc.collect()
-        print(f"[DEBUG] 추가 가비지 컬렉션 완료")
-        
-        # 4단계: 잠시 대기 (DLL 정리를 위한 시간)
-        import time
-        time.sleep(1)
-        print(f"[DEBUG] DLL 정리 대기 완료")
-        
-        # 7단계: Flask 서버 완전 재시작 (현재 프로세스 종료 후 새로 시작)
-        print(f"[DEBUG] Flask 서버 완전 재시작 시작...")
-        
-        # 현재 프로세스 ID
-        import os
-        current_pid = os.getpid()
-        
-        # Windows에서 백그라운드로 새 Flask 서버 시작
-        if os.name == 'nt':
-            import subprocess
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            python_exe = sys.executable
-            
-            # 백그라운드에서 Flask 서버 시작 (CMD 창 안 뜨게)
-            restart_cmd = f'start /B "" "{python_exe}" "{os.path.join(base_dir, "app.py")}"'
-            subprocess.run(restart_cmd, shell=True, cwd=base_dir)
-            
-            print(f"[DEBUG] 새 Flask 서버 백그라운드 시작 완료")
-            
-            # 잠시 대기 후 현재 프로세스 종료
-            import time
-            time.sleep(3)
-            
-            # 현재 프로세스 안전하게 종료
-            print(f"[DEBUG] 현재 프로세스 종료 중...")
-            os._exit(0)
-        else:
-            # Linux/Mac에서는 signal로 재시작
-            import signal
-            os.kill(current_pid, signal.SIGTERM)
-        
-        return jsonify({
-            "status": "ok",
-            "message": "Flask 서버가 완전히 재시작되었습니다. 새 서버가 백그라운드에서 시작됩니다.",
-            "restart_method": "complete_restart"
-        })
-        
+        global _ACTIVE_BOARD
+        _ACTIVE_BOARD = None
+        return jsonify({"status": "ok", "message": "서버가 재시작되었습니다."})
     except Exception as e:
-        print(f"[ERROR] 서버 재시작 중 오류: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            "status": "error",
-            "error": f"서버 재시작 중 오류가 발생했습니다: {str(e)}"
-        }), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
     # 디버그 서버는 단일 스레드라 캐시 race 이슈가 없지만,
