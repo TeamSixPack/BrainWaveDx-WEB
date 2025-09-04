@@ -457,13 +457,13 @@ def check_moca_q4_api():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-def run_muse2_eeg_collection(serial_number):
+def run_muse2_eeg_collection(serial_number, max_retries=3):
     """
-    Muse 2 헤드밴드로 뇌파 데이터를 수집하는 함수
+    Muse 2 헤드밴드로 뇌파 데이터를 수집하는 함수 (재시도 로직 포함)
     """
     global _ACTIVE_BOARD  # 전역 변수 사용 선언
     
-    print(f"[DEBUG] 뇌파 데이터 수집 시작: 시리얼 넘버 {serial_number}")
+    print(f"[DEBUG] 뇌파 데이터 수집 시작: 시리얼 넘버 {serial_number}, 최대 재시도: {max_retries}")
     
     # 시뮬레이션 모드 (실제 헤드밴드 없이 테스트)
     SIMULATION_MODE = False
@@ -523,52 +523,99 @@ def run_muse2_eeg_collection(serial_number):
         except Exception as e:
             raise Exception(f"시뮬레이션 데이터 생성 실패: {str(e)}")
     
-    # 실제 헤드밴드 모드 (Jupyter Notebook 코드 그대로 사용)
+    # 실제 헤드밴드 모드 (재시도 로직 포함)
+    last_error = None
+    
+    for attempt in range(max_retries):
+        try:
+            print(f"[DEBUG] 연결 시도 {attempt + 1}/{max_retries}")
+            
+            # 기존 연결이 있으면 정리
+            if _ACTIVE_BOARD is not None:
+                try:
+                    _ACTIVE_BOARD.stop_stream()
+                    _ACTIVE_BOARD.release_session()
+                    print("[DEBUG] 기존 연결 정리 완료")
+                except:
+                    pass
+                _ACTIVE_BOARD = None
+            
+            # 잠시 대기 (리소스 해제 시간)
+            if attempt > 0:
+                print(f"[DEBUG] {2 * attempt}초 대기 중...")
+                sleep(2 * attempt)
+            
+            import pandas as pd
+            from time import sleep
+            from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds
+            
+            # Jupyter Notebook 코드 그대로 복사 (input() 대신 serial_number 파라미터 사용)
+            params = BrainFlowInputParams()
+            params.serial_number = f"Muse-{serial_number}"  # Muse 2의 고유 시리얼 넘버
+            print("설정된 시리얼 넘버:", params.serial_number)
+            
+            MUSE_2_BLED_BOARD = 22  #:
+            MUSE_2_BOARD = 38  #:
+            
+            board_id = MUSE_2_BOARD
+            
+            board_shim = BoardShim(board_id, params)
+            
+            # 전역 변수에 저장 (세션 정리를 위해)
+            _ACTIVE_BOARD = board_shim
+            
+            use_data_seconds = 180  # 3분 동안 데이터 수집 (AI 모델이 47개 세그먼트를 얻을 수 있는 충분한 시간) 
+            sampling_rate = BoardShim.get_sampling_rate(board_id)
+            num_points = use_data_seconds * sampling_rate  # 몇 초 동안 몇개의 데이터를 가져올지
+            
+            # Muse 2 연결
+            try:
+                print(f"[DEBUG] prepare_session 시작...")
+                board_shim.prepare_session()
+                print(f"[DEBUG] prepare_session 완료")
+            except Exception as e:
+                print(f"[ERROR] prepare_session 실패: {e}")
+                # 전역 변수 정리
+                _ACTIVE_BOARD = None
+                last_error = f"장비 연결 실패: {str(e)}"
+                if attempt < max_retries - 1:
+                    print(f"[DEBUG] 재시도 예정...")
+                    continue
+                else:
+                    raise Exception(last_error)
+            
+            # Muse 2 데이터 수집 시작
+            try:
+                print(f"[DEBUG] start_stream 시작...")
+                board_shim.start_stream()
+                print(f"[DEBUG] start_stream 완료")
+            except Exception as e:
+                print(f"[ERROR] start_stream 실패: {e}")
+                # 전역 변수 정리
+                _ACTIVE_BOARD = None
+                last_error = f"데이터 수집 시작 실패: {str(e)}"
+                if attempt < max_retries - 1:
+                    print(f"[DEBUG] 재시도 예정...")
+                    continue
+                else:
+                    raise Exception(last_error)
+            
+            # 연결 성공 시 루프 종료
+            print(f"[DEBUG] 연결 성공! (시도 {attempt + 1}/{max_retries})")
+            break
+            
+        except Exception as e:
+            last_error = str(e)
+            print(f"[ERROR] 연결 시도 {attempt + 1} 실패: {e}")
+            if attempt < max_retries - 1:
+                print(f"[DEBUG] {2 * (attempt + 1)}초 후 재시도...")
+                sleep(2 * (attempt + 1))
+            else:
+                print(f"[ERROR] 모든 연결 시도 실패. 마지막 오류: {last_error}")
+                raise Exception(f"연결 실패 (최대 재시도 횟수 초과): {last_error}")
+    
+    # 연결 성공 후 데이터 수집 진행
     try:
-        import pandas as pd
-        from time import sleep
-        from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds
-        
-        # Jupyter Notebook 코드 그대로 복사 (input() 대신 serial_number 파라미터 사용)
-        params = BrainFlowInputParams()
-        params.serial_number = f"Muse-{serial_number}"  # Muse 2의 고유 시리얼 넘버
-        print("설정된 시리얼 넘버:", params.serial_number)
-        
-        MUSE_2_BLED_BOARD = 22  #:
-        MUSE_2_BOARD = 38  #:
-        
-        board_id = MUSE_2_BOARD
-        
-        board_shim = BoardShim(board_id, params)
-        
-        # 전역 변수에 저장 (세션 정리를 위해)
-        _ACTIVE_BOARD = board_shim
-        
-        use_data_seconds = 180  # 3분 동안 데이터 수집 (AI 모델이 47개 세그먼트를 얻을 수 있는 충분한 시간) 
-        sampling_rate = BoardShim.get_sampling_rate(board_id)
-        num_points = use_data_seconds * sampling_rate  # 몇 초 동안 몇개의 데이터를 가져올지
-        
-        # Muse 2 연결
-        try:
-            print(f"[DEBUG] prepare_session 시작...")
-            board_shim.prepare_session()
-            print(f"[DEBUG] prepare_session 완료")
-        except Exception as e:
-            print(f"[ERROR] prepare_session 실패: {e}")
-            # 전역 변수 정리
-            _ACTIVE_BOARD = None
-            raise Exception(f"장비 연결 실패: {str(e)}")
-        
-        # Muse 2 데이터 수집 시작
-        try:
-            print(f"[DEBUG] start_stream 시작...")
-            board_shim.start_stream()
-            print(f"[DEBUG] start_stream 완료")
-        except Exception as e:
-            print(f"[ERROR] start_stream 실패: {e}")
-            # 전역 변수 정리
-            _ACTIVE_BOARD = None
-            raise Exception(f"데이터 수집 시작 실패: {str(e)}")
         
         # 전극 접촉 상태 확인 (10초간)
         print("전극 접촉 상태 확인 중...")
@@ -763,9 +810,271 @@ def restart_flask_server():
     """
     try:
         global _ACTIVE_BOARD
-        _ACTIVE_BOARD = None
+        
+        # 기존 연결 강제 정리
+        if _ACTIVE_BOARD is not None:
+            try:
+                _ACTIVE_BOARD.stop_stream()
+                _ACTIVE_BOARD.release_session()
+                print("[RESTART] 기존 연결 정리 완료")
+            except Exception as e:
+                print(f"[RESTART] 기존 연결 정리 중 오류 (무시): {e}")
+            finally:
+                _ACTIVE_BOARD = None
+        
+        # 가비지 컬렉션 강제 실행
+        import gc
+        gc.collect()
+        
+        # 추가 정리 작업
+        try:
+            # BrainFlow 로그 정리
+            from brainflow.board_shim import BoardShim
+            BoardShim.log_message(3, "Server restart completed")
+        except:
+            pass
+        
+        print("[RESTART] Flask 서버 재시작 완료")
         return jsonify({"status": "ok", "message": "서버가 재시작되었습니다."})
     except Exception as e:
+        print(f"[RESTART] 서버 재시작 오류: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.post("/force_restart_server")
+def force_restart_server():
+    """
+    Ctrl+C로 서버 종료 후 python app.py 재실행
+    """
+    try:
+        import os
+        import sys
+        import subprocess
+        import threading
+        
+        print("[FORCE_RESTART] 서버 재시작 시작...")
+        
+        # 1. 모든 리소스 정리
+        global _ACTIVE_BOARD
+        if _ACTIVE_BOARD is not None:
+            try:
+                _ACTIVE_BOARD.stop_stream()
+                _ACTIVE_BOARD.release_session()
+                print("[FORCE_RESTART] 기존 연결 정리 완료")
+            except Exception as e:
+                print(f"[FORCE_RESTART] 기존 연결 정리 중 오류 (무시): {e}")
+            finally:
+                _ACTIVE_BOARD = None
+        
+        # 2. 가비지 컬렉션
+        import gc
+        gc.collect()
+        
+        # 3. 응답 전송 (서버 종료 전)
+        response = jsonify({
+            "status": "ok", 
+            "message": "서버가 재시작됩니다. 잠시 후 다시 연결해주세요.",
+            "restart_type": "force"
+        })
+        
+        # 4. 백그라운드에서 서버 재시작
+        def restart_server():
+            import time
+            time.sleep(2)  # 응답 전송 후 2초 대기
+            
+            try:
+                print("[FORCE_RESTART] 서버 종료 중...")
+                
+                # 현재 디렉토리 확인
+                current_dir = os.getcwd()
+                print(f"[FORCE_RESTART] 현재 디렉토리: {current_dir}")
+                
+                # 배치 파일 실행 (Ctrl+C + python app.py)
+                batch_file = os.path.join(current_dir, "restart_server.bat")
+                if os.path.exists(batch_file):
+                    print(f"[FORCE_RESTART] 배치 파일 실행: {batch_file}")
+                    subprocess.Popen([batch_file], shell=True, cwd=current_dir)
+                else:
+                    print("[FORCE_RESTART] 배치 파일이 없습니다. 직접 종료합니다.")
+                    os._exit(0)
+                
+            except Exception as e:
+                print(f"[FORCE_RESTART] 서버 재시작 오류: {e}")
+                os._exit(0)
+        
+        # 백그라운드 스레드에서 재시작 실행
+        restart_thread = threading.Thread(target=restart_server, daemon=True)
+        restart_thread.start()
+        
+        return response
+        
+    except Exception as e:
+        print(f"[FORCE_RESTART] 강제 재시작 오류: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.post("/diagnose_device")
+def diagnose_device():
+    """
+    Muse 2 장비 연결 문제 진단 엔드포인트
+    """
+    try:
+        data = request.get_json()
+        serial_number = data.get('serial_number', '')
+        
+        if not serial_number:
+            return jsonify({"status": "error", "message": "시리얼 넘버가 필요합니다."}), 400
+        
+        print(f"[DIAGNOSTIC] 장비 진단 시작 - 시리얼: {serial_number}")
+        
+        # 1. 블루투스 상태 확인
+        bluetooth_status = "unknown"
+        try:
+            import subprocess
+            import platform
+            
+            if platform.system() == "Windows":
+                cmd = "powershell Get-PnpDevice -Class Bluetooth | Select-String Muse"
+                output = subprocess.check_output(cmd, shell=True, text=True)
+                bluetooth_status = "muse_detected" if "Muse" in output else "no_muse"
+            else:
+                cmd = "bluetoothctl devices | grep Muse"
+                output = subprocess.check_output(cmd, shell=True, text=True)
+                bluetooth_status = "muse_detected" if "Muse" in output else "no_muse"
+        except Exception as e:
+            bluetooth_status = f"error: {str(e)}"
+        
+        # 2. BrainFlow 설치 확인
+        brainflow_status = "unknown"
+        try:
+            import brainflow
+            brainflow_status = f"installed: {brainflow.__version__}"
+        except ImportError:
+            brainflow_status = "not_installed"
+        except Exception as e:
+            brainflow_status = f"error: {str(e)}"
+        
+        # 3. 연결 테스트
+        connection_test = {
+            "success": False,
+            "error": None,
+            "connection_time": None
+        }
+        
+        try:
+            from brainflow.board_shim import BoardShim, BrainFlowInputParams
+            import time
+            
+            start_time = time.time()
+            
+            # BrainFlow 로깅 활성화
+            BoardShim.enable_dev_board_logger()
+            
+            # 파라미터 설정
+            params = BrainFlowInputParams()
+            params.serial_number = f"Muse-{serial_number}"
+            
+            # Muse 2 보드 ID
+            board_id = 38
+            
+            # 연결 테스트
+            board_shim = BoardShim(board_id, params)
+            
+            # 세션 준비
+            board_shim.prepare_session()
+            
+            # 스트림 시작
+            board_shim.start_stream()
+            
+            # 연결 시간 측정
+            connection_time = time.time() - start_time
+            connection_test["connection_time"] = connection_time
+            
+            # 즉시 정리
+            board_shim.stop_stream()
+            board_shim.release_session()
+            
+            connection_test["success"] = True
+            
+        except Exception as e:
+            connection_test["error"] = str(e)
+            connection_test["success"] = False
+        
+        # 4. 해결책 제안
+        solutions = []
+        
+        if bluetooth_status == "no_muse":
+            solutions.append("Muse 2 헤드밴드가 페어링되지 않았습니다. 헤드밴드를 켜고 페어링 모드로 전환하세요.")
+            solutions.append("Windows 설정 > 장치 > Bluetooth 및 기타 장치에서 Muse 2를 제거 후 다시 페어링하세요.")
+        
+        if brainflow_status == "not_installed":
+            solutions.append("BrainFlow가 설치되지 않았습니다. pip install brainflow 명령으로 설치하세요.")
+        
+        if not connection_test["success"]:
+            error = connection_test["error"]
+            if "prepare_session" in str(error):
+                solutions.append("장비가 다른 프로그램에서 사용 중일 수 있습니다. 모든 프로그램을 종료하고 다시 시도하세요.")
+                solutions.append("Muse 2 헤드밴드를 껐다 켜서 재연결하세요.")
+            elif "serial" in str(error).lower():
+                solutions.append("시리얼 넘버가 올바른지 확인하세요. Muse 2 앱에서 확인할 수 있습니다.")
+            else:
+                solutions.append("블루투스 스택을 재설정해보세요.")
+                solutions.append("컴퓨터를 재시작해보세요.")
+        
+        # 5. 결과 반환
+        diagnostic_result = {
+            "status": "ok",
+            "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+            "serial_number": serial_number,
+            "bluetooth_status": bluetooth_status,
+            "brainflow_status": brainflow_status,
+            "connection_test": connection_test,
+            "solutions": solutions
+        }
+        
+        print(f"[DIAGNOSTIC] 진단 완료: {diagnostic_result}")
+        
+        return jsonify(diagnostic_result)
+        
+    except Exception as e:
+        print(f"[DIAGNOSTIC] 진단 오류: {str(e)}")
+        import traceback
+        print(f"[DIAGNOSTIC] 상세 오류: {traceback.format_exc()}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.post("/force_cleanup")
+def force_cleanup():
+    """
+    강제 정리 - 모든 리소스 해제
+    """
+    try:
+        global _ACTIVE_BOARD
+        
+        # 기존 연결 강제 정리
+        if _ACTIVE_BOARD is not None:
+            try:
+                _ACTIVE_BOARD.stop_stream()
+                _ACTIVE_BOARD.release_session()
+                print("[CLEANUP] 기존 연결 정리 완료")
+            except Exception as e:
+                print(f"[CLEANUP] 기존 연결 정리 중 오류 (무시): {e}")
+            finally:
+                _ACTIVE_BOARD = None
+        
+        # 가비지 컬렉션 강제 실행
+        import gc
+        gc.collect()
+        
+        # 추가 정리 작업
+        try:
+            # BrainFlow 로그 정리
+            from brainflow.board_shim import BoardShim
+            BoardShim.log_message(3, "Force cleanup completed")
+        except:
+            pass
+        
+        return jsonify({"status": "ok", "message": "강제 정리가 완료되었습니다."})
+        
+    except Exception as e:
+        print(f"[CLEANUP] 강제 정리 오류: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":

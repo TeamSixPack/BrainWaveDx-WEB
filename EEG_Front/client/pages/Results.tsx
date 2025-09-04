@@ -36,6 +36,7 @@ export default function Results() {
   const [downloadingPDF, setDownloadingPDF] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false); // 저장 중 상태 추가
+  const [isRestarting, setIsRestarting] = useState(false); // 재시작 중 상태 추가
   const [assessmentSaved, setAssessmentSaved] = useState(() => {
     // localStorage에서 저장 상태 확인 (새로고침 시에도 유지)
     const saved = localStorage.getItem('assessment_saved');
@@ -1298,35 +1299,64 @@ export default function Results() {
               <Button 
                 variant="outline" 
                 className={`${styles.btnLarge} ${styles.btnOutlineBlue}`}
+                disabled={isRestarting}
                 onClick={async () => {
+                  setIsRestarting(true);
+                  
                   try {
-                    await fetch('http://localhost:8000/restart_flask_server', {
+                    console.log('[RESTART] Flask 서버 재시작 시작...');
+                    
+                    // 1. 먼저 강제 정리 실행
+                    await fetch('http://localhost:8000/force_cleanup', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' }
                     });
+                    
+                    // 2. Flask 서버 강제 재시작 (Ctrl+C + python app.py)
+                    const restartResponse = await fetch('http://localhost:8000/force_restart_server', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (restartResponse.ok) {
+                      console.log('[RESTART] Flask 서버 재시작 성공');
+                    } else {
+                      console.warn('[RESTART] Flask 서버 재시작 실패, 세션 정리로 대체');
+                      // 재시작 실패 시 세션 정리
+                      await fetch('http://localhost:8000/reset_eeg_session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                      });
+                    }
                   } catch (error) {
+                    console.error('[RESTART] 서버 재시작 중 오류:', error);
                     try {
+                      // 오류 발생 시 세션 정리로 대체
                       await fetch('http://localhost:8000/reset_eeg_session', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' }
                       });
                     } catch (resetError) {
-                      // 무시
+                      console.error('[RESTART] 세션 정리도 실패:', resetError);
                     }
                   }
                   
                   // 프론트엔드 스토리지 정리
+                  console.log('[RESTART] 프론트엔드 스토리지 정리 중...');
                   sessionStorage.removeItem('eeg_analysis_result');
                   sessionStorage.removeItem('muse2_serial_number');
                   localStorage.removeItem('assessment_saved');
                   localStorage.removeItem('last_saved_hash');
                   
-                  // 페이지 이동
-                  navigate('/assessment');
+                  // 5초 대기 후 페이지 이동 (서버 완전 재시작 시간 확보)
+                  setTimeout(() => {
+                    console.log('[RESTART] Assessment 페이지로 이동');
+                    navigate('/assessment');
+                  }, 5000);
                 }}
               >
                 <Activity className="h-5 w-5 mr-2" />
-                다시 검사하기
+                {isRestarting ? "서버 재시작 중..." : "다시 검사하기"}
               </Button>
             </div>
           </CardContent>

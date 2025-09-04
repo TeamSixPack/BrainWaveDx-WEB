@@ -24,6 +24,7 @@ export default function Assessment() {
   const [deviceConnectionStatus, setDeviceConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'failed'>('disconnected');
   const [countdown, setCountdown] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [hasDiagnosed, setHasDiagnosed] = useState(false); // 진단 실행 여부 추적
   
   // TTS 관련 상태
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -237,11 +238,101 @@ export default function Assessment() {
     }
   };
 
-  // 뇌파 측정 시작 함수
+  // 장비 진단 함수
+  const diagnoseDevice = async (serialNumber: string) => {
+    try {
+      console.log('[DIAGNOSTIC] 장비 진단 시작...');
+      
+      const response = await fetch('http://localhost:8000/diagnose_device', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serial_number: serialNumber })
+      });
+      
+      const result = await response.json();
+      
+      if (result.status === 'ok') {
+        console.log('[DIAGNOSTIC] 진단 결과:', result);
+        
+        // 해결책이 있으면 사용자에게 표시
+        if (result.solutions && result.solutions.length > 0) {
+          const solutionsText = result.solutions.join('\n');
+          alert(`장비 연결 문제가 발견되었습니다:\n\n${solutionsText}`);
+        }
+        
+        return result;
+      } else {
+        console.error('[DIAGNOSTIC] 진단 실패:', result.message);
+        return null;
+      }
+    } catch (error) {
+      console.error('[DIAGNOSTIC] 진단 오류:', error);
+      return null;
+    }
+  };
+
+  // 강제 정리 함수
+  const forceCleanup = async () => {
+    try {
+      console.log('[CLEANUP] 강제 정리 시작...');
+      
+      const response = await fetch('http://localhost:8000/force_cleanup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const result = await response.json();
+      
+      if (result.status === 'ok') {
+        console.log('[CLEANUP] 강제 정리 완료');
+        return true;
+      } else {
+        console.error('[CLEANUP] 강제 정리 실패:', result.message);
+        return false;
+      }
+    } catch (error) {
+      console.error('[CLEANUP] 강제 정리 오류:', error);
+      return false;
+    }
+  };
+
+  // 연결 실패 처리 함수
+  const handleConnectionFailure = async () => {
+    // 이미 진단을 실행했다면 중복 실행 방지
+    if (hasDiagnosed) {
+      console.log('[DIAGNOSTIC] 이미 진단을 실행했으므로 건너뜀');
+      return;
+    }
+    
+    console.log('[DIAGNOSTIC] 연결 실패 - 진단 시작');
+    setHasDiagnosed(true); // 진단 실행 플래그 설정
+    
+    // 먼저 강제 정리
+    await forceCleanup();
+    
+    // 2초 대기
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // 진단 실행
+    if (serialNumber) {
+      const diagnostic = await diagnoseDevice(serialNumber);
+      
+      if (diagnostic && !diagnostic.connection_test.success) {
+        // 진단 결과에 따라 추가 조치
+        console.log('[DIAGNOSTIC] 연결 실패 원인:', diagnostic.connection_test.error);
+      }
+    }
+  };
+
+  // 뇌파 측정 시작 함수 (개선된 버전)
   const startEegMeasurement = async () => {
     setDeviceConnectionStatus('connecting');
+    setHasDiagnosed(false); // 진단 플래그 리셋
     
     try {
+      // 먼저 강제 정리 실행
+      await forceCleanup();
+      
       // 실제 뇌파 측정 시작 로직 (시뮬레이션)
       await new Promise(resolve => setTimeout(resolve, 2000));
       
@@ -251,6 +342,7 @@ export default function Assessment() {
       if (isConnected) {
         setDeviceConnectionStatus('connected');
         setErrorMessage(''); // 에러 메시지 초기화
+        setHasDiagnosed(false); // 연결 성공 시 진단 플래그 리셋
         
         // 연결 성공 시 음성 안내
         if (isVoiceMode && isTTSEnabled) {
@@ -284,6 +376,9 @@ export default function Assessment() {
       } else {
         setDeviceConnectionStatus('failed');
         
+        // 연결 실패 시 진단 실행
+        await handleConnectionFailure();
+        
         // 연결 실패 시 음성 안내
         if (isVoiceMode && isTTSEnabled) {
           speakText("뇌파 측정 시작에 실패했습니다. 장비 전원과 시리얼 넘버를 확인해주세요.");
@@ -291,6 +386,9 @@ export default function Assessment() {
       }
     } catch (error) {
       setDeviceConnectionStatus('failed');
+      
+      // 오류 발생 시 진단 실행
+      await handleConnectionFailure();
       
       // 오류 발생 시 음성 안내
       if (isVoiceMode && isTTSEnabled) {
@@ -378,14 +476,14 @@ export default function Assessment() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (isRecording && recordingTime < 190 && currentStep !== 'complete') { // complete 단계에서는 타이머 정지
+    if (isRecording && recordingTime < 190 && currentStep !== 'complete' as AssessmentStep) { // complete 단계에서는 타이머 정지
       interval = setInterval(() => {
         setRecordingTime(prev => {
           if (prev >= 189) {
             // 정확히 190초(3분 10초)에서 측정 완료
             setIsRecording(false);
             // complete 단계가 아닐 때만 processing 단계로 이동
-            if (currentStep !== 'complete') {
+            if (currentStep !== 'complete' as AssessmentStep) {
               setCurrentStep("processing");
               // 뇌파 측정 완료 시 음성 안내
               if (isVoiceMode) {
@@ -397,7 +495,7 @@ export default function Assessment() {
           return prev + 1;
         });
       }, 1000);
-    } else if (recordingTime >= 190 && currentStep !== 'complete') {
+    } else if (recordingTime >= 190 && currentStep !== 'complete' as AssessmentStep) {
       // 190초에 도달했는데도 아직 recording 상태라면 강제로 중단 (complete 단계가 아닐 때만)
       setIsRecording(false);
       setCurrentStep("processing");
@@ -405,6 +503,7 @@ export default function Assessment() {
       setRecordingTime(190);
     }
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRecording, recordingTime, isVoiceMode, currentStep]);
 
 
@@ -1022,6 +1121,41 @@ export default function Assessment() {
                       <p className="text-xs text-red-600 mt-1">
                         장비 전원이 켜져 있는지, 시리얼 넘버가 올바른지 확인해주세요.
                       </p>
+                      <div className="mt-2 flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            if (serialNumber) {
+                              setHasDiagnosed(false); // 진단 플래그 리셋
+                              await diagnoseDevice(serialNumber);
+                            }
+                          }}
+                          className="text-xs"
+                          disabled={!serialNumber}
+                        >
+                          🔍 장비 진단
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            setHasDiagnosed(false); // 진단 플래그 리셋
+                            await forceCleanup();
+                          }}
+                          className="text-xs"
+                        >
+                          🔄 강제 정리
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={startEegMeasurement}
+                          className="text-xs"
+                        >
+                          🔁 다시 시도
+                        </Button>
+                      </div>
                     </div>
                   )}
                   

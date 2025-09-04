@@ -23,6 +23,8 @@ import RecordSelection from "./pages/RecordSelection";
 import TestModeSelection from "./pages/TestModeSelection";
 import EegTest from "./pages/EegTest";
 import MemoryHelper from "./pages/MemoryHelper";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +51,8 @@ const App = () => (
           <Route path="/questionnaire" element={<Questionnaire />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/about" element={<About />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
