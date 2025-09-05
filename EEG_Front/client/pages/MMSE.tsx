@@ -9,14 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { Brain, ArrowLeft, ArrowRight, CheckCircle, Clock, AlertCircle, Volume2, VolumeX, RotateCcw } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
-import { saveCognitiveScore } from "@/lib/api";
+import { saveCognitiveScore, FLASK_API_URL } from "@/lib/api";
 
 // OpenAI API를 사용한 장소 판별 함수
 const checkPlaceWithAI = async (word: string): Promise<boolean> => {
   try {
     console.log('🔍 장소 판별 AI 채점 시작:', word);
     
-    const response = await fetch('http://localhost:8000/check_place', {
+    const response = await fetch(`${FLASK_API_URL}/check_place`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ const checkMocaQ3WithAI = async (answer: string): Promise<boolean> => {
   try {
     console.log('🔍 MoCA Q3 AI 채점 시작:', answer);
     
-    const response = await fetch('http://localhost:8000/check_moca_q3', {
+    const response = await fetch(`${FLASK_API_URL}/check_moca_q3`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ const checkMocaQ4WithAI = async (answer: string): Promise<boolean> => {
   try {
     console.log('🔍 MoCA Q4 AI 채점 시작:', answer);
     
-    const response = await fetch('http://localhost:8000/check_moca_q4', {
+    const response = await fetch(`${FLASK_API_URL}/check_moca_q4`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

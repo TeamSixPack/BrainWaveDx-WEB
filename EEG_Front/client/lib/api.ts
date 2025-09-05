@@ -1,5 +1,15 @@
+// 환경별 API URL 설정
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
 // Spring 백엔드 API 기본 URL
-const API_BASE_URL = 'http://localhost:8090';
+const API_BASE_URL = isProduction 
+  ? 'http://neuroscan.smhrd.com:8090'  // 배포 환경
+  : 'http://localhost:8090';            // 로컬 환경
+
+// Flask 백엔드 API URL (뇌파 분석용)
+export const FLASK_API_URL = isProduction 
+  ? 'http://neuroscan.smhrd.com:8000'  // 배포 환경
+  : 'http://localhost:8000';            // 로컬 환경
 
 // API 응답 타입 정의
 export interface ApiResponse<T = any> {

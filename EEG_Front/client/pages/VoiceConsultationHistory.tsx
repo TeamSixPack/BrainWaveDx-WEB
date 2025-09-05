@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "@/lib/api";
 import { 
   MessageCircle,
   Calendar,
@@ -54,7 +55,7 @@ export default function VoiceConsultationHistory() {
         throw new Error("사용자 정보를 찾을 수 없습니다.");
       }
       
-      const response = await fetch(`http://localhost:8090/api/voice-consultation/user/${user.uid}`);
+      const response = await fetch(`${API_BASE_URL}/api/voice-consultation/user/${user.uid}`);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -87,7 +88,7 @@ export default function VoiceConsultationHistory() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8090/api/voice-consultation/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/voice-consultation/${id}`, {
         method: 'DELETE',
       });
 

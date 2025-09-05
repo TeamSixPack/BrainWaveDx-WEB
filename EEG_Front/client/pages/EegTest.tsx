@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
 import { Brain, Upload, FileText, ArrowLeft, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { API_BASE_URL } from "@/lib/api";
 
 type TestStep = "upload" | "processing" | "result" | "additional-test";
 
@@ -59,7 +60,7 @@ export default function EegTest() {
       formData.append('enforce_two_minutes', 'true');
 
       // Spring Boot 서버로 파일 전송
-      const response = await fetch('http://localhost:8090/api/upload-eeg', {
+      const response = await fetch(`${API_BASE_URL}/api/upload-eeg`, {
         method: 'POST',
         body: formData,
       });

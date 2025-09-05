@@ -51,7 +51,7 @@ export default function Assessment() {
     const resetEegSession = async () => {
       try {
         console.log('[DEBUG] 페이지 로드 시 뇌파 세션 정리 시작...');
-        const response = await fetch('http://localhost:8000/reset_eeg_session', {
+        const response = await fetch(`${FLASK_API_URL}/reset_eeg_session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -159,7 +159,7 @@ export default function Assessment() {
       
       // 이제 실제 뇌파 데이터 수집 시작
       console.log('[DEBUG] Flask API 호출 시작');
-      const response = await fetch('http://localhost:8000/start_eeg_collection', {
+      const response = await fetch(`${FLASK_API_URL}/start_eeg_collection`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ serialNumber })
@@ -243,7 +243,7 @@ export default function Assessment() {
     try {
       console.log('[DIAGNOSTIC] 장비 진단 시작...');
       
-      const response = await fetch('http://localhost:8000/diagnose_device', {
+      const response = await fetch(`${FLASK_API_URL}/diagnose_device`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ serial_number: serialNumber })
@@ -276,7 +276,7 @@ export default function Assessment() {
     try {
       console.log('[CLEANUP] 강제 정리 시작...');
       
-      const response = await fetch('http://localhost:8000/force_cleanup', {
+      const response = await fetch(`${FLASK_API_URL}/force_cleanup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -749,13 +749,13 @@ export default function Assessment() {
                         console.log('[CONFIRM] 장비 착용 확인 - 강제 재시작 시작...');
                         
                         // 1. 먼저 강제 정리 실행
-                        await fetch('http://localhost:8000/force_cleanup', {
+                        await fetch(`${FLASK_API_URL}/force_cleanup`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' }
                         });
                         
                         // 2. Flask 서버 강제 재시작 (Ctrl+C + python app.py)
-                        const restartResponse = await fetch('http://localhost:8000/force_restart_server', {
+                        const restartResponse = await fetch(`${FLASK_API_URL}/force_restart_server`, {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' }
                         });
@@ -765,7 +765,7 @@ export default function Assessment() {
                         } else {
                           console.warn('[CONFIRM] Flask 서버 강제 재시작 실패, 세션 정리로 대체');
                           // 재시작 실패 시 세션 정리
-                          await fetch('http://localhost:8000/reset_eeg_session', {
+                          await fetch(`${FLASK_API_URL}/reset_eeg_session`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' }
                           });
@@ -774,7 +774,7 @@ export default function Assessment() {
                         console.error('[CONFIRM] 서버 재시작 중 오류:', error);
                         try {
                           // 오류 발생 시 세션 정리로 대체
-                          await fetch('http://localhost:8000/reset_eeg_session', {
+                          await fetch(`${FLASK_API_URL}/reset_eeg_session`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' }
                           });

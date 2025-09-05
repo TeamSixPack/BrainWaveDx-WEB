@@ -1307,13 +1307,13 @@ export default function Results() {
                     console.log('[RESTART] Flask 서버 재시작 시작...');
                     
                     // 1. 먼저 강제 정리 실행
-                    await fetch('http://localhost:8000/force_cleanup', {
+                    await fetch(`${FLASK_API_URL}/force_cleanup`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' }
                     });
                     
                     // 2. Flask 서버 강제 재시작 (Ctrl+C + python app.py)
-                    const restartResponse = await fetch('http://localhost:8000/force_restart_server', {
+                    const restartResponse = await fetch(`${FLASK_API_URL}/force_restart_server`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' }
                     });
@@ -1323,7 +1323,7 @@ export default function Results() {
                     } else {
                       console.warn('[RESTART] Flask 서버 재시작 실패, 세션 정리로 대체');
                       // 재시작 실패 시 세션 정리
-                      await fetch('http://localhost:8000/reset_eeg_session', {
+                      await fetch(`${FLASK_API_URL}/reset_eeg_session`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' }
                       });
@@ -1332,7 +1332,7 @@ export default function Results() {
                     console.error('[RESTART] 서버 재시작 중 오류:', error);
                     try {
                       // 오류 발생 시 세션 정리로 대체
-                      await fetch('http://localhost:8000/reset_eeg_session', {
+                      await fetch(`${FLASK_API_URL}/reset_eeg_session`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' }
                       });

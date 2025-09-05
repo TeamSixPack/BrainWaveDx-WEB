@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "@/lib/api";
 import styles from "./AssessmentHistoryButton.module.css";
 import { 
   Brain,
@@ -73,7 +74,7 @@ export default function AssessmentHistory() {
         throw new Error("사용자 정보를 찾을 수 없습니다.");
       }
       
-      const response = await fetch(`http://localhost:8090/api/assessments/user/${user.uid}`);
+      const response = await fetch(`${API_BASE_URL}/api/assessments/user/${user.uid}`);
       console.log('🔍 API 응답 상태:', response.status);
       
       if (!response.ok) {
@@ -139,7 +140,7 @@ export default function AssessmentHistory() {
       try {
         console.log('🔍 검사 기록 삭제 시작: ID =', id);
         
-        const response = await fetch(`http://localhost:8090/api/assessments/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/assessments/${id}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 // 검사 결과를 백엔드 DB에 저장하는 유틸리티
+import { API_BASE_URL } from "./api";
 
 export interface AssessmentData {
   userId: string;
@@ -16,7 +17,7 @@ export const saveAssessmentToDB = async (data: AssessmentData): Promise<boolean>
   try {
     console.log('🔵 검사 결과를 DB에 저장 중...', data);
     
-    const response = await fetch('http://localhost:8090/api/assessments', {
+    const response = await fetch(`${API_BASE_URL}/api/assessments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

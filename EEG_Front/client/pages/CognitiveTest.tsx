@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate, Link } from "react-router-dom";
-import { saveCognitiveScore } from "@/lib/api";
+import { saveCognitiveScore, FLASK_API_URL } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { 
   Brain, 
@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 // OpenAI API를 사용한 장소 판별 함수
 const checkPlaceWithAI = async (word: string): Promise<boolean> => {
   try {
-    const response = await fetch('http://localhost:8000/check_place', {
+    const response = await fetch(`${FLASK_API_URL}/check_place`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

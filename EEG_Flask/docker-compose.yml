@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  eeg-flask:
+    build: .
+    ports:
+      - "8000:8000"
+    privileged: true  # 블루투스 접근을 위한 권한
+    devices:
+      - /dev/bus/usb:/dev/bus/usb  # USB 장치 접근
+    volumes:
+      - /var/run/dbus:/var/run/dbus  # D-Bus 소켓
+      - /sys/class/bluetooth:/sys/class/bluetooth  # 블루투스 시스템 파일
+      - /var/lib/bluetooth:/var/lib/bluetooth  # 블루투스 설정
+    environment:
+      - FLASK_PORT=8000
+      - DOCKER_ENV=false  # 실제 장비 연결 모드
+    restart: unless-stopped
+    network_mode: host  # 호스트 네트워크 모드로 블루투스 접근
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN

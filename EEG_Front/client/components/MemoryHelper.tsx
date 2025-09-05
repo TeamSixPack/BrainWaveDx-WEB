@@ -5,6 +5,7 @@ import QuestionSelector from "@/components/memory-helper/QuestionSelector";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "@/lib/api";
 
 type Step = 'start' | 'welcome' | 'question' | 'recording' | 'processing' | 'result';
 
@@ -739,7 +740,7 @@ export default function MemoryHelper() {
         uid: userId
       });
 
-      const response = await fetch('http://localhost:8090/api/voice-consultation/save', {
+      const response = await fetch(`${API_BASE_URL}/api/voice-consultation/save`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
