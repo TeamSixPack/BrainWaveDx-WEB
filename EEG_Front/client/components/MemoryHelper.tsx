@@ -5,7 +5,7 @@ import QuestionSelector from "@/components/memory-helper/QuestionSelector";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, FASTAPI_URL } from "@/lib/api";
 
 type Step = 'start' | 'welcome' | 'question' | 'recording' | 'processing' | 'result';
 
@@ -85,7 +85,7 @@ export default function MemoryHelper() {
     
     // FastAPI 호출 시도
     try {
-      const response = await fetch('http://localhost:8001/voice-chatbot', {
+      const response = await fetch(`${FASTAPI_URL}/voice-chatbot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

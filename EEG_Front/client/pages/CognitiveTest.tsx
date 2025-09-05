@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate, Link } from "react-router-dom";
-import { saveCognitiveScore, FLASK_API_URL } from "@/lib/api";
+import { saveCognitiveScore, FLASK_API_URL, API_BASE_URL } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { 
   Brain, 
@@ -205,7 +205,7 @@ export default function CognitiveTest() {
       
       // 내장 목록에 없으면 API 호출 시도
       console.log(`🔍 API 호출 시도: "${word}"`);
-      const response = await fetch('http://localhost:8090/api/validate-word', {
+      const response = await fetch(`${API_BASE_URL}/api/validate-word`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

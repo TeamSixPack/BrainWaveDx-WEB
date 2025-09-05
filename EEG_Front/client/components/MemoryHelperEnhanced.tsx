@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Mic, MicOff, Send, Loader2, Brain, AlertTriangle, CheckCircle, ArrowRight, Bot, Download, RotateCcw, Home } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useNavigate } from "react-router-dom";
+import { FASTAPI_URL } from "@/lib/api";
 
 interface AnalysisResult {
   status: string;
@@ -47,7 +48,7 @@ const MemoryHelperEnhanced: React.FC = () => {
   // FastAPI 음성 챗봇 API 호출
   const callFastAPIAnalysis = async (questionText: string, answerText: string) => {
     try {
-      const response = await fetch('http://localhost:8001/voice-chatbot', {
+      const response = await fetch(`${FASTAPI_URL}/voice-chatbot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

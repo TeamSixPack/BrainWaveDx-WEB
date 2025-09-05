@@ -11,6 +11,11 @@ export const FLASK_API_URL = isProduction
   ? 'http://neuroscan.smhrd.com:8000'  // 배포 환경
   : 'http://localhost:8000';            // 로컬 환경
 
+// FastAPI 백엔드 API URL (음성 챗봇용)
+export const FASTAPI_URL = isProduction 
+  ? 'http://neuroscan.smhrd.com:8001'  // 배포 환경
+  : 'http://localhost:8001';            // 로컬 환경
+
 // API 응답 타입 정의
 export interface ApiResponse<T = any> {
   success: boolean;

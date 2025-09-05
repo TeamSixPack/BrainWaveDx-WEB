@@ -22,7 +22,7 @@ public class PageController {
 	
     private final FlaskClientService flaskClientService;
     private final RestTemplate rest = new RestTemplate();
-    private final String FLASK_INFER_URL = "http://127.0.0.1:8000/infer";
+    private final String FLASK_INFER_URL = "http://neuroscan.smhrd.com:8000/infer";
 
 	
     // ---------- 공용 ---------- //
