@@ -2,4 +2,6 @@
 **/test-upload/
 EEG_Flask/dataset/test-upload/
 EEG_Flask/dataset/test-upload/*
-EEG_Flask/uploads/eeg/*
+EEG_Flask/uploads/eeg/***/.env
+letsencrypt/
+**/acme.json
