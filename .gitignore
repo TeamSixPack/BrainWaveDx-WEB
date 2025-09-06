@@ -10,3 +10,4 @@ docker/traefik/letsencrypt/
 letsencrypt/
 docker/traefik/letsencrypt/
 **/acme.json
+**/.env
