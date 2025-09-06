@@ -2,4 +2,12 @@
 **/test-upload/
 EEG_Flask/dataset/test-upload/
 EEG_Flask/dataset/test-upload/*
-EEG_Flask/uploads/eeg/*
+EEG_Flask/uploads/eeg/*# secrets / machine-specific
+environments/prod/.env
+**/.env
+docker/traefik/letsencrypt/
+**/acme.json
+# volumes / build / tmp
+**/data/
+**/node_modules/
+**/__pycache__/

@@ -1,0 +1,15 @@
+http:
+  routers:
+    flask-raw:
+      rule: "Host(`neuroscan.smhrd.com`) && (Path(`/start_eeg_collection`) || Path(`/reset_eeg_session`) || Path(`/force_cleanup`))"
+      entryPoints: ["web","websecure"]
+      service: flask-raw
+      priority: 500
+      tls:
+        certResolver: le
+
+  services:
+    flask-raw:
+      loadBalancer:
+        servers:
+          - url: "http://flask:8000"

@@ -1,0 +1,56 @@
+services:
+  traefik:
+    command: ["--configFile=/traefik.yml"]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # 정적: '파일 하나'만 루트에 마운트
+      - /srv/apps/brainwave/traefik-static/traefik.yml:/traefik.yml:ro
+      # 동적: 완전히 다른 경로로 마운트(상위와 겹치지 않음)
+      - /srv/apps/brainwave/traefik-dynamic:/dynamic:ro
+      # ACME
+      - /srv/apps/brainwave/letsencrypt:/letsencrypt:rw
+      # Docker provider
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # web 라우터는 GET/HEAD만 허용 → POST 낚아채기 방지
+  web:
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.web.rule: "Host(`${BASE_HOST}`) && Method(`GET`,`HEAD`)"
+      traefik.http.routers.web.entrypoints: "web,websecure"
+      traefik.http.routers.web.priority: "1"
+      traefik.http.routers.web.tls.certresolver: "le"
+
+  # /eeg/* → Flask (stripPrefix)
+  flask:
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.flask.loadbalancer.server.port: "8000"
+      traefik.http.routers.flask-eeg.rule: "Host(`${BASE_HOST}`) && PathPrefix(`/eeg`)"
+      traefik.http.routers.flask-eeg.entrypoints: "web,websecure"
+      traefik.http.routers.flask-eeg.priority: "190"
+      traefik.http.routers.flask-eeg.service: "flask"
+      traefik.http.routers.flask-eeg.middlewares: "eeg-strip@docker"
+      traefik.http.middlewares.eeg-strip.stripprefix.prefixes: "/eeg"
+      traefik.http.middlewares.eeg-strip.stripprefix.forceSlash: "true"
+      traefik.http.routers.flask-eeg.tls.certresolver: "le"
+
+  spring:
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.spring.entrypoints: "web,websecure"
+      traefik.http.routers.spring.tls.certresolver: "le"
+
+  authproxy:
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.authproxy.entrypoints: "web,websecure"
+      traefik.http.routers.authproxy.tls.certresolver: "le"
+
+  fastapi:
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.fastapi.entrypoints: "web,websecure"
+      traefik.http.routers.fastapi.tls.certresolver: "le"

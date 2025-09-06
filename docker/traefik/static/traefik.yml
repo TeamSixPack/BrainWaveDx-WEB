@@ -1,0 +1,26 @@
+log:
+  level: DEBUG
+api:
+  dashboard: false
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: brainwave_web
+  file:
+    directory: /dynamic       # <- 컨테이너 안에서의 "다른" 경로
+    watch: true
+
+certificatesResolvers:
+  le:
+    acme:
+      email: ${LE_EMAIL}
+      storage: /letsencrypt/acme.json
+      httpChallenge:
+        entryPoint: web

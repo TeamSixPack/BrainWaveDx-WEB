@@ -1,0 +1,39 @@
+services:
+  traefik:
+    command: ["--configFile=/etc/traefik/traefik.yml"]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /srv/apps/brainwave/traefik-static:/etc/traefik:ro
+      - /srv/apps/brainwave/traefik-dynamic:/etc/traefik/dynamic:ro
+      - /srv/apps/brainwave/letsencrypt:/letsencrypt
+
+  # web 라우터는 GET/HEAD만 허용(POST 낚아채기 차단)
+  web:
+    labels:
+      traefik.http.routers.web.rule: "Host(`${BASE_HOST}`) && Method(`GET`,`HEAD`)"
+      traefik.http.routers.web.entrypoints: "web,websecure"
+      traefik.http.routers.web.tls.certresolver: "le"
+
+  # /eeg/* → Flask (HTTPS 엔트리포인트도 허용)
+  flask:
+    labels:
+      traefik.http.routers.flask-eeg.entrypoints: "web,websecure"
+      traefik.http.routers.flask-eeg.tls.certresolver: "le"
+
+  spring:
+    labels:
+      traefik.http.routers.spring.entrypoints: "web,websecure"
+      traefik.http.routers.spring.tls.certresolver: "le"
+
+  authproxy:
+    labels:
+      traefik.http.routers.authproxy.entrypoints: "web,websecure"
+      traefik.http.routers.authproxy.tls.certresolver: "le"
+
+  fastapi:
+    labels:
+      traefik.http.routers.fastapi.entrypoints: "web,websecure"
+      traefik.http.routers.fastapi.tls.certresolver: "le"
