@@ -6,3 +6,7 @@ EEG_Flask/uploads/eeg/*.env
 letsencrypt/
 docker/traefik/letsencrypt/
 **/acme.json
+**/.env
+letsencrypt/
+docker/traefik/letsencrypt/
+**/acme.json
