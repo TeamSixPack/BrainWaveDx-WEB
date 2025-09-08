@@ -1,0 +1,4 @@
+services:
+  web:
+    volumes:
+      - /srv/apps/brainwave/webroot:/usr/share/nginx/html:ro

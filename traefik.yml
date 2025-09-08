@@ -1,0 +1,16 @@
+entryPoints:
+  web:
+    address: ":80"
+    forwardedHeaders:
+      insecure: true
+providers:
+  file:
+    directory: "/dynamic"
+    watch: true
+  docker:
+    exposedByDefault: false
+api:
+  dashboard: false
+log:
+  level: INFO
+accessLog: {}

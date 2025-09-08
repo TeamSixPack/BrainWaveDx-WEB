@@ -1,0 +1,14 @@
+http:
+  routers:
+    api-spring:
+      rule: "Host(`neuroscan.smhrd.com`) && PathPrefix(`/api`)"
+      entryPoints: ["web"]
+      priority: 1002
+      service: spring-svc
+
+  services:
+    spring-svc:
+      loadBalancer:
+        servers:
+          - url: "http://spring:8090"
+          - url: "http://brainwave-spring-1:8090"

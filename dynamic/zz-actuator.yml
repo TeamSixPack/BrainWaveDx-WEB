@@ -1,0 +1,12 @@
+http:
+  routers:
+    actuator-proxy:
+      rule: "Host(`neuroscan.smhrd.com`) && PathPrefix(`/actuator`)"
+      entryPoints: ["web"]
+      priority: 999
+      service: spring-health-svc
+  services:
+    spring-health-svc:
+      loadBalancer:
+        servers:
+          - url: "http://spring-health-proxy:8080"

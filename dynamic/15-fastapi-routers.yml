@@ -1,0 +1,23 @@
+http:
+  routers:
+    chat-v3:
+      rule: "Host(`neuroscan.smhrd.com`) && PathPrefix(`/chat`)"
+      entryPoints: ["web"]
+      priority: 1005
+      middlewares: ["chat-strip-v3"]
+      service: fastapi-svc-v2
+    docs-v3:
+      rule: "Host(`neuroscan.smhrd.com`) && (Path(`/docs`) || Path(`/openapi.json`))"
+      entryPoints: ["web"]
+      priority: 1005
+      service: fastapi-svc-v2
+  middlewares:
+    chat-strip-v3:
+      stripPrefix:
+        prefixes: ["/chat"]
+  services:
+    fastapi-svc-v2:
+      loadBalancer:
+        servers:
+          - url: "http://fastapi:8001"
+          - url: "http://brainwave-fastapi-1:8001"

@@ -1,0 +1,12 @@
+services:
+  traefik:
+    networks:
+      - default
+  spring-health-proxy:
+    networks:
+      - default
+
+networks:
+  default:
+    name: brainwave_default
+    external: true
