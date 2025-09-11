@@ -1,33 +1,21 @@
-# Flask 서버용 Dockerfile (블루투스 접근 가능)
-FROM python:3.9-slim
+FROM python:3.10-slim
 
-# 시스템 패키지 업데이트 및 필요한 패키지 설치
-RUN apt-get update && apt-get install -y \
-    bluetooth \
-    bluez \
-    bluez-tools \
-    libbluetooth-dev \
-    libglib2.0-dev \
-    libdbus-1-dev \
-    libudev-dev \
-    libical-dev \
-    libreadline-dev \
-    dbus \
-    systemd \
-    && rm -rf /var/lib/apt/lists/*
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
 
-# 작업 디렉토리 설정
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
+COPY EEG_Flask/requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt && \
+    pip install --no-cache-dir gunicorn
 
-# Python 의존성 설치
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY EEG_Flask/ /app/
 
-# 애플리케이션 코드 복사
-COPY . .
-
-# 포트 노출
 EXPOSE 8000
-
-# 블루투스 서비스 시작 및 Flask 앱 실행
-CMD ["sh", "-c", "service dbus start && service bluetooth start && sleep 2 && python app.py"]
+# 앱 모듈명이 app.py 이고 Flask 인스턴스 변수가 app 라고 가정
+CMD ["gunicorn", "-w", "2", "-k", "gthread", "-b", "0.0.0.0:8000", "app:app", "--timeout", "120", "--graceful-timeout", "30"]

@@ -1,0 +1,13 @@
+services:
+  spring-health-proxy:
+    build:
+      context: ./spring-health-proxy
+    image: brainwave/spring-health-proxy:dev
+    restart: unless-stopped
+    networks:
+      - default
+
+networks:
+  default:
+    external: true
+    name: brainwave_default

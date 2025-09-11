@@ -264,8 +264,7 @@ def infer_3():
 def infer_2():
     return _infer_common("2c")
 
-# 중복된 /infer 엔드포인트 제거됨 - 위의 _infer_common 함수로 대체
-
+# (4) Muse 2 뇌파 데이터 수집 및 분석
 @app.post("/start_eeg_collection")
 def start_eeg_collection():
     """
@@ -616,7 +615,6 @@ def run_muse2_eeg_collection(serial_number, max_retries=3):
     
     # 연결 성공 후 데이터 수집 진행
     try:
-        
         # 전극 접촉 상태 확인 (10초간)
         print("전극 접촉 상태 확인 중...")
         for i in range(10):

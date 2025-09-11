@@ -1,0 +1,77 @@
+http:
+  routers:
+    web-static:
+      rule: "Host(`neuroscan.smhrd.com`) && Method(`GET`,`HEAD`) && PathPrefix(`/`)"
+      entryPoints: ["web"]
+      priority: 1
+      service: web-svc
+
+    api:
+      rule: "Host(`neuroscan.smhrd.com`) && PathPrefix(`/api`)"
+      entryPoints: ["web"]
+      priority: 110
+      service: spring-svc
+
+    actuator:
+      rule: "Host(`neuroscan.smhrd.com`) && PathPrefix(`/actuator`)"
+      entryPoints: ["web"]
+      priority: 111
+      service: spring-health-svc
+
+    eeg:
+      rule: "Host(`neuroscan.smhrd.com`) && PathPrefix(`/eeg`)"
+      entryPoints: ["web"]
+      priority: 120
+      middlewares: ["eeg-strip"]
+      service: flask-svc
+
+    chat:
+      rule: "Host(`neuroscan.smhrd.com`) && PathPrefix(`/chat`)"
+      entryPoints: ["web"]
+      priority: 110
+      middlewares: ["chat-strip"]
+      service: fastapi-svc
+
+    flask-root-post:
+      rule: "Host(`neuroscan.smhrd.com`) && (Path(`/start_eeg_collection`) || Path(`/reset_eeg_session`) || Path(`/force_cleanup`) || Path(`/health`) || Path(`/healthz`)) && Method(`POST`,`GET`)"
+      entryPoints: ["web"]
+      priority: 130
+      service: flask-svc
+
+  middlewares:
+    eeg-strip:
+      stripPrefix:
+        prefixes: ["/eeg"]
+    chat-strip:
+      stripPrefix:
+        prefixes: ["/chat"]
+
+  services:
+    web-svc:
+      loadBalancer:
+        servers:
+          - url: "http://web:80"
+          - url: "http://brainwave-web-1:80"
+
+    spring-svc:          # Spring 본 서비스 (8090)
+      loadBalancer:
+        servers:
+          - url: "http://spring:8090"
+          - url: "http://brainwave-spring-1:8090"
+
+    spring-health-svc:   # 사이드카 (8080) → 항상 200
+      loadBalancer:
+        servers:
+          - url: "http://spring-health-proxy:8080"
+
+    flask-svc:
+      loadBalancer:
+        servers:
+          - url: "http://flask:8000"
+          - url: "http://brainwave-flask-1:8000"
+
+    fastapi-svc:
+      loadBalancer:
+        servers:
+          - url: "http://fastapi:8001"
+          - url: "http://brainwave-fastapi-1:8001"

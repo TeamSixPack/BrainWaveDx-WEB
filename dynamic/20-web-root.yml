@@ -1,0 +1,12 @@
+http:
+  routers:
+    web-root:
+      rule: "Host(`neuroscan.smhrd.com`) && PathPrefix(`/`)"
+      entryPoints: ["web"]
+      priority: 100
+      service: web-svc
+  services:
+    web-svc:
+      loadBalancer:
+        servers:
+          - url: "http://web:80"

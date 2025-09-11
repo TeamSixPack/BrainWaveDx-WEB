@@ -2,8 +2,8 @@
 const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
 
 // Spring 백엔드 API 기본 URL
-const API_BASE_URL = isProduction 
-  ? 'http://neuroscan.smhrd.com:8090'  // 배포 환경
+export const API_BASE_URL = isProduction 
+  ? ''  // 배포 환경
   : 'http://localhost:8090';            // 로컬 환경
 
 // Flask 백엔드 API URL (뇌파 분석용)
@@ -275,3 +275,6 @@ export const testPostCors = async (message: string): Promise<boolean> => {
     return false;
   }
 };
+/** Frontend가 백엔드를 부를 때 기본 베이스 URL
+ *  Vite 환경변수(VITE_API_BASE_URL)가 없으면 빈 문자열(동일 Origin상 상대경로)로 동작
+ */
