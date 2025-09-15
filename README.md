@@ -34,7 +34,8 @@
 
 
 #### 서비스 아키텍쳐
-<img width="2849" height="1608" alt="Screenshot_10" src="https://github.com/user-attachments/assets/47932458-e9b9-405f-9e7c-00531aae50ad" />
+<img width="1853" height="1360" alt="서비스아키텍쳐" src="https://github.com/user-attachments/assets/2c78a974-c943-4c23-8a4d-299d79d6955e" />
+
 
 
 ## 📒 서비스 정의
