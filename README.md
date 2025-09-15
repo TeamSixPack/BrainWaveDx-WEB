@@ -1,6 +1,6 @@
 # 📒 PROJECT BrainWaveDx 
 
-[BrainWaveDx](https://----주소----) 페이지 URL이동
+[BrainWaveDx](https://neuroscan.smhrd.com) 페이지 URL이동
 
 
 ## 🖼️ 주제
@@ -29,13 +29,15 @@
 
 #### ERD
 
-#### 플로우차트
-![이미지](이미지URL입력)
+#### 아키텍쳐
+<img width="2849" height="1608" alt="Screenshot_10" src="https://github.com/user-attachments/assets/47932458-e9b9-405f-9e7c-00531aae50ad" />
 
-## 📰 서비스 목표
-![화면예시](이미지URL입력)
 
-- 위에 이미지와 같은 서비스를 제공하는 페이지의 개발
+## 📰 서비스 정의
+- 뇌파,인지검사,음성챗봇을 통한 AI해석과 리포트를 제공하는 `치매조기 모니터링` 서비스
+
+## 📰 서비스 기능
+<img width="2858" height="1581" alt="Screenshot_11" src="https://github.com/user-attachments/assets/0503d370-2a5d-4378-8882-6c704f7b920a" />
 
 
 
@@ -82,7 +84,5 @@ Fix : 버그 수정
 
 Extra : 그외에 기타 커밋내용
 
-## 📈 브랜치 정보
-[자세한 내용은 Wiki 참조]()
 
 
