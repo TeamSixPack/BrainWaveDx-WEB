@@ -43,6 +43,8 @@
 <img width="2858" height="1581" alt="Screenshot_11" src="https://github.com/user-attachments/assets/0503d370-2a5d-4378-8882-6c704f7b920a" />
 
 ## 🎥 시현영상
+https://github.com/user-attachments/assets/ae881992-3539-4165-8743-2794fa445551
+
 
 
 ## 🔔 컨벤션 규칙
