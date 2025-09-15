@@ -23,22 +23,19 @@
 
 ## 🎢 개발 플로우차트
 
-#### 메뉴트리
-
-#### 기능정의
-
 #### ERD
 
 #### 아키텍쳐
 <img width="2849" height="1608" alt="Screenshot_10" src="https://github.com/user-attachments/assets/47932458-e9b9-405f-9e7c-00531aae50ad" />
 
 
-## 📰 서비스 정의
+## 📒 서비스 정의
 - 뇌파,인지검사,음성챗봇을 통한 AI해석과 리포트를 제공하는 `치매조기 모니터링` 서비스
 
 ## 📰 서비스 기능
 <img width="2858" height="1581" alt="Screenshot_11" src="https://github.com/user-attachments/assets/0503d370-2a5d-4378-8882-6c704f7b920a" />
 
+## 🎥 시현영상
 
 
 ## 🔔 컨벤션 규칙
