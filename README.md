@@ -28,11 +28,12 @@
 2025.08.01 ~ 2024.09.01
 
 
-## 🎢 개발 플로우차트
+## 🎢 시스템 디자인
 
-#### ERD
+#### 데이터베이스 스키마(ERD)
 
-#### 아키텍쳐
+
+#### 서비스 아키텍쳐
 <img width="2849" height="1608" alt="Screenshot_10" src="https://github.com/user-attachments/assets/47932458-e9b9-405f-9e7c-00531aae50ad" />
 
 
